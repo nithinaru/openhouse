@@ -22,3 +22,6 @@ Visual language adapted from a consumer map app's site and onboarding (sky photo
 
 ## Create a moment (`create-a-moment/`)
 End-to-end flow: create → pick location → invite → photos matched by location + time → house builds → fast-forward → step inside. See its README.
+
+## Step inside (`step-inside/`)
+Walking through a finished moment: footprints at every photo spot, camera-true photos snapping into the 3D room, angles of one moment, who-stood-where map, and the motion spec.
