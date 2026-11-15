@@ -18,10 +18,6 @@ import { Button, SheetHeader } from '@/theme/ui';
 
 import { demoFlags, useDemoFlags } from './demoFlags';
 
-const goBack = () => {
-  if (router.canGoBack()) router.back();
-  else router.replace('/');
-};
 import { backendHost, probeBackend, scheduleKeikiText, type BackendStatus } from './simulate';
 
 type Overlay = 'pair' | 'paid' | null;
@@ -327,3 +323,8 @@ const styles = StyleSheet.create({
   overlay: { backgroundColor: colors.bg, paddingHorizontal: space.lg, gap: space.lg },
   overlayClose: { alignSelf: 'center', minWidth: 160 },
 });
+
+const goBack = () => {
+  if (router.canGoBack()) router.back();
+  else router.replace('/');
+};
