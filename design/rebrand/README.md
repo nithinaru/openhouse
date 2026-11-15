@@ -7,7 +7,7 @@ Visual language adapted from a consumer map app's site and onboarding (sky photo
 - Signature mechanic: every contributor is a cardboard standee placed where they stood. Tap a cutout to see the night from their photos.
 
 ## Onboarding (`onboarding/`)
-1. `o1-splash` — chrome "open house" balloons in the sky, "step back inside.", get started
+1. `o1-splash` — "wish you were here" in black liquid metal with pink balloons in the sky, "step back inside.", get started
 2. `o2-what-do-you-remember` — tap floating 3D objects for the kinds of nights you want
 3. `o3-who-was-there` — friend cutout collage with sticker tags, sync contacts
 4. `o4-where-was-it` — address + tilted place cards ("by @rohan · 3 nights"); interior only
