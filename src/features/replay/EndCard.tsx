@@ -31,7 +31,6 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
   const walkIn =
     onWalkIn && !plus ? () => router.push({ pathname: '/plus', params: { from: 'walkin', tripId: tripId ?? '' } }) : onWalkIn;
   const makeSomething = tripId ? () => router.push({ pathname: '/shop/[id]', params: { id: tripId } }) : undefined;
-  const openDrop = tripId ? () => router.push({ pathname: '/drop/[id]', params: { id: tripId } }) : undefined;
   const cells = [
     { value: stats.distanceLabel, label: 'walked' },
     { value: String(stats.stops), label: stats.stops === 1 ? 'stop' : 'stops' },
@@ -74,7 +73,6 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
       {makeSomething ? (
         <Button variant="secondary" label="make something" onPress={makeSomething} style={{ marginTop: space.sm }} />
       ) : null}
-      {openDrop ? <Button variant="quiet" label="the drop →" onPress={openDrop} /> : null}
       <View style={styles.quiet}>
         {ask ? <Button variant="quiet" label="ask about this day" onPress={ask} /> : null}
         <Button variant="quiet" label="watch again" onPress={onAgain} />

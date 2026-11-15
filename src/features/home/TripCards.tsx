@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image as RNImage, StyleSheet, Text, View } from 'react-native';
 
+import { HOUSE_PEOPLE } from '@/lib/demo/demoHouse';
 import type { Person, Trip } from '@/lib/types';
 import { colors, fonts, radius, shadow, space, type } from '@/theme';
 import { PinIcon, PlusIcon } from '@/theme/icons';
@@ -75,6 +76,13 @@ export function TripRow({ trip, onPress }: { trip: Trip; onPress: () => void }) 
 
 const TILT = [-5, 3, -2, 4];
 
+/** Live people often have no photo yet: fall back by name to the bundled cutouts, then initials. */
+function avatarFor(p: Person): string | undefined {
+  if (p.avatarUri) return p.avatarUri;
+  const house = HOUSE_PEOPLE.find((h) => h.name.toLowerCase() === p.name.trim().toLowerCase());
+  return house ? RNImage.resolveAssetSource(house.cutout)?.uri : undefined;
+}
+
 /** "who's inside": the people from your days as an overlapping row of standees. */
 export function WhoStrip({ people, onAdd }: { people: Person[]; onAdd: () => void }) {
   const shown = people.slice(0, 3);
@@ -83,7 +91,7 @@ export function WhoStrip({ people, onAdd }: { people: Person[]; onAdd: () => voi
       {shown.map((p, i) => (
         <Cutout
           key={p.id}
-          uri={p.avatarUri}
+          uri={avatarFor(p)}
           name={p.name}
           width={118}
           height={150}
