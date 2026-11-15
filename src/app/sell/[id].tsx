@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 
 import { formatCents, type Unavailable } from '@/features/commerce/checkout';
 import { PLATFORM_FEE, createListing, useSellerListings } from '@/features/commerce/listings';
@@ -15,7 +16,10 @@ import { EarningsCard } from '@/features/sell/EarningsCard';
 import { PriceSlider } from '@/features/sell/PriceSlider';
 import { RouteMini, orderedStops } from '@/features/shop/previews';
 import { colors, duration, ease, fonts, radius, space, type } from '@/theme';
-import { Button, SheetHeader } from '@/theme/ui';
+import { Button, Chip, SheetHeader } from '@/theme/ui';
+
+const WHOP_URL = 'https://sandbox.whop.com/yc-hack/';
+const openWhop = () => void WebBrowser.openBrowserAsync(WHOP_URL).catch(() => {});
 
 // Sell this day: publish the trip as a paid walkable guide on Whop, share the link, watch it earn.
 export default function SellScreen() {
@@ -89,6 +93,7 @@ export default function SellScreen() {
                 ))}
               </View>
             </View>
+            <Chip label="view on whop ↗" onPress={openWhop} style={{ alignSelf: 'flex-start' }} />
           </View>
         </View>
 
@@ -101,6 +106,7 @@ export default function SellScreen() {
                 {published.shareUrl}
               </Text>
               <Button label="share the link" onPress={() => share(published.shareUrl)} />
+              <Chip label="view on whop ↗" onPress={openWhop} style={{ alignSelf: 'center' }} />
             </View>
           </Animated.View>
         ) : (

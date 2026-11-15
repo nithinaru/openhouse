@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as WebBrowser from 'expo-web-browser';
 
 import { formatCents, type Product } from '@/features/commerce/checkout';
 import { Confirmed, PurchaseStatus, Section, TagIcon } from '@/features/commerce/ui';
@@ -30,7 +31,10 @@ import { useTrip } from '@/features/replay/useTrip';
 import { FriendPicker, ProductCard } from '@/features/shop/ProductCard';
 import { colors, duration, ease, fonts, radius, shadow, space, type } from '@/theme';
 import { ArrowIcon } from '@/theme/icons';
-import { Button, haptic, Press, SheetHeader, SkyBackground, Sticker } from '@/theme/ui';
+import { Button, Chip, haptic, Press, SheetHeader, SkyBackground, Sticker } from '@/theme/ui';
+
+const WHOP_URL = 'https://sandbox.whop.com/yc-hack/';
+const openWhop = () => void WebBrowser.openBrowserAsync(WHOP_URL).catch(() => {});
 
 const PRODUCTS: Product[] = ['print', 'postcards', 'zine', 'film'];
 
@@ -62,6 +66,7 @@ export default function ShopScreen() {
   const [open, setOpen] = useState<PieceId | null>(null);
   const [sizes, setSizes] = useState<Partial<Record<PieceId, string>>>({});
   const [rehearsal, setRehearsal] = useState<Rehearsal>('off');
+  const [waitlisted, setWaitlisted] = useState(false);
 
   const bought = purchase.state.phase === 'done';
   const live = drop.editions.find((e) => e.edition === edition) ?? drop.editions[0];
@@ -119,6 +124,7 @@ export default function ShopScreen() {
           <Text style={[type.callout, { color: colors.textMuted }]}>
             six pieces designed from your day · {art.address} · {art.dateLong}
           </Text>
+          <Chip label="view on whop ↗" onPress={openWhop} style={{ alignSelf: 'flex-start' }} />
         </Animated.View>
 
         <Animated.View entering={enter(1)}>
@@ -150,12 +156,30 @@ export default function ShopScreen() {
             all six pieces · hoodie {sizes.hoodie ?? 'm'} · tee {sizes.tee ?? 'm'} · change sizes on each piece
           </Text>
           <PromoField applied={promoCode} onApply={setPromoCode} onClear={() => setPromoCode(null)} />
-          <Button
-            label={soldOut ? 'sold out' : `get the full drop · ${formatCents(bundleCents)}`}
-            disabled={soldOut}
-            loading={purchase.busy && open == null}
-            onPress={() => buy(PIECE_ORDER.map(itemFor))}
-          />
+          {soldOut ? (
+            waitlisted ? (
+              <Animated.View entering={FadeIn.duration(duration.base)} style={styles.waitlist}>
+                <Sticker label="you're on the list · #14" rotate={-3} />
+              </Animated.View>
+            ) : (
+              <Button
+                label="join the waitlist"
+                onPress={() => {
+                  haptic('medium');
+                  setWaitlisted(true);
+                }}
+              />
+            )
+          ) : (
+            <Button
+              label={`get the full drop · ${formatCents(bundleCents)}`}
+              loading={purchase.busy && open == null}
+              onPress={() => buy(PIECE_ORDER.map(itemFor))}
+            />
+          )}
+          {soldOut ? (
+            <Text style={[type.caption, { textAlign: 'center' }]}>{"whop waitlist · we'll text you if a hoodie frees up"}</Text>
+          ) : null}
           {open == null ? <PurchaseStatus purchase={purchase} /> : null}
         </View>
 
@@ -248,6 +272,7 @@ const styles = StyleSheet.create({
   bundleHead: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   bundlePrice: { fontFamily: fonts.bold, fontSize: 20, letterSpacing: -0.5, color: colors.text },
   strike: { fontFamily: fonts.medium, fontSize: 15, color: colors.textFaint, textDecorationLine: 'line-through' },
+  waitlist: { alignItems: 'center', paddingVertical: space.sm },
   divider: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.sm },
   rule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.lineStrong },
   sell: {

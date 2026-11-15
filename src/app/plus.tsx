@@ -80,7 +80,7 @@ export default function PlusScreen() {
         <Animated.View entering={FadeIn.duration(duration.base)} style={{ gap: space.md }}>
           <Confirmed
             palette={[colors.sky, colors.pink, colors.text, colors.skyDeep]}
-            detail="plus · $5 a month · billed by whop"
+            detail="7 days free, then $5 a month · billed by whop"
             next={[
               { label: 'every poster style is open', detail: 'night map and field notes are on the frame screen' },
               { label: 'walk in anywhere', detail: 'no limit on 3d stops' },
@@ -91,11 +91,11 @@ export default function PlusScreen() {
         </Animated.View>
       ) : (
         <View style={{ gap: space.sm }}>
-          <Text style={[type.heading, { textAlign: 'center' }]}>
-            {formatCents(PLUS_PRICE_CENTS)} a month
+          <Text style={[type.heading, { textAlign: 'center' }]}>try plus free for 7 days</Text>
+          <Text style={[type.caption, { textAlign: 'center' }]}>
+            then {formatCents(PLUS_PRICE_CENTS)} a month · cancel anytime · billed by whop
           </Text>
-          <Text style={[type.caption, { textAlign: 'center' }]}>cancel anytime from your whop account</Text>
-          <Button label={`start plus · ${formatCents(PLUS_PRICE_CENTS)}/mo`} onPress={join} loading={purchase.busy} />
+          <Button label="start free trial" onPress={join} loading={purchase.busy} />
           <PurchaseStatus purchase={purchase} />
           <Button variant="quiet" label="not now" onPress={close} />
         </View>

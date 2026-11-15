@@ -3,6 +3,7 @@
 // pink "+$4.50" sticker and lands one success haptic. Long-press the title to rehearse a sale.
 
 import * as Haptics from 'expo-haptics';
+import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState } from 'react';
 import { Share, StyleSheet, Text, View } from 'react-native';
 import Animated, {
@@ -132,6 +133,7 @@ export function EarningsCard({ seller, compact }: { seller: SellerState; compact
                   {formatCents(l.priceCents)} · {l.sales} {l.sales === 1 ? 'buyer' : 'buyers'} · {formatCents(l.earningsCents)}
                 </Text>
               </View>
+              <Chip label="view on whop ↗" onPress={() => void WebBrowser.openBrowserAsync('https://sandbox.whop.com/yc-hack/').catch(() => {})} />
               <Chip label="share" onPress={() => void Share.share({ message: `walk my day: ${l.title} ${l.shareUrl}`, url: l.shareUrl })} />
             </View>
           ))
