@@ -38,7 +38,7 @@ Hackathon: YC Consumer Mobile Hackathon, Sun Nov 15. **Code freeze 4:00 PM. Demo
 - Trip screen + **Replay** (map flyover, photo fan-out, narration audio, haptics, light tint)
 - QR scan pairing → face pin at location (realtime on both phones)
 - Swipe to friend's photo at a shared stop
-- **Walk in**: World Labs 3D world for one stop (pre-generated + cached for demo)
+- **Walk in**: SHARP splat per stop from its hero photo (pre-generated + cached for demo)
 - Poster render + **Whop** sandbox checkout
 - Revyl check passing on the cloud iPhone (with seeded/demo data)
 
@@ -71,7 +71,7 @@ expo-sensors        ┘   ~3 thumbs/stop)        ├─ actions (Node):
                                                │   enrichStop  → Open-Meteo, suncalc, Wikipedia,
 Replay screen ◀──── useQuery(trip) ────────────│                 OpenAI vision (caption, scene, palette)
 react-native-maps (camera anim)                │   narrateTrip → OpenAI text + TTS → audio file in storage
-expo-av / expo-audio (narration + ambient)     │   buildWorld  → World Labs multi-image → poll → splat URL
+expo-av / expo-audio (narration + ambient)     │   buildStopSplat → Replicate SHARP → .ply in storage
 expo-haptics                                   │   checkout    → Whop sandbox → purchase_url
 react-native-webview (3D splat viewer)         │   notify      → Keiki (or skip)
 react-native-svg + view-shot (poster)          ├─ http: /whop (webhook → mark order paid)
@@ -145,12 +145,26 @@ orders:   { posterId, userId, whopCheckoutId, status: "pending"|"paid" }
 - Scan with `expo-camera` → mutation `pair(code, lat, lng)` → both users get a pairing row → realtime pin appears on both phones.
 - Shared stop = pairing within 2 h / 1 km of a moment for both users → "their angle" swipe shows the friend's thumbs for that moment.
 
-### 5.7 Walk in — 3D world (Convex action `buildWorld`)
-- World Labs World API, `POST https://api.worldlabs.ai/marble/v1/worlds:generate`, header `WLT-Api-Key`.
-- `world_prompt.type = "multi-image"`. Use **auto layout** (up to 8 overlapping images, identical dimensions) for a room captured from one spot; or **direction control** (up to 4 images) using each photo's **EXIF compass heading as `azimuth`**.
-- Async: store `operationId`, poll until ready (~5 min), save splat/viewer URL. **Check docs.worldlabs.ai for the exact response shape.**
-- Viewer: `react-native-webview` loading a tiny HTML page with a Gaussian-splat viewer (e.g. World Labs' Spark / three.js) pointed at the splat URL; fall back to the hosted viewer URL if provided.
-- **Demo:** pre-generate the YC-office world by ~2:00 PM and cache it. Never generate live on stage.
+### 5.7 Walk in — every stop becomes a memory you can step into (Convex action `buildStopSplat`)
+- **Model:** Apple SHARP (github.com/apple/ml-sharp): single photo → 3D Gaussian splat (.ply). Hosted on Replicate (`kfarr/sharp-ml`, ~18 s on a T4). Needs `REPLICATE_API_TOKEN` in Convex env.
+- Run it on each moment's hero photo during enrichment, store the .ply in Convex file storage, and save `splatUrl` on the moment. Pre-run all demo stops by 3:00 PM.
+- **Imperfection is the aesthetic.** Keep the splat smear, blur and missing edges on purpose. It should look like a memory, not a scan: retro game, dream simulation.
+- Viewer: `react-native-webview` loading one self-contained HTML page (three.js plus a Gaussian-splat loader for .ply) with:
+  - low internal render resolution upscaled with nearest-neighbor (soft PS1-style pixelation)
+  - ordered dithering and a limited palette tinted by the trip palette
+  - a heavy radial vignette, with edges dissolving into fog or black (no hard borders; the memory fades out)
+  - film grain and slight chromatic aberration
+  - a slow automatic camera drift (small dolly and sway, never far enough to expose holes), with gyroscope tilt nudging the camera
+  - a fade from the 2D photo into 3D, so the photo "opens up"
+- The narration for that stop keeps playing over the scene.
+- **Walk mode (Street View for memories):** consecutive photos in a moment become a walkable path.
+  - Order the moment's photos by `takenAt`. Each photo is one node with its own SHARP splat.
+  - Show soft, glowing arrows or footprints on the floor pointing to the next node(s). Turn left or right from the change in EXIF `headingDeg`; forward follows time order.
+  - Tap or swipe forward: the camera dollies into the current splat (~1.2 s) while it dissolves into fog, and the next splat fades up from the fog, roughly aligned to its heading. The fog hides misalignment, so nodes don't need real 3D registration.
+  - Swipe back to return. Long-press to drop back to the flat photo.
+  - Preload the next 2 splats.
+  - Stretch only: estimate real relative camera poses for a room's photos with VGGT and place the splats in one shared space.
+- Stretch only: a World Labs multi-image world for one room ($5 minimum API credit, ~5 min generation). Not required.
 
 ### 5.8 Poster + Whop
 - Poster = `react-native-svg`: project stop coords to the canvas, single-weight route line, stop dots, face circles, title, dates, footer stats ("14.2 mi · 6 stops · 3 people"), trip palette. Capture with `react-native-view-shot`, upload to storage.
@@ -178,7 +192,8 @@ orders:   { posterId, userId, whopCheckoutId, status: "pending"|"paid" }
 ## 7. Demo plan (2 minutes, two real phones)
 
 **Capture during the day at YC (do this early):**
-- [ ] By 12:30: one teammate stands in one spot in a recognizable YC room and takes **8 overlapping photos** turning in a full circle (same orientation, no zoom, same aspect ratio). Kick off the World Labs job immediately. Optionally do a second room.
+- [ ] Walk path: walk a route through the office taking a photo every 3–4 steps facing forward (and 2–3 photos turning at each corner). 8–12 photos = one walkable memory.
+- [ ] By 12:30: test SHARP on 3 real photos from the office (good depth: a hallway, people at a table, the YC sign with background behind it). Avoid flat walls and glass.
 - [ ] Through lunch: photos at 4–6 distinct spots in and around the office, including at least one **10-second video** per spot (ambient sound), a front-camera selfie with teammates, and one shot of a sign (OCR'd caption).
 - [ ] Both teammates shoot the same spot at the same time → guaranteed "their angle" swipe.
 - [ ] Scan each other's QR at one spot → face pins.
@@ -204,7 +219,7 @@ orders:   { posterId, userId, whopCheckoutId, status: "pending"|"paid" }
 2. Convex schema (§4) + core queries/mutations (trips, moments, photos, pairings) + file upload flow.
 3. `enrichStop` action (§5.3).
 4. `narrateTrip` action + TTS (§5.4).
-5. `buildWorld` action + polling (§5.7) — **start this thread first among integrations; it gates the demo.**
+5. `buildStopSplat` action via Replicate SHARP (§5.7) — **start this thread first among integrations; it gates the demo.**
 6. Whop checkout + `/whop` webhook (§5.8) using the hackathon guide prompt.
 7. Keiki notify (§5.9), then Supermemory if time.
 8. Revyl: proof of changes on PRs + a validation check: "open the demo trip, replay starts, poster screen opens."

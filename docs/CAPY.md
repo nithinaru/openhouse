@@ -22,7 +22,7 @@ Client shapes live in src/lib/types.ts (Trip, Moment, Photo, Person, Pairing). K
 documents compatible with those field names. A cached demo trip is in src/lib/demo/demoTrip.ts.
 
 Rules:
-- Server SDKs (Anthropic, OpenAI, Whop, World Labs, Keiki, Supermemory) are called ONLY from
+- Server SDKs (Anthropic, OpenAI, Replicate, Whop, Keiki, Supermemory) are called ONLY from
   Convex actions ("use node"). Never import them in the Expo app.
 - Read secrets with process.env in Convex actions. Set each one in Convex with
   npx convex env set NAME "$NAME" before using it.
@@ -47,7 +47,7 @@ Capy: + > Environment variables > Project. Values are in your local `hackathon/k
 | `ANTHROPIC_API_KEY` | needed for captions and narration |
 | `WHOP_API_KEY`, `WHOP_WEBHOOK_SECRET`, `WHOP_ENVIRONMENT=sandbox` | ready |
 | `SUPERMEMORY_API_KEY` | ready (P2) |
-| `WORLDLABS_API_KEY` | **still needed** from platform.worldlabs.ai, gates "Walk in" |
+| `REPLICATE_API_TOKEN` | **still needed** from replicate.com, gates "Walk in" (SHARP) |
 | `OPENAI_API_KEY` | optional, only for narration audio |
 | `KEIKI_API_KEY` | waiting on Keiki access |
 
@@ -76,14 +76,17 @@ file upload flow (generateUploadUrl + storage ids on photos). Seed the demo trip
 src/lib/demo/demoTrip.ts with an internal mutation seed.demo. One PR.
 ```
 
-**Thread 3: World Labs "Walk in" (start early, it gates the demo)**
+**Thread 3: SHARP splats for "Walk in" (start early, it gates the demo)**
 ```
-Add a Convex action worlds.build(momentId, storageIds) that calls the World Labs World API
-(POST https://api.worldlabs.ai/marble/v1/worlds:generate, header WLT-Api-Key from
-WORLDLABS_API_KEY) with world_prompt.type "multi-image". Check docs.worldlabs.ai for the exact
-request and response shape before writing it. Store the operation id in worlds, poll with a
-scheduled action until ready, and save splatUrl and viewerUrl. Add query worlds.forMoment.
-Demo fallback: if DEMO_MODE, return a cached viewerUrl. One PR.
+Read docs/BUILD.md §5.7. Add a Convex action splats.buildForPhoto(photoId) that runs Apple SHARP
+on Replicate (model kfarr/sharp-ml, REPLICATE_API_TOKEN) on the photo's stored thumbnail or
+full image. Check the model's page on replicate.com for the exact input and output fields
+before writing it. Download the resulting .ply, store it in Convex file storage, and save
+splatUrl on the photo. Add splats.buildForMoment(momentId) that runs it on the hero photo
+first (saving splatUrl on the moment as worldSplatUrl), then on the rest of the moment's
+photos in takenAt order for walk mode, with a few running at once. Add query
+splats.forMoment(momentId) returning the ordered nodes { photoId, uri, takenAt, headingDeg,
+splatUrl }. Demo fallback: if DEMO_MODE, return cached splat URLs. One PR.
 ```
 
 **Thread 4: enrichment**
