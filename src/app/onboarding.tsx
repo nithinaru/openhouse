@@ -1,31 +1,25 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { IngestShow } from '@/features/home/IngestShow';
+import { PressableScale } from '@/features/home/PressableScale';
 import { DEMO_TRIP_ID } from '@/lib/demo/demoTrip';
+import { notifyTripReady } from '@/lib/ingest/notify';
 import { IngestError, ingestRecent, type IngestProgress } from '@/lib/ingest/readLibrary';
 import { setTrip } from '@/lib/ingest/store';
 import { colors, radius, space, type } from '@/theme';
 
+/** How long "Your day is ready" holds before the replay opens. */
+const READY_BEAT_MS = 2200;
+
 type State =
   | { kind: 'idle' }
-  | { kind: 'running'; progress: IngestProgress }
+  | { kind: 'running'; progress: IngestProgress; ready?: { title: string; stops: number } }
   | { kind: 'failed'; message: string };
-
-function progressLabel(p: IngestProgress): string {
-  switch (p.phase) {
-    case 'permission':
-      return 'Asking for access';
-    case 'scanning':
-      return `Looking for places · ${p.found} photos`;
-    case 'reading':
-    case 'naming':
-    case 'done':
-      return `${p.stops} ${p.stops === 1 ? 'stop' : 'stops'} found`;
-  }
-}
 
 function failureMessage(e: unknown): string {
   if (e instanceof IngestError) {
@@ -35,67 +29,92 @@ function failureMessage(e: unknown): string {
   return 'Something went wrong reading your photos.';
 }
 
+const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
 export default function OnboardingScreen() {
   const [state, setState] = useState<State>({ kind: 'idle' });
+  const alive = useRef(true);
+  useEffect(
+    () => () => {
+      alive.current = false;
+    },
+    [],
+  );
 
   const start = async () => {
     setState({ kind: 'running', progress: { phase: 'permission', found: 0, read: 0, stops: 0, limited: false } });
     try {
-      const trip = await ingestRecent((progress) => setState({ kind: 'running', progress }));
+      const trip = await ingestRecent((progress) => {
+        if (alive.current) setState((s) => (s.kind === 'running' ? { ...s, progress } : s));
+      });
       setTrip(trip);
+      if (!alive.current) return;
+
+      setState((s) => (s.kind === 'running' ? { ...s, ready: { title: trip.title, stops: trip.moments.length } } : s));
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace({ pathname: '/trip/[id]', params: { id: trip.id } });
+      // The beat and the notification (which may show a one-time permission prompt) run together.
+      await Promise.all([wait(READY_BEAT_MS), notifyTripReady(trip)]);
+      if (alive.current) router.replace({ pathname: '/trip/[id]', params: { id: trip.id } });
     } catch (e) {
       console.warn('[onboarding] ingest failed', e);
-      setState({ kind: 'failed', message: failureMessage(e) });
+      if (alive.current) setState({ kind: 'failed', message: failureMessage(e) });
     }
   };
 
   const useDemo = () => router.replace({ pathname: '/trip/[id]', params: { id: DEMO_TRIP_ID } });
 
-  const running = state.kind === 'running';
+  if (state.kind === 'running') {
+    return (
+      <Animated.View entering={FadeIn.duration(350)} style={{ flex: 1 }}>
+        <IngestShow progress={state.progress} ready={state.ready} />
+      </Animated.View>
+    );
+  }
+
+  const failed = state.kind === 'failed';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
-      <View style={{ flex: 1, justifyContent: 'center', padding: space.lg, gap: space.md }}>
-        <Text style={type.title}>Openhouse</Text>
-        <Text style={type.body}>Turns today&apos;s photos into a replay of where you went.</Text>
-
-        {running && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-            <ActivityIndicator color={colors.accent} />
-            <Text style={type.caption}>{progressLabel(state.progress)}</Text>
-          </View>
+      <View style={styles.body}>
+        <Animated.View entering={FadeInDown.duration(380)} style={{ gap: space.md }}>
+          <Text style={styles.kicker}>Openhouse</Text>
+          <Text style={styles.headline}>Your camera roll already remembers the day.</Text>
+          <Text style={[type.body, { color: colors.textMuted, lineHeight: 23 }]}>
+            Where you stood, which way you faced, who was there. Openhouse reads the photos you already took
+            and plays the day back. Nothing to type.
+          </Text>
+        </Animated.View>
+        {failed && (
+          <Animated.View entering={FadeIn.duration(200)} style={styles.error}>
+            <Text style={[type.body, { color: colors.text }]}>{state.message}</Text>
+          </Animated.View>
         )}
-        {running && state.progress.limited && (
-          <Text style={type.caption}>Using only the photos you selected.</Text>
-        )}
-        {state.kind === 'failed' && <Text style={type.caption}>{state.message}</Text>}
       </View>
 
       <View style={{ padding: space.lg, gap: space.sm }}>
-        <Pressable
-          accessibilityRole="button"
-          disabled={running}
-          onPress={start}
-          style={{
-            backgroundColor: colors.accent,
-            borderRadius: radius.full,
-            paddingVertical: space.md,
-            alignItems: 'center',
-            opacity: running ? 0.5 : 1,
-          }}
-        >
-          <Text style={[type.body, { color: colors.bg }]}>
-            {state.kind === 'failed' ? 'Try again' : 'Let Openhouse read your photos'}
-          </Text>
-        </Pressable>
-        {state.kind === 'failed' && (
-          <Pressable accessibilityRole="button" onPress={useDemo} style={{ paddingVertical: space.md, alignItems: 'center' }}>
-            <Text style={[type.body, { color: colors.accent }]}>Use demo trip</Text>
-          </Pressable>
-        )}
+        <PressableScale accessibilityRole="button" onPress={start} scaleTo={0.96} haptic="medium" style={styles.cta}>
+          <Text style={styles.ctaText}>{failed ? 'Try again' : 'Let Openhouse read your photos'}</Text>
+        </PressableScale>
+        <PressableScale accessibilityRole="button" onPress={useDemo} haptic="none" style={styles.secondary}>
+          <Text style={[type.body, { color: colors.accent }]}>{failed ? 'Use demo trip' : 'See a sample day'}</Text>
+        </PressableScale>
       </View>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  body: { flex: 1, justifyContent: 'center', padding: space.lg, gap: space.lg },
+  kicker: { color: colors.accent, fontSize: 15, fontWeight: '700' },
+  headline: { ...type.title, fontSize: 34, lineHeight: 40, letterSpacing: -0.8 },
+  error: { backgroundColor: colors.surface, borderRadius: radius.md, padding: space.md },
+  cta: {
+    backgroundColor: colors.accent,
+    borderRadius: radius.full,
+    minHeight: 54,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaText: { color: colors.bg, fontSize: 17, fontWeight: '700' },
+  secondary: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+});
