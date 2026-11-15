@@ -1,3 +1,4 @@
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
@@ -15,10 +16,15 @@ type Props = {
   onFrame: () => void;
   onWalkIn?: () => void;
   onAgain: () => void;
+  /** Defaults to opening the Ask sheet for the current trip route. */
+  onAsk?: () => void;
 };
 
 // Closing card after the last stop: the day in numbers, its colors, what next.
-export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onWalkIn, onAgain }: Props) {
+export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onWalkIn, onAgain, onAsk }: Props) {
+  const { id: tripId } = useLocalSearchParams<{ id?: string }>();
+  const ask =
+    onAsk ?? (tripId ? () => router.push({ pathname: '/ask/[id]', params: { id: tripId } }) : undefined);
   const cells = [
     { value: stats.distanceLabel, label: 'walked' },
     { value: String(stats.stops), label: stats.stops === 1 ? 'stop' : 'stops' },
@@ -80,6 +86,15 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
           </Pressable>
         ) : null}
       </View>
+      {ask ? (
+        <Pressable
+          onPress={ask}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.ask, pressed && styles.pressed]}
+        >
+          <Text style={styles.askText}>Ask about this day</Text>
+        </Pressable>
+      ) : null}
       <Pressable onPress={onAgain} hitSlop={12} accessibilityRole="button" style={styles.again}>
         <Text style={styles.againText}>Watch again</Text>
       </Pressable>
@@ -131,6 +146,16 @@ const styles = StyleSheet.create({
   },
   secondaryText: { fontSize: 17, fontWeight: '600', color: colors.text },
   pressed: { transform: [{ scale: 0.97 }], opacity: 0.9 },
+  ask: {
+    height: 48,
+    marginTop: space.sm,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  askText: { fontSize: 16, fontWeight: '600', color: colors.accent },
   again: { alignSelf: 'center', paddingVertical: space.md },
   againText: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
 });
