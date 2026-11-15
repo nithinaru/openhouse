@@ -30,6 +30,15 @@ export const FN = {
   meEntitlements: { path: 'me:entitlements', kind: 'query', deployed: false }, // -> { plus }
   askQuestion: { path: 'ask:question', kind: 'action', deployed: false }, // { tripId, question } -> { answer, momentIds }
   memoriesIndexTrip: { path: 'memories:indexTrip', kind: 'action', deployed: false }, // { tripId }
+
+  // Whop commerce (contract in docs/WHOP.md).
+  giftsForUser: { path: 'gifts:forUser', kind: 'query', deployed: false }, // { userId } -> Gift[]
+  giftsMarkSeen: { path: 'gifts:markSeen', kind: 'mutation', deployed: false }, // { giftId } -> null
+  listingsCreate: { path: 'listings:create', kind: 'action', deployed: false }, // { userId, tripId, title, priceCents } -> { listingId, shareUrl }
+  listingsForSeller: { path: 'listings:forSeller', kind: 'query', deployed: false }, // { userId } -> SellerListing[]
+  listingsGet: { path: 'listings:get', kind: 'query', deployed: false }, // { listingId } -> Listing | null
+  listingsCheckout: { path: 'listings:checkout', kind: 'action', deployed: false }, // { listingId, buyerUserId } -> { purchaseUrl, orderId }
+  listingsHasAccess: { path: 'listings:hasAccess', kind: 'query', deployed: false }, // { listingId, userId } -> { access, tripId }
 } as const satisfies Record<string, FnDef>;
 
 export type FnName = keyof typeof FN;

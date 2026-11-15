@@ -5,7 +5,7 @@ import { Marker } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
 import type { Pairing, Person } from '@/lib/types';
-import { colors, ease, radius, type } from '@/theme';
+import { colors, ease, fonts, radius, shadow, type } from '@/theme';
 
 const EASE_OUT = ease.out;
 
@@ -36,7 +36,7 @@ export function PersonPin({ pairing, person }: { pairing: Pairing; person?: Pers
   }));
   const nameStyle = useAnimatedStyle(() => ({
     opacity: name.get(),
-    transform: [{ translateX: (1 - name.get()) * -10 }, { scale: 0.92 + 0.08 * name.get() }],
+    transform: [{ translateX: (1 - name.get()) * -10 }, { rotate: '-4deg' }, { scale: 0.92 + 0.08 * name.get() }],
   }));
 
   return (
@@ -78,9 +78,10 @@ const styles = StyleSheet.create({
     width: SIZE,
     height: SIZE,
     borderRadius: radius.full,
-    borderWidth: 2,
-    borderColor: colors.accent,
-    backgroundColor: colors.surface,
+    borderWidth: 3,
+    borderColor: colors.bg,
+    backgroundColor: colors.skyHaze,
+    ...shadow.chip,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -88,12 +89,13 @@ const styles = StyleSheet.create({
   label: {
     marginLeft: GAP,
     maxWidth: LABEL_W,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.pink,
     borderRadius: radius.full,
     paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.lineStrong,
+    paddingVertical: 3,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.pinkEdge,
   },
-  labelText: { fontSize: 12, fontWeight: '600', color: colors.text },
+  labelText: { fontFamily: fonts.bold, fontSize: 12, color: colors.text, textTransform: 'lowercase' },
 });

@@ -6,6 +6,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { colors, ease, film } from '@/theme';
 
 const INK = colors.ink;
+const PAPER = colors.bg;
 const LETTERBOX_H = film.letterboxH;
 const EASE_IN_OUT = ease.inOut;
 
@@ -28,7 +29,7 @@ export function Letterbox({ visible, topInset }: { visible: boolean; topInset: n
   );
 }
 
-// Soft dark gradient behind the caption so serif type reads over any map.
+// Soft paper fade behind the caption so ink type reads over any map.
 // Its strength crossfades with `strong` (opacity only).
 export function BottomScrim({ height, strong }: { height: number; strong: boolean }) {
   const o = useSharedValue(0.55);
@@ -41,9 +42,9 @@ export function BottomScrim({ height, strong }: { height: number; strong: boolea
       <Svg width="100%" height="100%">
         <Defs>
           <LinearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={INK} stopOpacity="0" />
-            <Stop offset="0.45" stopColor={INK} stopOpacity="0.55" />
-            <Stop offset="1" stopColor={INK} stopOpacity="0.92" />
+            <Stop offset="0" stopColor={PAPER} stopOpacity="0" />
+            <Stop offset="0.45" stopColor={PAPER} stopOpacity="0.72" />
+            <Stop offset="1" stopColor={PAPER} stopOpacity="0.97" />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#scrim)" />
@@ -59,8 +60,8 @@ export function TopScrim({ height }: { height: number }) {
       <Svg width="100%" height="100%">
         <Defs>
           <LinearGradient id="top" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={INK} stopOpacity="0.7" />
-            <Stop offset="1" stopColor={INK} stopOpacity="0" />
+            <Stop offset="0" stopColor={colors.sky} stopOpacity="0.85" />
+            <Stop offset="1" stopColor={colors.sky} stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect x="0" y="0" width="100%" height="100%" fill="url(#top)" />

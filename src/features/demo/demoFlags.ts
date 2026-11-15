@@ -13,13 +13,18 @@ export type DemoFlags = {
   narratorOn: boolean;
   /** Set when "Reset onboarding" was tapped, so Home can show first-run copy. */
   onboardingReset: boolean;
+  /** Openhouse+ lock. auto = real entitlements (unlocked on the demo trip / offline). */
+  plusLocked: PlusLock;
 };
+
+export type PlusLock = 'auto' | 'locked' | 'unlocked';
 
 const initial: DemoFlags = {
   friendPaired: false,
   orderPaid: false,
   narratorOn: true,
   onboardingReset: false,
+  plusLocked: 'auto',
 };
 
 let state: DemoFlags = { ...initial };
@@ -41,6 +46,9 @@ export const demoFlags = {
   },
   get onboardingReset() {
     return state.onboardingReset;
+  },
+  get plusLocked() {
+    return state.plusLocked;
   },
   get(): DemoFlags {
     return state;

@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { Moment } from '@/lib/types';
-import { colors, ease, space, type } from '@/theme';
+import { colors, ease, fonts, space, type } from '@/theme';
 
 import { splitWords } from './narrator';
 import { formatTime } from './stats';
@@ -35,7 +35,7 @@ export function KineticCaption({ moment, progress, reducedMotion, onPress }: Pro
     ...(moment.weather
       ? [{ key: 'wx', text: `${Math.round(moment.weather.tempF)}° ${moment.weather.summary}`, style: styles.muted }]
       : []),
-    ...(moment.isGoldenHour ? [{ key: 'gold', text: 'Golden hour', style: styles.golden }] : []),
+    ...(moment.isGoldenHour ? [{ key: 'gold', text: 'golden hour', style: styles.golden }] : []),
   ];
 
   return (
@@ -87,16 +87,14 @@ function Word({
 const styles = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: space.md, rowGap: space.xs, marginBottom: space.sm },
   stamp: { ...type.stamp },
-  place: { ...type.label },
+  place: { ...type.heading },
   muted: { ...type.callout, color: colors.textMuted },
-  golden: { ...type.callout, color: colors.accent },
+  golden: { ...type.callout, fontFamily: fonts.semibold, color: colors.pinkEdge },
   words: { flexDirection: 'row', flexWrap: 'wrap' },
   word: {
     ...type.story,
     fontSize: 24,
-    lineHeight: 32,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    lineHeight: 30,
+    letterSpacing: -0.5,
   },
 });

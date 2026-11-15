@@ -12,13 +12,13 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import type { Moment } from '@/lib/types';
-import { colors, ease, radius, space } from '@/theme';
+import { colors, ease, fonts, radius, shadow, space } from '@/theme';
 
 const EASE_OUT = ease.out;
 
-const TRACK_H = 3;
+const TRACK_H = 4;
 const HIT_H = 36;
-const KNOB = 11;
+const KNOB = 16;
 
 type Props = {
   moments: Moment[];
@@ -100,7 +100,7 @@ export function Timeline({ moments, index, progress, onJump }: Props) {
     <View style={styles.root}>
       <Animated.View pointerEvents="none" style={[styles.label, labelStyle]}>
         <Text style={styles.labelText} numberOfLines={1}>
-          {hovered?.placeName ?? (hovered ? `Stop ${hoverIndex + 1}` : '')}
+          {hovered?.placeName ?? (hovered ? `stop ${hoverIndex + 1}` : '')}
         </Text>
       </Animated.View>
       <GestureDetector gesture={pan}>
@@ -109,8 +109,8 @@ export function Timeline({ moments, index, progress, onJump }: Props) {
           onLayout={(e) => width.set(e.nativeEvent.layout.width)}
           accessible
           accessibilityRole="adjustable"
-          accessibilityLabel="Replay timeline"
-          accessibilityValue={{ text: `Stop ${Math.max(1, index + 1)} of ${n}` }}
+          accessibilityLabel="replay timeline"
+          accessibilityValue={{ text: `stop ${Math.max(1, index + 1)} of ${n}` }}
           accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
           onAccessibilityAction={(e) => {
             if (e.nativeEvent.actionName === 'increment') onJump(Math.min(n - 1, index + 1));
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.accent },
-  notch: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: colors.ink },
+  notch: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: colors.bg },
   knob: {
     position: 'absolute',
     left: 0,
@@ -148,9 +148,12 @@ const styles = StyleSheet.create({
     width: KNOB,
     height: KNOB,
     borderRadius: KNOB / 2,
-    backgroundColor: colors.text,
+    backgroundColor: colors.bg,
+    borderWidth: 2.5,
+    borderColor: colors.ink,
   },
   label: {
+    ...shadow.chip,
     position: 'absolute',
     left: 0,
     bottom: HIT_H - 2,
@@ -158,13 +161,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   labelText: {
+    fontFamily: fonts.semibold,
     fontSize: 12,
-    fontWeight: '500',
     color: colors.text,
-    backgroundColor: colors.scrimStrong,
+    textTransform: 'lowercase',
+    backgroundColor: colors.bg,
     paddingHorizontal: space.sm,
-    paddingVertical: 3,
-    borderRadius: radius.sm,
+    paddingVertical: 4,
+    borderRadius: radius.full,
     overflow: 'hidden',
   },
 });

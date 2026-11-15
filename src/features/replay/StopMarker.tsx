@@ -29,8 +29,8 @@ export function ViewCone({ rotationDeg, active }: { rotationDeg: number; active:
   return (
     <View style={{ width: SIZE, height: SIZE, transform: [{ rotate: `${rotationDeg}deg` }] }}>
       <Svg width={SIZE} height={SIZE}>
-        <Path d={WEDGE} fill={colors.accent} fillOpacity={active ? 0.45 : 0.22} />
-        <Circle cx={SIZE / 2} cy={SIZE / 2} r={active ? 7 : 5} fill={colors.accent} stroke={colors.text} strokeWidth={2} />
+        <Path d={WEDGE} fill={active ? colors.pinkEdge : colors.ink} fillOpacity={active ? 0.4 : 0.16} />
+        <Circle cx={SIZE / 2} cy={SIZE / 2} r={active ? 7.5 : 5.5} fill={colors.ink} stroke={colors.bg} strokeWidth={2.5} />
       </Svg>
     </View>
   );
@@ -78,9 +78,9 @@ export function StopMarker({ moment, active, cameraHeading, onPress }: Props) {
             width: 14,
             height: 14,
             borderRadius: 7,
-            backgroundColor: colors.accent,
-            borderWidth: 2,
-            borderColor: colors.text,
+            backgroundColor: colors.ink,
+            borderWidth: 2.5,
+            borderColor: colors.bg,
           }}
         />
       )}

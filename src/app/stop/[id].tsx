@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState, type ReactNode } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -15,17 +14,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { useEntitlements } from '@/features/commerce/membership';
+import { GiftIcon } from '@/features/commerce/ui';
 import { peopleAt } from '@/features/replay/people';
 import { useMoment } from '@/features/replay/useTrip';
 import { AngleCompare } from '@/features/stop/AngleCompare';
 import { HeroPager } from '@/features/stop/HeroPager';
-import { colors, ease, radius, space, type } from '@/theme';
-import { ArrowIcon, CloudIcon, SunIcon } from '@/theme/icons';
-import { Button, Chip, CloseButton, formatClock, Stamp } from '@/theme/ui';
+import type { Person, Photo } from '@/lib/types';
+import { colors, ease, radius, shadow, space, type } from '@/theme';
+import { ArrowIcon, ChatIcon, CloudIcon, SunIcon } from '@/theme/icons';
+import { Button, Chip, CloseButton, Cutout, formatClock, Press, Print } from '@/theme/ui';
 
 const EASE_OUT = ease.out;
 const EASE_IN_OUT = ease.inOut;
 const WALK_MS = 560;
+const SHEET_OVERLAP = 28;
 
 export default function StopScreen() {
   const { id, tripId } = useLocalSearchParams<{ id: string; tripId?: string }>();
@@ -34,13 +37,14 @@ export default function StopScreen() {
   const { width, height: screenH } = useWindowDimensions();
   const reduced = useReducedMotion();
   const [page, setPage] = useState(0);
+  const { plus } = useEntitlements(tripId ?? trip.id);
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollY = useSharedValue(0);
   const walk = useSharedValue(0);
   const walking = useRef(false);
 
-  const heroH = Math.round(Math.min(screenH * 0.62, width * 1.25));
+  const heroH = Math.round(Math.min(screenH * 0.5, width * 1.08));
   // Enough scale that the photo covers the whole screen, then a bit more: you step through it.
   const walkScale = (screenH / heroH) * 1.25;
 
@@ -64,8 +68,8 @@ export default function StopScreen() {
   if (!moment) {
     return (
       <View style={[styles.fill, styles.center]}>
-        <Text style={type.body}>Stop not found</Text>
-        <Button variant="secondary" label="Close" onPress={() => router.back()} style={{ marginTop: space.md }} />
+        <Text style={type.body}>stop not found</Text>
+        <Button variant="secondary" label="close" onPress={() => router.back()} style={{ marginTop: space.md }} />
       </View>
     );
   }
@@ -73,6 +77,8 @@ export default function StopScreen() {
   const theirPhotos = trip.theirAngles?.[moment.id] ?? [];
   const friend = theirPhotos.length ? trip.people.find((p) => p.id === theirPhotos[0].userId) : undefined;
   const people = peopleAt(trip, moment.id);
+  // A friend who shared this stop (their angle, or paired here) can be sent something from it.
+  const giftFriend = friend ?? people[0];
   const photos = moment.photos;
   const current = photos[Math.min(page, photos.length - 1)];
   const top = Math.max(insets.top, space.md) + space.sm;
@@ -84,6 +90,10 @@ export default function StopScreen() {
   };
 
   const walkIn = () => {
+    if (!plus) {
+      router.push({ pathname: '/plus', params: { from: 'walkin', tripId: tripId ?? trip.id } });
+      return;
+    }
     if (walking.current) return;
     walking.current = true;
     scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -94,15 +104,23 @@ export default function StopScreen() {
     );
   };
 
-  const chips: { key: string; icon: ReactNode; label: string; gold?: boolean }[] = [
+  const ask = () => router.push({ pathname: '/ask/[id]', params: { id: tripId ?? trip.id } });
+
+  const chips: { key: string; icon?: ReactNode; label: string; gold?: boolean }[] = [
+    { key: 'photos', label: `${photos.length} ${photos.length === 1 ? 'photo' : 'photos'}` },
+    ...(people.length ? [{ key: 'people', label: `${people.length} ${people.length === 1 ? 'person' : 'people'}` }] : []),
     ...(moment.weather
-      ? [{ key: 'wx', icon: <CloudIcon color={colors.textMuted} />, label: `${Math.round(moment.weather.tempF)}°F · ${moment.weather.summary}` }]
+      ? [{ key: 'wx', icon: <CloudIcon color={colors.textMuted} />, label: `${Math.round(moment.weather.tempF)}°f · ${moment.weather.summary}` }]
       : []),
-    ...(moment.isGoldenHour ? [{ key: 'gold', icon: <SunIcon color={colors.accent} />, label: 'Golden hour', gold: true }] : []),
+    ...(moment.isGoldenHour ? [{ key: 'gold', icon: <SunIcon color={colors.text} />, label: 'golden hour', gold: true }] : []),
   ];
 
   let step = 0;
   const enter = () => (reduced ? undefined : FadeInDown.duration(420).delay(120 + step++ * 70).easing(EASE_OUT));
+
+  // The scene: the first person met here as a standee, with the prints from where they stood.
+  const lead = friend ?? people[0];
+  const scenePhotos: Photo[] = (lead && friend && friend.id === lead.id ? theirPhotos : photos.filter((p) => p.id !== current?.id)).slice(0, 3);
 
   return (
     <View style={styles.fill}>
@@ -111,41 +129,54 @@ export default function StopScreen() {
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 132 }}
       >
-        <View>
-          <HeroPager
-            photos={photos}
-            width={width}
-            height={heroH}
-            scrollY={scrollY}
-            walk={walk}
-            walkScale={walkScale}
-            reduced={reduced}
-            dotsTop={top + 7}
-            onPageChange={setPage}
-          />
-          <Animated.View pointerEvents="none" style={[styles.heroText, { width, height: heroH }, contentFade]}>
-            <Scrim width={width} height={heroH} />
-            <View style={{ position: 'absolute', left: pad, right: pad, bottom: space.lg }}>
-              <Stamp style={styles.kicker}>
-                {formatClock(moment.startAt)} · Stop {moment.order + 1} of {trip.moments.length}
-              </Stamp>
-              <Text style={styles.place} numberOfLines={2}>
-                {moment.placeName ?? 'A stop'}
-              </Text>
-              {moment.caption ? <Text style={styles.caption}>{moment.caption}</Text> : null}
-            </View>
-          </Animated.View>
-        </View>
+        <HeroPager
+          photos={photos}
+          width={width}
+          height={heroH}
+          scrollY={scrollY}
+          walk={walk}
+          walkScale={walkScale}
+          reduced={reduced}
+          dotsTop={top + 9}
+          onPageChange={setPage}
+        />
 
-        {/* Opaque so the slower-moving hero slides under it. */}
-        <Animated.View style={[{ backgroundColor: colors.bg, paddingHorizontal: pad, paddingTop: space.lg, gap: space.lg, minHeight: screenH * 0.5 }, contentFade]}>
-          {chips.length ? (
-            <Animated.View entering={enter()} style={styles.chips}>
-              {chips.map((c) => (
-                <Chip key={c.key} icon={c.icon} label={c.label} tone={c.gold ? 'accent' : 'default'} />
-              ))}
+        {/* Paper sheet; opaque so the slower-moving hero slides under it. */}
+        <Animated.View style={[styles.sheet, { minHeight: screenH * 0.5 }, contentFade]}>
+          <Animated.View entering={enter()} style={{ gap: space.xs }}>
+            <Text style={type.caption}>
+              {formatClock(moment.startAt)} · stop {moment.order + 1} of {trip.moments.length}
+            </Text>
+            <Text style={styles.place} accessibilityRole="header" numberOfLines={3}>
+              {moment.placeName ?? 'a stop'}
+            </Text>
+            {moment.caption ? <Text style={styles.caption}>{moment.caption}</Text> : null}
+          </Animated.View>
+
+          <Animated.View entering={enter()} style={styles.chips}>
+            {chips.map((c) => (
+              <Chip key={c.key} icon={c.icon} label={c.label} tone={c.gold ? 'accent' : 'default'} />
+            ))}
+          </Animated.View>
+
+          {lead ? (
+            <Animated.View entering={enter()} style={{ gap: space.md }}>
+              <View>
+                <Text style={styles.section}>{lead.name}&apos;s side</Text>
+                <Text style={type.caption}>seen from where {lead.name.toLowerCase()} stood</Text>
+              </View>
+              <Scene person={lead} photos={scenePhotos} width={contentW} at={formatClock(moment.startAt)} />
+              {people.length > 1 ? (
+                <View style={styles.more}>
+                  {people
+                    .filter((p) => p.id !== lead.id)
+                    .map((p, i) => (
+                      <Cutout key={p.id} uri={p.avatarUri} name={p.name} width={84} height={104} rotate={i % 2 ? 4 : -4} tag={p.name} />
+                    ))}
+                </View>
+              ) : null}
             </Animated.View>
           ) : null}
 
@@ -158,40 +189,33 @@ export default function StopScreen() {
           {theirPhotos.length && current ? (
             <Animated.View entering={enter()} style={{ gap: space.sm }}>
               <View>
-                <Text style={styles.section}>Their angle</Text>
+                <Text style={styles.section}>their angle</Text>
                 <Text style={type.caption}>
-                  Drag the line to see it through {friend?.name ?? 'their'}
-                  {friend ? "'s" : ''} eyes.
+                  drag the line to see it through {friend ? `${friend.name.toLowerCase()}'s` : 'their'} eyes
                 </Text>
               </View>
-              <AngleCompare mine={current} theirs={theirPhotos} friendName={friend?.name ?? 'Them'} width={contentW} reduced={reduced} />
+              <AngleCompare mine={current} theirs={theirPhotos} friendName={friend?.name ?? 'them'} width={contentW} reduced={reduced} />
+            </Animated.View>
+          ) : null}
+
+          {giftFriend ? (
+            <Animated.View entering={enter()}>
+              <Button
+                variant="secondary"
+                label={`gift ${giftFriend.name.toLowerCase()} this`}
+                onPress={() =>
+                  router.push({ pathname: '/gift/[id]', params: { id: moment.id, tripId: tripId ?? trip.id, to: giftFriend.id } })
+                }
+                accessibilityHint="sends them a postcard, print or film of this stop"
+                trailing={<GiftIcon color={colors.text} />}
+              />
             </Animated.View>
           ) : null}
 
           {moment.fact ? (
             <Animated.View entering={enter()} style={styles.quote}>
               <Text style={styles.quoteText}>{moment.fact}</Text>
-              <Text style={styles.quoteSource}>Nearby {moment.placeName ?? 'this stop'}</Text>
-            </Animated.View>
-          ) : null}
-
-          {people.length ? (
-            <Animated.View entering={enter()} style={{ gap: space.sm }}>
-              <Text style={styles.section}>Met here</Text>
-              <View style={styles.chips}>
-                {people.map((person) => (
-                  <View key={person.id} style={styles.personChip}>
-                    {person.avatarUri ? (
-                      <Image source={{ uri: person.avatarUri }} style={styles.avatar} />
-                    ) : (
-                      <View style={[styles.avatar, styles.center]}>
-                        <Text style={type.label}>{person.name[0]}</Text>
-                      </View>
-                    )}
-                    <Text style={styles.personName}>{person.name}</Text>
-                  </View>
-                ))}
-              </View>
+              <Text style={styles.quoteSource}>nearby {moment.placeName ?? 'this stop'}</Text>
             </Animated.View>
           ) : null}
         </Animated.View>
@@ -204,32 +228,69 @@ export default function StopScreen() {
 
       <Animated.View pointerEvents="box-none" style={[styles.bottomBar, { paddingBottom: insets.bottom + space.md }, contentFade]}>
         <BottomFade width={width} />
-        <Button
-          label="Walk in"
-          onPress={walkIn}
-          accessibilityHint="Step inside this moment in 3D"
-          trailing={<ArrowIcon color={colors.accentInk} />}
-        />
+        <View style={styles.actions}>
+          <Button
+            label={plus ? 'walk in' : 'walk in · plus'}
+            onPress={walkIn}
+            accessibilityHint="step inside this moment in 3d"
+            trailing={<ArrowIcon color={colors.accentInk} />}
+            style={{ flex: 1 }}
+          />
+          <Press onPress={ask} accessibilityRole="button" accessibilityLabel="ask about this day" scaleTo={0.92} style={styles.askButton}>
+            <ChatIcon size={22} color={colors.text} />
+          </Press>
+        </View>
       </Animated.View>
 
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.ink }, veil]} />
+      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: colors.sky }, veil]} />
     </View>
   );
 }
 
-function Scrim({ width, height }: { width: number; height: number }) {
+/** A standee on the left, a tilted stack of their prints on the right, a sticker tag below. */
+function Scene({ person, photos, width, at }: { person: Person; photos: Photo[]; width: number; at: string }) {
+  const cutW = Math.round(width * 0.46);
+  const cutH = Math.round(cutW * 1.5);
+  const printW = Math.round(width * 0.58);
+  const printH = Math.round(printW * 1.04);
+  const tilts = [7, -4, 3];
+  const stack = photos.slice(0, 3);
   return (
-    <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
-      <Defs>
-        <LinearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor={colors.ink} stopOpacity="0.4" />
-          <Stop offset="0.22" stopColor={colors.ink} stopOpacity="0" />
-          <Stop offset="0.5" stopColor={colors.bg} stopOpacity="0" />
-          <Stop offset="1" stopColor={colors.bg} stopOpacity="0.95" />
-        </LinearGradient>
-      </Defs>
-      <Rect width={width} height={height} fill="url(#scrim)" />
-    </Svg>
+    <View style={{ width, height: Math.max(cutH + 24, printH + cutH * 0.3 + 12) }}>
+      {stack.length ? (
+        <View
+          style={{ position: 'absolute', top: 0, bottom: 0, left: width - printW, width: printW }}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        >
+          {stack
+            .map((p, i) => ({ p, fromTop: i }))
+            .reverse()
+            .map(({ p, fromTop }) => (
+              <Print
+                key={p.id}
+                uri={p.uri}
+                width={printW}
+                height={printH}
+                rotate={tilts[fromTop % tilts.length]}
+                caption={fromTop === 0 ? `${person.name}'s angle` : undefined}
+                meta={fromTop === 0 ? `${at} · by @${person.name.toLowerCase()}` : undefined}
+                style={{ position: 'absolute', top: fromTop === 0 ? cutH * 0.3 : (stack.length - fromTop) * 22 - 22 }}
+              />
+            ))}
+        </View>
+      ) : null}
+      <Cutout
+        uri={person.avatarUri}
+        name={person.name}
+        width={cutW}
+        height={cutH}
+        rotate={-3}
+        tag={`@${person.name.toLowerCase()} · ${at}`}
+        tagRotate={-6}
+        style={{ position: 'absolute', left: 0, top: 0 }}
+      />
+    </View>
   );
 }
 
@@ -239,7 +300,7 @@ function BottomFade({ width }: { width: number }) {
       <Defs>
         <LinearGradient id="bottomFade" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={colors.bg} stopOpacity="0" />
-          <Stop offset="0.55" stopColor={colors.bg} stopOpacity="0.92" />
+          <Stop offset="0.55" stopColor={colors.bg} stopOpacity="0.94" />
           <Stop offset="1" stopColor={colors.bg} stopOpacity="1" />
         </LinearGradient>
       </Defs>
@@ -251,35 +312,34 @@ function BottomFade({ width }: { width: number }) {
 const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
   center: { alignItems: 'center', justifyContent: 'center' },
-  heroText: { position: 'absolute', top: 0, left: 0 },
-  kicker: { marginBottom: space.sm },
-  place: { ...type.display },
-  caption: { ...type.callout, color: colors.text, opacity: 0.86, marginTop: space.xs },
+  sheet: {
+    marginTop: -SHEET_OVERLAP,
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
+    paddingHorizontal: space.lg,
+    paddingTop: space.lg,
+    gap: space.lg,
+  },
+  place: { ...type.display, fontSize: 40, lineHeight: 42, letterSpacing: -1.8 },
+  caption: { ...type.body, color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   narration: { ...type.story },
-  section: { ...type.heading, fontSize: 17, lineHeight: 22, marginBottom: space.xxs },
-  quote: {
-    paddingLeft: space.md,
-    paddingVertical: space.xs,
-    borderLeftWidth: 1,
-    borderLeftColor: colors.accent,
-  },
-  quoteText: { ...type.story, fontSize: 19, lineHeight: 28 },
+  section: { ...type.heading, fontSize: 22, lineHeight: 26, marginBottom: space.xxs },
+  more: { flexDirection: 'row', flexWrap: 'wrap', gap: space.md, marginTop: space.md },
+  quote: { padding: space.md, borderRadius: radius.lg, backgroundColor: colors.skyHaze },
+  quoteText: { ...type.story, fontSize: 19, lineHeight: 26 },
   quoteSource: { ...type.caption, marginTop: space.sm },
-  personChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingLeft: space.xs,
-    paddingRight: space.md,
-    paddingVertical: space.xs,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-  },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.elevated },
-  personName: { ...type.callout },
   closeWrap: { position: 'absolute', right: space.md },
   bottomBar: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, paddingTop: space.xl },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  askButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.pink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.chip,
+  },
 });

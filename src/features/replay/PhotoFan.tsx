@@ -18,9 +18,9 @@ import { colors, radius, shadow } from '@/theme';
 const CARD_W = 136;
 const CARD_H = 102;
 const SPREAD = [
-  { x: -106, y: 8, rotate: -8 },
-  { x: 0, y: 0, rotate: 0 },
-  { x: 106, y: 8, rotate: 8 },
+  { x: -104, y: 10, rotate: -9 },
+  { x: 0, y: 0, rotate: -2 },
+  { x: 104, y: 12, rotate: 8 },
 ];
 // Ken Burns: each card drifts its own way while it's on screen.
 const KB_MS = 9000;
@@ -86,7 +86,7 @@ function Card({
 
   return (
     <Animated.View style={[styles.card, slot === 1 && styles.hero, style]}>
-      <Pressable onPress={onPress} style={styles.fill} accessibilityRole="imagebutton" accessibilityLabel="Open stop">
+      <Pressable onPress={onPress} style={styles.fill} accessibilityRole="imagebutton" accessibilityLabel="open stop">
         <Animated.View style={[styles.fill, kbStyle]}>
           <Image source={{ uri: photo.uri }} style={styles.fill} contentFit="cover" transition={180} />
         </Animated.View>
@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: CARD_W,
     height: CARD_H,
-    borderRadius: radius.xs,
+    borderRadius: radius.sm,
     overflow: 'hidden',
-    borderWidth: 3,
-    borderColor: colors.text,
-    backgroundColor: colors.surface,
+    borderWidth: 5,
+    borderColor: colors.bg,
+    backgroundColor: colors.bg,
     ...shadow.print,
   },
   hero: { width: CARD_W + 12, height: CARD_H + 9 },

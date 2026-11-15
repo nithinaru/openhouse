@@ -19,6 +19,8 @@ import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-nat
 import { captureRef } from 'react-native-view-shot';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { PLUS_STYLES, useEntitlements } from '@/features/commerce/membership';
+import { PlusLock } from '@/features/commerce/ui';
 import { startCheckout, waitForPaid } from '@/features/poster/checkout';
 import { FRAME_STYLES, FramedPoster, frameInset } from '@/features/poster/FramedPoster';
 import { OrderConfirmed } from '@/features/poster/OrderConfirmed';
@@ -64,6 +66,10 @@ export default function FrameScreen() {
   const [size, setSize] = useState<SizeId>('12x16');
   const sizeInfo = SIZES.find((s) => s.id === size)!;
   const variant = POSTER_VARIANTS[index];
+  // Night and field are Openhouse+ styles: soft lock, the button opens the paywall.
+  const { plus } = useEntitlements(id ?? trip.id);
+  const styleLocked = !plus && PLUS_STYLES.has(variant.id);
+  const openPlus = () => router.push({ pathname: '/plus', params: { from: 'styles', tripId: id ?? trip.id } });
 
   const scrollX = useSharedValue(0);
   const lastIndex = useSharedValue(0);
@@ -185,7 +191,10 @@ export default function FrameScreen() {
       </Animated.View>
 
       <View style={{ alignItems: 'center', gap: space.sm }}>
-        <Text style={type.heading}>{variant.label}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <Text style={type.heading}>{variant.label}</Text>
+          {styleLocked ? <PlusLock onPress={openPlus} /> : null}
+        </View>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {POSTER_VARIANTS.map((v, i) => (
             <View key={v.id} style={[styles.dot, i === index && { backgroundColor: colors.text, width: 16 }]} />
@@ -221,6 +230,8 @@ export default function FrameScreen() {
             palette={trip.palette}
             detail={`${sizeInfo.label} · ${variant.label} · ships in 3–5 days`}
           />
+        ) : styleLocked ? (
+          <Button label="unlock this style with plus" onPress={openPlus} />
         ) : (
           <Button label={`Frame this · $${sizeInfo.price}`} onPress={frameThis} loading={checkingOut} />
         )}

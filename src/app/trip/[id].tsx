@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useMemo, useRef } from 'react';
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
@@ -17,7 +18,7 @@ import { Timeline } from '@/features/replay/Timeline';
 import { TitleCard } from '@/features/replay/TitleCard';
 import { useReplay } from '@/features/replay/useReplay';
 import { useTrip } from '@/features/replay/useTrip';
-import { colors, film, fonts, radius, space, tintFor, type } from '@/theme';
+import { colors, film, fonts, radius, shadow, space, tintFor, type } from '@/theme';
 import { BackIcon, PauseIcon, PlayIcon } from '@/theme/icons';
 import { IconButton } from '@/theme/ui';
 
@@ -54,6 +55,7 @@ export default function ReplayScreen() {
 
   return (
     <View style={[styles.fill, { backgroundColor: colors.bg }]}>
+      <StatusBar style="dark" />
       <MapView
         ref={mapRef}
         style={styles.fill}
@@ -81,10 +83,10 @@ export default function ReplayScreen() {
         showsCompass={false}
         showsBuildings
         toolbarEnabled={false}
-        userInterfaceStyle="dark"
+        userInterfaceStyle="light"
       >
         {route.length > 1 ? (
-          <Polyline coordinates={route} strokeColor={colors.accent} strokeWidth={3} lineDashPattern={[2, 6]} />
+          <Polyline coordinates={route} strokeColor={colors.ink} strokeWidth={3} lineDashPattern={[2, 7]} />
         ) : null}
         {moments.map((m, i) =>
           i <= landed ? (
@@ -126,7 +128,7 @@ export default function ReplayScreen() {
       <View style={[styles.topBar, { paddingTop: insets.top + space.sm }]} pointerEvents="box-none">
         <IconButton
           tone="media"
-          label="Back"
+          label="back"
           icon={<BackIcon color={colors.text} />}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         />
@@ -142,7 +144,7 @@ export default function ReplayScreen() {
         ) : (
           <IconButton
             tone="media"
-            label={paused ? 'Play' : 'Pause'}
+            label={paused ? 'play' : 'pause'}
             icon={paused ? <PlayIcon color={colors.text} /> : <PauseIcon color={colors.text} />}
             onPress={replay.togglePause}
           />
@@ -156,7 +158,7 @@ export default function ReplayScreen() {
           pointerEvents="none"
           style={styles.pausedBadge}
         >
-          <Text style={type.caption}>Paused · tap the map to resume</Text>
+          <Text style={styles.pausedText}>paused · tap the map to resume</Text>
         </Animated.View>
       ) : null}
 
@@ -240,17 +242,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   titleWrap: { flex: 1, alignItems: 'center' },
-  title: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 22, color: colors.text },
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: -0.4,
+    color: colors.text,
+    textTransform: 'lowercase',
+    backgroundColor: colors.bg,
+    paddingHorizontal: space.md,
+    paddingVertical: 9,
+    borderRadius: 20,
+    overflow: 'hidden',
+    maxWidth: '100%',
+  },
   pillSpacer: { width: 40 },
   pausedBadge: {
     position: 'absolute',
     alignSelf: 'center',
     top: '42%',
-    backgroundColor: colors.scrimStrong,
+    backgroundColor: colors.bg,
     borderRadius: radius.full,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
+    ...shadow.chip,
   },
+  pausedText: { ...type.label, fontSize: 14 },
   bottom: {
     position: 'absolute',
     left: 0,
@@ -260,5 +277,5 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   footer: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  counter: { ...type.stamp, color: colors.textMuted, minWidth: 32, textAlign: 'right' },
+  counter: { ...type.stamp, color: colors.text, minWidth: 32, textAlign: 'right' },
 });

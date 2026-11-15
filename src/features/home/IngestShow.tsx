@@ -1,15 +1,12 @@
-// The ingest is the show (docs/BUILD.md §6 item 2): a dark map where each stop drops in as it is
-// clustered, the camera eases to fit the stops so far, and a live counter ticks up.
+// The ingest is the show (docs/BUILD.md §6 item 2): on a soft sky, each stop's photo flies in
+// as a print the moment it is clustered, the prints settle into a scrapbook pile, and a
+// live counter and progress bar tick along the bottom.
 
 import * as Haptics from 'expo-haptics';
-import { Image } from 'expo-image';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import { useEffect, useMemo, useRef } from 'react';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeInRight,
-  LinearTransition,
   ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
@@ -22,159 +19,117 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { IngestProgress, StopPreview } from '@/lib/ingest/readLibrary';
 import { colors, ease, fonts, radius, shadow, space, type } from '@/theme';
+import { PinIcon } from '@/theme/icons';
+import { Print, SkyBackground, Sticker, Wordmark } from '@/theme/ui';
 
 import { plural } from './tripMeta';
 
 const EASE_OUT = ease.out;
-const PIN = 46;
 const HAPTIC_GAP_MS = 140;
-// A wide opening view (continental US); the first stop flies the camera in from here.
-const OPENING_REGION = { latitude: 37.5, longitude: -98.5, latitudeDelta: 40, longitudeDelta: 40 };
+const MAX_PRINTS = 8;
+
+/** Where each print lands, as fractions of the stage, with its tilt. Deterministic for rehearsal. */
+const SLOTS = [
+  { x: -0.2, y: -0.2, r: -7 },
+  { x: 0.22, y: -0.26, r: 6 },
+  { x: -0.24, y: 0.18, r: 5 },
+  { x: 0.2, y: 0.14, r: -5 },
+  { x: 0.0, y: -0.02, r: 2 },
+  { x: -0.06, y: 0.32, r: -9 },
+  { x: 0.26, y: 0.36, r: 8 },
+  { x: -0.28, y: -0.38, r: -3 },
+];
 
 function phaseLabel(p: IngestProgress): string {
   switch (p.phase) {
     case 'permission':
-      return 'Asking for access';
+      return 'asking for access';
     case 'scanning':
-      return 'Looking through your camera roll';
+      return 'looking through your camera roll';
     case 'reading':
-      return (p.stopList?.length ?? 0) > 0 ? 'Retracing your day' : 'Finding where you were';
+      return (p.stopList?.length ?? 0) > 0 ? 'putting every photo back where you stood' : 'finding where you were';
     case 'naming':
-      return 'Naming the places';
+      return 'naming the places';
     case 'done':
-      return 'Done';
+      return 'done';
   }
 }
 
 function counterLabel(p: IngestProgress): string {
-  const photos = p.phase === 'scanning' ? p.found : Math.max(p.read, 0);
-  const parts = [plural(photos, 'photo')];
   const stops = p.stopList?.length ?? p.stops;
-  if (p.phase !== 'scanning' && p.phase !== 'permission') parts.push(plural(stops, 'stop'));
-  if (p.places) parts.push(plural(p.places, 'place'));
+  if (p.phase === 'scanning' || p.phase === 'permission') return `found ${plural(p.found, 'photo')}`;
+  const parts = [p.found > 0 ? `placed ${Math.max(p.read, 0)} of ${plural(p.found, 'photo')}` : plural(p.read, 'photo')];
+  parts.push(`${plural(stops, 'stop')} found`);
   return parts.join(' · ');
 }
 
-/** A photo bubble on a stem that drops onto the map when it mounts. */
-function StopPin({ stop, index }: { stop: StopPreview; index: number }) {
+/** One stop's photo, thrown in from below and settling into its slot. */
+function FlyingPrint({ stop, slot, stageW, stageH, printW }: { stop: StopPreview; slot: number; stageW: number; stageH: number; printW: number }) {
   const reduced = useReducedMotion();
-  const y = useSharedValue(reduced ? 0 : -28);
-  const s = useSharedValue(reduced ? 1 : 0.86);
+  const target = SLOTS[slot % SLOTS.length];
+  const t = useSharedValue(reduced ? 1 : 0);
   const o = useSharedValue(0);
-  const [tracking, setTracking] = useState(true);
-  const freezeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-
-  // Track view changes while something is changing, then freeze the marker snapshot so
-  // 15 markers don't re-render every frame.
-  const trackFor = (ms: number) => {
-    setTracking(true);
-    clearTimeout(freezeTimer.current);
-    freezeTimer.current = setTimeout(() => setTracking(false), ms);
-  };
 
   useEffect(() => {
-    o.set(withTiming(1, { duration: 180, easing: EASE_OUT }));
-    y.set(withSpring(0, { duration: 420, dampingRatio: 0.62, reduceMotion: ReduceMotion.System }));
-    s.set(withSpring(1, { duration: 420, dampingRatio: 0.62, reduceMotion: ReduceMotion.System }));
-    freezeTimer.current = setTimeout(() => setTracking(false), 900);
-    return () => clearTimeout(freezeTimer.current);
-  }, [o, s, y]);
+    o.set(withTiming(1, { duration: 200, easing: EASE_OUT }));
+    t.set(withSpring(1, { duration: 700, dampingRatio: 0.78, reduceMotion: ReduceMotion.System }));
+  }, [o, t]);
 
-  const style = useAnimatedStyle(() => ({
-    opacity: o.get(),
-    transform: [{ translateY: y.get() }, { scale: s.get() }],
-  }));
+  const style = useAnimatedStyle(() => {
+    const p = t.get();
+    return {
+      opacity: o.get(),
+      transform: [
+        { translateX: target.x * stageW * p },
+        { translateY: target.y * stageH * p + (1 - p) * stageH * 0.75 },
+        { rotate: `${target.r * p + (1 - p) * -14}deg` },
+        { scale: 1.12 - 0.12 * p },
+      ],
+    };
+  });
 
   return (
-    <Marker
-      identifier={stop.key}
-      coordinate={{ latitude: stop.lat, longitude: stop.lng }}
-      anchor={{ x: 0.5, y: 1 }}
-      tracksViewChanges={tracking}
-      zIndex={index}
-    >
-      <Animated.View style={[styles.pinWrap, style]}>
-        <View style={styles.bubble}>
-          {stop.heroUri ? (
-            <Image source={{ uri: stop.heroUri }} style={styles.bubbleImg} contentFit="cover" onLoad={() => trackFor(500)} />
-          ) : (
-            <View style={[styles.bubbleImg, { backgroundColor: colors.line }]} />
-          )}
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{index + 1}</Text>
-          </View>
-        </View>
-        <View style={styles.stem} />
-        <View style={styles.foot} />
-      </Animated.View>
-    </Marker>
+    <Animated.View style={[styles.flying, { marginLeft: -printW / 2, marginTop: (-printW * 1.2) / 2 }, style]}>
+      <Print uri={stop.heroUri} width={printW} border={7} meta={stop.placeName} />
+    </Animated.View>
   );
 }
 
 type Props = {
   progress: IngestProgress;
-  /** Set when ingest finished; shows the "Your day is ready" beat. */
+  /** Set when ingest finished; shows the "your day is ready" beat. */
   ready?: { title: string; stops: number } | null;
 };
 
 export function IngestShow({ progress, ready }: Props) {
   const insets = useSafeAreaInsets();
-  const mapRef = useRef<MapView>(null);
+  const { width, height } = useWindowDimensions();
   const seen = useRef(new Set<string>());
   const lastTick = useRef(0);
-  const [mapReady, setMapReady] = useState(false);
   const stops = useMemo(() => progress.stopList ?? [], [progress.stopList]);
+  const hasStops = stops.length > 0;
 
-  // Diff stop keys: each new stop gets a haptic tick and the camera re-fits.
+  // A light tick per newly found stop, throttled so a burst doesn't buzz.
   useEffect(() => {
-    if (!mapReady || stops.length === 0) return;
     const fresh = stops.filter((s) => !seen.current.has(s.key));
     if (fresh.length === 0) return;
     for (const s of fresh) seen.current.add(s.key);
-
     const now = Date.now();
     if (now - lastTick.current > HAPTIC_GAP_MS) {
       lastTick.current = now;
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+  }, [stops]);
 
-    const coords = stops.map((s) => ({ latitude: s.lat, longitude: s.lng }));
-    const lats = coords.map((c) => c.latitude);
-    const lngs = coords.map((c) => c.longitude);
-    const span = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
-    if (coords.length === 1 || span < 0.004) {
-      const center = {
-        latitude: (Math.max(...lats) + Math.min(...lats)) / 2,
-        longitude: (Math.max(...lngs) + Math.min(...lngs)) / 2,
-      };
-      // First stop: a long fly-in from the opening view. Later: a short ease.
-      const first = seen.current.size === fresh.length;
-      mapRef.current?.animateCamera(
-        { center, altitude: 2600, zoom: 15, pitch: 0, heading: 0 },
-        { duration: first ? 1600 : 700 },
-      );
-    } else {
-      mapRef.current?.fitToCoordinates(coords, {
-        edgePadding: { top: insets.top + 170, bottom: insets.bottom + 200, left: 70, right: 70 },
-        animated: true,
-      });
-    }
-  }, [stops, mapReady, insets.top, insets.bottom]);
-
-  // Scrim: heavy while nothing is on the map, gone while stops land, back for the final beat.
-  const scrim = useSharedValue(0.55);
+  // The pile dims back for the final beat.
   const finale = useSharedValue(0);
-  const hasStops = stops.length > 0;
   useEffect(() => {
-    const target = ready ? 0.72 : hasStops ? 0 : 0.55;
-    scrim.set(withTiming(target, { duration: ready ? 420 : 600, easing: EASE_OUT }));
     if (ready) finale.set(withDelay(150, withTiming(1, { duration: 420, easing: EASE_OUT })));
-  }, [ready, hasStops, scrim, finale]);
-
-  const scrimStyle = useAnimatedStyle(() => ({ opacity: scrim.get() }));
+  }, [ready, finale]);
+  const pileStyle = useAnimatedStyle(() => ({ opacity: 1 - finale.get() * 0.75, transform: [{ scale: 1 - finale.get() * 0.04 }] }));
   const finaleStyle = useAnimatedStyle(() => ({
     opacity: finale.get(),
-    transform: [{ scale: 0.96 + finale.get() * 0.04 }],
+    transform: [{ translateY: (1 - finale.get()) * 10 }],
   }));
 
   // Progress bar: absolute, childless fill, so animating width is cheap.
@@ -194,148 +149,80 @@ export function IngestShow({ progress, ready }: Props) {
   }, [fraction, bar]);
   const barStyle = useAnimatedStyle(() => ({ width: `${bar.get() * 100}%` }));
 
-  const film = [...stops].reverse().slice(0, 10);
+  // Newest prints on top; only the latest few stay on the pile.
+  const pile = stops.slice(-MAX_PRINTS);
+  const offset = Math.max(0, stops.length - MAX_PRINTS);
+  const stageW = width;
+  const stageH = Math.round(height * 0.5);
+  const printW = Math.round(Math.min(width * 0.38, 160));
 
   return (
-    <View style={styles.fill}>
-      <MapView
-        ref={mapRef}
-        style={StyleSheet.absoluteFill}
-        initialRegion={OPENING_REGION}
-        onMapReady={() => setMapReady(true)}
-        userInterfaceStyle="dark"
-        mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-        scrollEnabled={false}
-        zoomEnabled={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-        showsPointsOfInterests={false}
-        showsCompass={false}
-        showsScale={false}
-        toolbarEnabled={false}
-      >
-        {stops.map((s, i) => (
-          <StopPin key={s.key} stop={s} index={i} />
-        ))}
-      </MapView>
-
-      <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.scrim, scrimStyle]} />
-
-      {/* Top: phase + live counter + progress */}
-      <View pointerEvents="none" style={[styles.top, { paddingTop: insets.top + space.md }]}>
-        <Text style={styles.phase}>{ready ? 'Done' : phaseLabel(progress)}</Text>
-        <Text style={styles.counter} accessibilityLiveRegion="polite">
-          {counterLabel(progress)}
+    <SkyBackground variant="soft">
+      <View style={[styles.top, { paddingTop: insets.top + space.xl }]}>
+        <Text style={styles.title} accessibilityRole="header">
+          {ready ? 'your day is ready' : 'building your day…'}
         </Text>
+        <Text style={styles.sub}>{ready ? ready.title : phaseLabel(progress)}</Text>
+      </View>
+
+      <Animated.View pointerEvents="none" style={[styles.stage, { height: stageH }, pileStyle]}>
+        {pile.map((s, i) => (
+          <FlyingPrint key={s.key} stop={s} slot={offset + i} stageW={stageW} stageH={stageH} printW={printW} />
+        ))}
+        {!hasStops && !ready ? (
+          <Animated.View entering={FadeIn.duration(300)} style={styles.waiting}>
+            <Wordmark variant="chrome" width={Math.min(width - space.xl * 2, 300)} />
+            <Text style={styles.waitingText}>your photos never leave this phone to do this</Text>
+          </Animated.View>
+        ) : null}
+      </Animated.View>
+
+      {ready ? (
+        <Animated.View pointerEvents="none" style={[styles.finale, { top: insets.top + 180 }, finaleStyle]}>
+          <Sticker label={`${plural(ready.stops, 'stop')} · ready to replay`} rotate={-4} />
+        </Animated.View>
+      ) : null}
+
+      <View style={[styles.bottom, { paddingBottom: insets.bottom + space.lg }]}>
+        <View style={styles.status} accessible accessibilityLiveRegion="polite" accessibilityLabel={counterLabel(progress)}>
+          <PinIcon size={16} color={colors.pinkEdge} />
+          <Text style={styles.statusText} numberOfLines={1}>
+            {ready ? `${plural(ready.stops, 'stop')} · ${plural(progress.found || progress.read, 'photo')}` : counterLabel(progress)}
+          </Text>
+        </View>
         <View style={styles.track}>
           <Animated.View style={[styles.fillBar, barStyle]} />
         </View>
-        {progress.limited && <Text style={styles.note}>Using only the photos you selected.</Text>}
+        {progress.limited ? <Text style={styles.note}>using only the photos you selected</Text> : null}
       </View>
-
-      {/* Bottom: film strip of stops as they're found, newest first */}
-      {!ready && film.length > 0 && (
-        <View pointerEvents="none" style={[styles.bottom, { paddingBottom: insets.bottom + space.md }]}>
-          <ScrollView horizontal scrollEnabled={false} contentContainerStyle={{ gap: space.sm, paddingHorizontal: space.md }}>
-            {film.map((s) => (
-              <Animated.View
-                key={s.key}
-                entering={FadeInRight.duration(320).easing(EASE_OUT)}
-                layout={LinearTransition.duration(260).easing(EASE_OUT)}
-                style={styles.card}
-              >
-                {s.heroUri && <Image source={{ uri: s.heroUri }} style={styles.cardImg} contentFit="cover" transition={200} />}
-                <View style={styles.cardLabel}>
-                  <Text style={styles.cardText} numberOfLines={1}>
-                    {s.placeName ?? plural(s.photoCount, 'photo')}
-                  </Text>
-                </View>
-              </Animated.View>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Waiting state before the first stop lands */}
-      {!hasStops && !ready && (
-        <Animated.View entering={FadeIn.duration(300)} pointerEvents="none" style={styles.center}>
-          <View style={styles.seekDot} />
-          <Text style={styles.waiting}>Your photos never leave this phone to do this.</Text>
-        </Animated.View>
-      )}
-
-      {/* Final beat */}
-      {ready && (
-        <Animated.View pointerEvents="none" style={[styles.center, finaleStyle]}>
-          <Text style={styles.readyKicker}>{plural(ready.stops, 'stop')} · ready to replay</Text>
-          <Text style={styles.readyTitle}>Your day is ready</Text>
-          <Text style={styles.readySub}>{ready.title}</Text>
-        </Animated.View>
-      )}
-    </View>
+    </SkyBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.bg },
-  scrim: { backgroundColor: colors.bg },
-  top: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: space.lg, gap: 6 },
-  phase: { ...type.caption },
-  counter: { fontFamily: fonts.serif, color: colors.text, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'] },
-  track: { height: 3, borderRadius: 2, backgroundColor: colors.line, marginTop: space.sm, overflow: 'hidden' },
-  fillBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.accent, borderRadius: 2 },
-  note: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  card: {
-    width: 92,
-    height: 116,
-    borderRadius: radius.md,
-    overflow: 'hidden',
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.lineStrong,
-  },
-  cardImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  cardLabel: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    backgroundColor: colors.scrimStrong,
-  },
-  cardText: { color: colors.text, fontSize: 11, fontWeight: '500' },
-  center: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: space.xl, gap: space.sm },
-  seekDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent, marginBottom: space.sm },
-  waiting: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
-  readyKicker: { ...type.stamp },
-  readyTitle: { ...type.display, textAlign: 'center' },
-  readySub: { ...type.body, color: colors.textMuted, textAlign: 'center' },
-  pinWrap: { alignItems: 'center' },
-  bubble: {
-    width: PIN,
-    height: PIN,
-    borderRadius: PIN / 2,
-    borderWidth: 2.5,
-    borderColor: colors.text,
-    backgroundColor: colors.surface,
-    ...shadow.print,
-  },
-  bubbleImg: { width: PIN - 5, height: PIN - 5, borderRadius: (PIN - 5) / 2 },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    paddingHorizontal: 4,
-    backgroundColor: colors.accent,
+  top: { alignItems: 'center', paddingHorizontal: space.lg, gap: space.sm },
+  title: { ...type.display, fontSize: 40, lineHeight: 42, letterSpacing: -1.8, textAlign: 'center' },
+  sub: { ...type.body, color: colors.textMuted, textAlign: 'center' },
+  stage: { marginTop: space.xl },
+  flying: { position: 'absolute', left: '50%', top: '50%' },
+  waiting: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', gap: space.md },
+  waitingText: { ...type.caption, color: colors.textMuted, textAlign: 'center' },
+  finale: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: space.lg, gap: space.md, alignItems: 'center' },
+  status: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: space.sm,
+    minHeight: 48,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.full,
+    backgroundColor: colors.bg,
+    alignSelf: 'stretch',
     justifyContent: 'center',
+    ...shadow.chip,
   },
-  badgeText: { color: colors.accentInk, fontSize: 10, fontWeight: '600', fontVariant: ['tabular-nums'] },
-  stem: { width: 2, height: 10, backgroundColor: colors.text },
-  foot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: -1 },
+  statusText: { fontFamily: fonts.semibold, fontSize: 16, letterSpacing: -0.2, color: colors.text, fontVariant: ['tabular-nums'] },
+  track: { alignSelf: 'stretch', height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.6)', overflow: 'hidden' },
+  fillBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.ink, borderRadius: 4 },
+  note: { ...type.caption, color: colors.textMuted },
 });

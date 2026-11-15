@@ -2,8 +2,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
-import { colors, ease, fonts, radius, space, type } from '@/theme';
-import { Button, Stamp } from '@/theme/ui';
+import { useEntitlements } from '@/features/commerce/membership';
+import { colors, ease, fonts, radius, shadow, space, type } from '@/theme';
+import { Button, Sticker } from '@/theme/ui';
 
 import type { TripStats } from './stats';
 
@@ -25,6 +26,11 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
   const { id: tripId } = useLocalSearchParams<{ id?: string }>();
   const ask =
     onAsk ?? (tripId ? () => router.push({ pathname: '/ask/[id]', params: { id: tripId } }) : undefined);
+  // Walk in is an Openhouse+ perk: soft lock opens the paywall instead.
+  const { plus } = useEntitlements(tripId);
+  const walkIn =
+    onWalkIn && !plus ? () => router.push({ pathname: '/plus', params: { from: 'walkin', tripId: tripId ?? '' } }) : onWalkIn;
+  const makeSomething = tripId ? () => router.push({ pathname: '/shop/[id]', params: { id: tripId } }) : undefined;
   const cells = [
     { value: stats.distanceLabel, label: 'walked' },
     { value: String(stats.stops), label: stats.stops === 1 ? 'stop' : 'stops' },
@@ -38,8 +44,8 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
       exiting={FadeOut.duration(220)}
       style={[styles.card, { paddingBottom: bottomInset + space.sm }]}
     >
-      <Stamp>{date}</Stamp>
-      <Text style={[type.title, { marginTop: space.xs }]} numberOfLines={2}>
+      <Sticker label={date} small rotate={-3} />
+      <Text style={[type.title, { marginTop: space.md }]} numberOfLines={2}>
         {title}
       </Text>
 
@@ -61,12 +67,15 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
       ) : null}
 
       <View style={styles.actions}>
-        <Button label="Frame it" onPress={onFrame} style={{ flex: 1 }} />
-        {onWalkIn ? <Button variant="secondary" label="Walk in" onPress={onWalkIn} style={{ flex: 1 }} /> : null}
+        <Button label="frame it" onPress={onFrame} style={{ flex: 1 }} />
+        {walkIn ? <Button variant="secondary" label={plus ? 'walk in' : 'walk in · plus'} onPress={walkIn} style={{ flex: 1 }} /> : null}
       </View>
+      {makeSomething ? (
+        <Button variant="secondary" label="make something" onPress={makeSomething} style={{ marginTop: space.sm }} />
+      ) : null}
       <View style={styles.quiet}>
-        {ask ? <Button variant="quiet" label="Ask about this day" onPress={ask} /> : null}
-        <Button variant="quiet" label="Watch again" onPress={onAgain} />
+        {ask ? <Button variant="quiet" label="ask about this day" onPress={ask} /> : null}
+        <Button variant="quiet" label="watch again" onPress={onAgain} />
       </View>
     </Animated.View>
   );
@@ -78,18 +87,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     paddingHorizontal: space.lg,
     paddingTop: space.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.lineStrong,
+    ...shadow.float,
   },
   stats: { flexDirection: 'row', marginTop: space.lg },
   cell: { flex: 1, gap: space.xxs },
-  value: { fontFamily: fonts.serif, fontSize: 26, lineHeight: 32, color: colors.text, fontVariant: ['tabular-nums'] },
-  palette: { flexDirection: 'row', height: 12, marginTop: space.lg, borderRadius: radius.xs, overflow: 'hidden' },
+  value: { fontFamily: fonts.bold, fontSize: 30, lineHeight: 34, letterSpacing: -1.2, color: colors.text, fontVariant: ['tabular-nums'], textTransform: 'lowercase' },
+  palette: { flexDirection: 'row', height: 10, marginTop: space.lg, borderRadius: radius.full, overflow: 'hidden' },
   swatch: { flex: 1 },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
   quiet: { flexDirection: 'row', justifyContent: 'center', marginTop: space.xs },

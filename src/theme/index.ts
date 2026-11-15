@@ -1,13 +1,12 @@
 // Openhouse design tokens. Every screen imports from here; nothing hard-codes its own
 // colors, sizes, fonts or curves.
 //
-// Direction: a darkroom. Warm umber blacks instead of blue-black, paper-white type,
-// one safelight amber used rarely (the primary action, the current stop, the date
-// stamp). Display type is the iOS system serif (New York) for titles and narration;
-// the interface itself is the system sans. The one signature detail is the stamp:
-// times and dates set in mono amber, like the date imprint on a film print.
+// Direction: a sticker scrapbook in the sky. White paper and soft sky blue, ink-black
+// type and black pill buttons, one sticker pink for name tags, chrome only in the
+// wordmark. Inter Tight everywhere, all lowercase: bold and tight for headlines, medium
+// for reading. The signature detail is the sticker: a pink tag with a dashed edge,
+// slapped on slightly crooked, naming who stood where.
 
-import { Platform } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
 // ---------------------------------------------------------------------------
@@ -15,75 +14,102 @@ import { Easing } from 'react-native-reanimated';
 
 /** Raw ramp. Screens use the semantic `colors` below, not these. */
 const ramp = {
-  umber950: '#0A0907', // letterbox, scrims
-  umber900: '#12100D', // app background
-  umber850: '#1A1713', // raised surface
-  umber800: '#24201B', // elevated (sheets over surfaces, pressed rows)
-  umber700: '#3A342C',
-  paper50: '#F4EDE1', // primary text, "white"
-  paper300: '#B5AB9C',
-  paper400: '#A0968A', // secondary text, 7.0:1 on umber900
-  paper600: '#6F675D', // faint meta only, never body copy
-  safelight: '#E9A84C', // accent, 9.2:1 on umber900
-  safelightInk: '#1A1206', // text on the accent, 10.4:1
-  sage: '#86B58F',
-  clay: '#D9735C',
+  paper: '#FFFFFF',
+  mist: '#F2F3F5', // chips, quiet fills
+  cloud: '#E7E9ED', // pressed, elevated fills
+  ink: '#0A0A0A', // type, pills, the dock
+  slate: '#525A68', // secondary text, 7.0:1 on paper, 4.4:1 on sky
+  haze: '#8E95A1', // faint meta only
+  sky: '#B4D2F0',
+  skyDeep: '#9CC3EC',
+  skyHaze: '#DCEAF8',
+  pink: '#F7C5DD', // sticker fill
+  pinkEdge: '#E2549E', // sticker dashed edge
+  sage: '#3E9B6A',
+  clay: '#D2484B',
 };
 
 export const colors = {
-  bg: ramp.umber900,
-  surface: ramp.umber850,
-  elevated: ramp.umber800,
-  ink: ramp.umber950,
+  bg: ramp.paper,
+  surface: ramp.mist,
+  elevated: ramp.cloud,
+  ink: ramp.ink,
 
-  text: ramp.paper50,
-  textMuted: ramp.paper400,
-  textFaint: ramp.paper600,
+  text: ramp.ink,
+  textMuted: ramp.slate,
+  textFaint: ramp.haze,
 
-  accent: ramp.safelight,
-  accentInk: ramp.safelightInk,
-  accentMuted: 'rgba(233,168,76,0.14)',
+  /** The primary action is a black pill; "accent" is ink in this brand. */
+  accent: ramp.ink,
+  accentInk: ramp.paper,
+  accentMuted: 'rgba(10,10,10,0.06)',
 
-  /** Hairlines: paper at 10% / 18%. */
-  line: 'rgba(244,237,225,0.10)',
-  lineStrong: 'rgba(244,237,225,0.18)',
+  /** Hairlines: ink at 8% / 16%. */
+  line: 'rgba(10,10,10,0.08)',
+  lineStrong: 'rgba(10,10,10,0.16)',
 
   success: ramp.sage,
   danger: ramp.clay,
 
-  /** Controls that float over photos and maps. */
-  scrim: 'rgba(10,9,7,0.56)',
-  scrimStrong: 'rgba(10,9,7,0.82)',
-  /** Paper at low alpha, for tracks and inactive dots over media. */
-  veil: 'rgba(244,237,225,0.22)',
+  /** Controls that float over photos and maps: white paper discs and pills. */
+  scrim: 'rgba(255,255,255,0.92)',
+  scrimStrong: 'rgba(255,255,255,0.97)',
+  /** Ink at low alpha, for tracks and inactive dots. */
+  veil: 'rgba(10,10,10,0.14)',
+
+  // Rebrand additions
+  sky: ramp.sky,
+  skyDeep: ramp.skyDeep,
+  skyHaze: ramp.skyHaze,
+  pink: ramp.pink,
+  pinkEdge: ramp.pinkEdge,
+  /** Type set directly on a photo. */
+  onMedia: '#FFFFFF',
+  /** Darkens a camera feed or photo behind white type. */
+  shade: 'rgba(10,10,10,0.45)',
 } as const;
 
 // ---------------------------------------------------------------------------
 // Type
 
-/** System serif (New York) on iOS. Resolved by RN's font utils, no font files needed. */
+/** Inter Tight, loaded in the root layout. `serif`/`sans`/`mono` stay as aliases. */
 export const fonts = {
-  serif: Platform.select({ ios: 'ui-serif', android: 'serif', default: 'Georgia' }) as string,
-  sans: Platform.select({ ios: 'System', default: undefined }) as string | undefined,
-  mono: Platform.select({ ios: 'ui-monospace', android: 'monospace', default: 'Menlo' }) as string,
+  regular: 'InterTight_400Regular',
+  medium: 'InterTight_500Medium',
+  semibold: 'InterTight_600SemiBold',
+  bold: 'InterTight_700Bold',
+  /** Headlines (was the system serif). */
+  serif: 'InterTight_700Bold',
+  sans: 'InterTight_500Medium',
+  /** Times and counts (tabular figures via fontVariant). */
+  mono: 'InterTight_500Medium',
 };
 
-/** Weights: 400 and 500 for reading, 600 for rare emphasis. Nothing heavier. */
+const lower = 'lowercase' as const;
+
+/** Bold and tight for headlines, medium for reading. Everything lowercase. */
 export const type = {
-  /** Big serif headline: onboarding, title card. */
-  display: { fontFamily: fonts.serif, fontSize: 36, lineHeight: 42, color: colors.text, letterSpacing: -0.4 },
+  /** Big headline: onboarding, title card. */
+  display: { fontFamily: fonts.bold, fontSize: 36, lineHeight: 38, color: colors.text, letterSpacing: -1.4, textTransform: lower },
   /** Screen titles and trip names. */
-  title: { fontFamily: fonts.serif, fontSize: 30, lineHeight: 36, color: colors.text, letterSpacing: -0.2 },
+  title: { fontFamily: fonts.bold, fontSize: 30, lineHeight: 32, color: colors.text, letterSpacing: -1.1, textTransform: lower },
   /** Card titles, section heads. */
-  heading: { fontSize: 20, lineHeight: 26, fontWeight: '600' as const, color: colors.text },
+  heading: { fontFamily: fonts.bold, fontSize: 20, lineHeight: 24, color: colors.text, letterSpacing: -0.5, textTransform: lower },
   /** Narration and quoted text. */
-  story: { fontFamily: fonts.serif, fontSize: 22, lineHeight: 30, color: colors.text },
-  body: { fontSize: 17, lineHeight: 24, color: colors.text },
-  callout: { fontSize: 15, lineHeight: 20, color: colors.text },
-  label: { fontSize: 15, lineHeight: 20, fontWeight: '600' as const, color: colors.text },
-  caption: { fontSize: 13, lineHeight: 18, color: colors.textMuted },
-  /** The signature: times and dates, mono amber, like a film date imprint. */
-  stamp: { fontFamily: fonts.mono, fontSize: 12, lineHeight: 16, color: colors.accent, fontVariant: ['tabular-nums' as const] },
+  story: { fontFamily: fonts.medium, fontSize: 21, lineHeight: 28, color: colors.text, letterSpacing: -0.3, textTransform: lower },
+  body: { fontFamily: fonts.medium, fontSize: 17, lineHeight: 24, color: colors.text, textTransform: lower },
+  callout: { fontFamily: fonts.medium, fontSize: 15, lineHeight: 20, color: colors.text, textTransform: lower },
+  label: { fontFamily: fonts.semibold, fontSize: 15, lineHeight: 20, color: colors.text, textTransform: lower },
+  caption: { fontFamily: fonts.medium, fontSize: 13, lineHeight: 18, color: colors.textMuted, textTransform: lower },
+  /** Times and dates: quiet tabular figures. */
+  stamp: {
+    fontFamily: fonts.semibold,
+    fontSize: 12,
+    lineHeight: 16,
+    color: colors.textMuted,
+    fontVariant: ['tabular-nums' as const],
+    textTransform: lower,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -92,16 +118,18 @@ export const type = {
 /** 4pt grid. */
 export const space = { xxs: 2, xs: 4, sm: 8, md: 16, lg: 24, xl: 40, xxl: 56 };
 
-/** Controls 12, cards 16, sheets 24. Chips and round buttons use `full`. */
-export const radius = { xs: 6, sm: 8, md: 12, lg: 16, xl: 24, full: 999 };
+/** Controls 10, cards 20, sheets 28. Buttons, chips and stickers use `full`. */
+export const radius = { xs: 6, sm: 10, md: 14, lg: 20, xl: 28, full: 999 };
 
 /** Minimum touch target and standard control heights. */
-export const size = { hit: 44, button: 52, chip: 32, iconButton: 40, icon: 18 };
+export const size = { hit: 44, button: 56, chip: 36, iconButton: 40, icon: 18 };
 
-/** Neutral, soft shadows only, for things that float over imagery. */
+/** Soft, slightly blue shadows: prints and cutouts lifted off paper or sky. */
 export const shadow = {
-  print: { shadowColor: '#000', shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
-  float: { shadowColor: '#000', shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 10 } },
+  print: { shadowColor: '#1B2B44', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 6 } },
+  float: { shadowColor: '#1B2B44', shadowOpacity: 0.22, shadowRadius: 24, shadowOffset: { width: 0, height: 14 } },
+  /** Small lift for white discs and pills over imagery. */
+  chip: { shadowColor: '#1B2B44', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } },
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -128,28 +156,28 @@ export const duration = {
 
 export const film = {
   letterboxH: 54,
-  /** Opacity of the light-of-day wash over the map. */
-  tintOpacity: 0.36,
+  /** Opacity of the light-of-day wash over the map. Kept subtle on a light map. */
+  tintOpacity: 0.16,
   tintFadeMs: 1400,
 };
 
 // ---------------------------------------------------------------------------
 // Light of day
 //
-// The wash laid over the Replay map, from the hour each stop was shot. Night and
-// blue hour lean cool, midday stays nearly neutral, afternoon warms, golden hour is
-// the one strong amber. Kept dark so paper-white captions always read on top.
+// The wash laid over the Replay map, from the hour each stop was shot. Night leans
+// deep blue, blue hour periwinkle, midday almost paper, afternoon warms, golden hour
+// is the one strong apricot. Light enough that ink captions always read on top.
 
 const LIGHT = [
-  { until: 5, color: '#0B0E1C' }, // night
-  { until: 7, color: '#1B2240' }, // blue hour, dawn
-  { until: 10, color: '#2E3A4A' }, // morning, cool
-  { until: 15, color: '#33352F' }, // midday, neutral
-  { until: 18, color: '#4A3822' }, // afternoon, warming
-  { until: 20, color: '#1E2142' }, // dusk, blue hour
-  { until: 24, color: '#0B0E1C' }, // night
+  { until: 5, color: '#2A3B66' }, // night
+  { until: 7, color: '#6E86C4' }, // blue hour, dawn
+  { until: 10, color: '#B4D2F0' }, // morning, sky
+  { until: 15, color: '#F4F1E8' }, // midday, paper
+  { until: 18, color: '#F2D9B0' }, // afternoon, warming
+  { until: 20, color: '#B9A8E0' }, // dusk
+  { until: 24, color: '#2A3B66' }, // night
 ];
-const GOLDEN = '#7A4A16';
+const GOLDEN = '#F5B565';
 
 export function tintFor(hourOfDay: number, isGoldenHour?: boolean): string {
   if (isGoldenHour) return GOLDEN;

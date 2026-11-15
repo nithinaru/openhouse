@@ -1,98 +1,125 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
-import type { Trip } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
-import { PinIcon, PlayIcon } from '@/theme/icons';
-import { Press, Stamp } from '@/theme/ui';
+import type { Person, Trip } from '@/lib/types';
+import { colors, fonts, radius, shadow, space, type } from '@/theme';
+import { PinIcon, PlusIcon } from '@/theme/icons';
+import { Cutout, MediaShade, Press, Sticker } from '@/theme/ui';
 
-import { collagePhotos, dateLabel, paletteFor, statsLabel } from './tripMeta';
+import { collagePhotos, shortDate, statsLabel } from './tripMeta';
 
 const IMG_TRANSITION = 220;
 
-function Swatches({ palette, size = 12 }: { palette: string[]; size?: number }) {
-  return (
-    <View style={{ flexDirection: 'row', gap: 4 }} accessibilityElementsHidden>
-      {palette.map((c, i) => (
-        <View
-          key={`${c}-${i}`}
-          style={{
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            backgroundColor: c,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderColor: colors.lineStrong,
-          }}
-        />
-      ))}
-    </View>
-  );
-}
-
-function Photo({ uri, style }: { uri?: string; style: object }) {
-  return (
-    <View style={[style, { backgroundColor: colors.elevated, overflow: 'hidden' }]}>
-      {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={IMG_TRANSITION} />}
-    </View>
-  );
-}
-
-/** Latest trip: a contact sheet of three prints, then title, date stamp, stats and palette. */
-export function TripHeroCard({ trip, onPress }: { trip: Trip; badge?: string; onPress: () => void }) {
-  const [a, b, c] = collagePhotos(trip, 3);
+/** A day as a big photo card: hero print full-bleed, lowercase title on the photo. */
+export function TripCard({
+  trip,
+  width,
+  height,
+  meta,
+  onPress,
+}: {
+  trip: Trip;
+  width: number;
+  height: number;
+  /** Line under the title; defaults to the date and stop count. */
+  meta?: string;
+  onPress: () => void;
+}) {
+  const [hero] = collagePhotos(trip, 1);
+  const line = meta ?? `${shortDate(trip)} · ${statsLabel(trip, true)}`;
   return (
     <Press
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${trip.title}. ${statsLabel(trip)}. Opens replay.`}
-      style={styles.hero}
+      accessibilityLabel={`${trip.title}. ${statsLabel(trip)}. opens replay`}
+      style={[styles.card, { width, height }]}
     >
-      <View style={styles.collage}>
-        <Photo uri={a?.uri} style={{ flex: 2 }} />
-        <View style={{ flex: 1, gap: 2 }}>
-          <Photo uri={b?.uri ?? a?.uri} style={{ flex: 1 }} />
-          <Photo uri={c?.uri ?? b?.uri ?? a?.uri} style={{ flex: 1 }} />
-        </View>
-        <View style={styles.playChip}>
-          <PlayIcon size={12} color={colors.text} />
-          <Text style={styles.playText}>Replay</Text>
-        </View>
-      </View>
-      <View style={styles.heroBody}>
-        <Stamp>{dateLabel(trip)}</Stamp>
-        <Text style={type.title} numberOfLines={2}>
+      {hero ? <Image source={{ uri: hero.uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={IMG_TRANSITION} /> : null}
+      <MediaShade from={0.38} strength={0.78} />
+      <View style={styles.cardText}>
+        <Text style={styles.cardTitle} numberOfLines={3}>
           {trip.title}
         </Text>
-        <View style={styles.footer}>
-          <Text style={[type.caption, { fontVariant: ['tabular-nums'] }]}>{statsLabel(trip)}</Text>
-          <Swatches palette={paletteFor(trip)} />
-        </View>
+        <Text style={styles.cardMeta} numberOfLines={1}>
+          {line}
+        </Text>
       </View>
     </Press>
   );
 }
 
-/** Older trips: thumbnail, title, stats. */
+/** Kept for older imports: the full-width version of the card. */
+export function TripHeroCard({ trip, onPress }: { trip: Trip; badge?: string; onPress: () => void }) {
+  return <TripCard trip={trip} width={320} height={400} onPress={onPress} />;
+}
+
+/** Compact row: thumbnail print, title, stats. */
 export function TripRow({ trip, onPress }: { trip: Trip; onPress: () => void }) {
   const [hero] = collagePhotos(trip, 1);
   return (
-    <Press
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={`${trip.title}. ${statsLabel(trip)}.`}
-      style={styles.row}
-    >
-      <Photo uri={hero?.uri} style={styles.rowThumb} />
-      <View style={{ flex: 1, gap: space.xs }}>
-        <Text style={type.label} numberOfLines={1}>
+    <Press onPress={onPress} accessibilityRole="button" accessibilityLabel={`${trip.title}. ${statsLabel(trip)}.`} style={styles.row}>
+      <View style={styles.rowThumb}>
+        {hero ? <Image source={{ uri: hero.uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={IMG_TRANSITION} /> : null}
+      </View>
+      <View style={{ flex: 1, gap: space.xxs }}>
+        <Text style={type.heading} numberOfLines={1}>
           {trip.title}
         </Text>
         <Text style={type.caption} numberOfLines={1}>
           {statsLabel(trip)}
         </Text>
       </View>
-      <Swatches palette={paletteFor(trip).slice(0, 3)} size={10} />
+    </Press>
+  );
+}
+
+const TILT = [-5, 3, -2, 4];
+
+/** "who's inside": the people from your days as an overlapping row of standees. */
+export function WhoStrip({ people, onAdd }: { people: Person[]; onAdd: () => void }) {
+  const shown = people.slice(0, 3);
+  return (
+    <View style={styles.strip}>
+      {shown.map((p, i) => (
+        <Cutout
+          key={p.id}
+          uri={p.avatarUri}
+          name={p.name}
+          width={118}
+          height={150}
+          rotate={TILT[i % TILT.length]}
+          tag={p.name}
+          tagRotate={i % 2 ? 4 : -5}
+          style={{
+            marginLeft: i === 0 ? 0 : -22,
+            marginTop: i % 2 ? 14 : 0,
+            zIndex: 3 - i,
+          }}
+        />
+      ))}
+      <Sticker
+        label="+ add a friend"
+        tone="paper"
+        rotate={-3}
+        onPress={onAdd}
+        accessibilityLabel="add a friend"
+        style={{ marginLeft: shown.length ? space.md : 0, alignSelf: 'center' }}
+      />
+    </View>
+  );
+}
+
+/** Dashed "+ add today" card: opens the ingest flow. */
+export function AddTodayCard({ onPress, first }: { onPress: () => void; first?: boolean }) {
+  return (
+    <Press onPress={onPress} accessibilityRole="button" accessibilityLabel="add today from your photos" style={styles.add} haptic="medium">
+      <View style={styles.addIcon}>
+        <PlusIcon size={16} color={colors.accentInk} />
+      </View>
+      <Text style={styles.addText} numberOfLines={2}>
+        <Text style={styles.addStrong}>{first ? 'read my photos ' : 'add today '}</Text>
+        <Text style={styles.addMuted}>your camera roll already remembers it</Text>
+      </Text>
     </Press>
   );
 }
@@ -103,57 +130,102 @@ export function EmptyTrips() {
       <View style={styles.emptyPin}>
         <PinIcon size={20} color={colors.textMuted} />
       </View>
-      <Text style={[type.heading, { textAlign: 'center' }]}>No days yet</Text>
+      <Text style={[type.heading, { textAlign: 'center' }]}>no days yet</Text>
       <Text style={[type.caption, { textAlign: 'center', maxWidth: 260 }]}>
-        Openhouse rebuilds where you went from the photos you already took. Nothing to type.
+        openhouse rebuilds where you went from the photos you already took. nothing to type.
       </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+  card: {
+    borderRadius: radius.xl,
     overflow: 'hidden',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
+    backgroundColor: colors.surface,
   },
-  collage: { flexDirection: 'row', gap: 2, aspectRatio: 4 / 3 },
-  playChip: {
+  cardText: {
     position: 'absolute',
-    left: space.md,
-    bottom: space.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    height: 32,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: colors.scrim,
+    left: space.md + 4,
+    right: space.md,
+    bottom: space.md + 4,
+    gap: space.xs,
   },
-  playText: { color: colors.text, fontSize: 13, fontWeight: '600' },
-  heroBody: { paddingHorizontal: space.md, paddingTop: space.md, paddingBottom: space.md, gap: space.xs },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.sm },
+  cardTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 30,
+    lineHeight: 30,
+    letterSpacing: -1.2,
+    color: colors.onMedia,
+    textTransform: 'lowercase',
+  },
+  cardMeta: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    lineHeight: 18,
+    color: 'rgba(255,255,255,0.88)',
+    textTransform: 'lowercase',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.md,
     padding: space.sm,
     paddingRight: space.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     borderRadius: radius.lg,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.line,
   },
-  rowThumb: { width: 56, height: 56, borderRadius: radius.sm },
+  rowThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+  },
+  strip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: space.xs,
+    paddingHorizontal: 20,
+  },
+  add: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    minHeight: 76,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+    borderRadius: radius.xl,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.ink,
+    backgroundColor: colors.bg,
+  },
+  addIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.ink,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...shadow.chip,
+  },
+  addText: { flex: 1 },
+  addStrong: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    letterSpacing: -0.4,
+    color: colors.text,
+  },
+  addMuted: { fontFamily: fonts.medium, fontSize: 15, color: colors.textMuted },
   empty: { alignItems: 'center', gap: space.sm, paddingVertical: space.xl },
   emptyPin: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.lineStrong,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: space.sm,

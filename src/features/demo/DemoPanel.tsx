@@ -142,6 +142,23 @@ export function DemoPanel() {
           </View>
         </Section>
 
+        <Section title="Openhouse+">
+          <Action
+            label={`Plus lock: ${flags.plusLocked}`}
+            detail={
+              flags.plusLocked === 'auto'
+                ? 'Real entitlements · demo trip and offline stay unlocked. Tap to force locked'
+                : flags.plusLocked === 'locked'
+                  ? 'Night/field styles and Walk in show the plus lock (a real purchase still unlocks). Tap to force unlocked'
+                  : 'Everything unlocked. Tap for auto'
+            }
+            onPress={() =>
+              demoFlags.set({ plusLocked: flags.plusLocked === 'auto' ? 'locked' : flags.plusLocked === 'locked' ? 'unlocked' : 'auto' })
+            }
+            on={flags.plusLocked !== 'auto'}
+          />
+        </Section>
+
         <Button
           variant="quiet"
           label="Reset all switches"

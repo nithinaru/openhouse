@@ -117,6 +117,52 @@ export function PeopleIcon({ size = 18, color }: IconProps) {
   );
 }
 
+export function HouseIcon({ size = 18, color }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeWidth={2}>
+      <Path d="M3.5 11 12 4l8.5 7" />
+      <Path d="M6 9.5V20h12V9.5" />
+      <Path d="M10 20v-5.5h4V20" />
+    </Svg>
+  );
+}
+
+export function MapIcon({ size = 18, color }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeWidth={2}>
+      <Path d="M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5z" />
+      <Path d="M9 4.5v13M15 6.5v13" />
+    </Svg>
+  );
+}
+
+export function PlusIcon({ size = 18, color }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeWidth={2.2}>
+      <Path d="M12 5v14M5 12h14" />
+    </Svg>
+  );
+}
+
+export function ChatIcon({ size = 18, color }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeWidth={2}>
+      <Path d="M5 18.5 4 21l3.6-1.6A9 9 0 1 0 3 12a8.9 8.9 0 0 0 2 6.5z" />
+      <Path d="M8.5 12h.01M12 12h.01M15.5 12h.01" strokeWidth={2.6} />
+    </Svg>
+  );
+}
+
+/** Hand-drawn star doodle for scrapbook margins. */
+export function StarDoodleIcon({ size = 24, color }: IconProps) {
+  return (
+    <Svg {...base(size, color)} strokeWidth={1.5}>
+      <Path d="M12 2.8l2.6 6.4 6.6.4-5.1 4.3 1.7 6.6L12 16.8l-5.8 3.7 1.7-6.6-5.1-4.3 6.6-.4z" />
+      <Path d="M12.4 3.6 10.2 9.8" />
+    </Svg>
+  );
+}
+
 export function SpeakerIcon({ size = 16, color }: IconProps) {
   return (
     <Svg {...base(size, color)}>

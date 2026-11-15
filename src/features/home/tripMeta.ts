@@ -25,8 +25,16 @@ export function plural(n: number, one: string, many = `${one}s`): string {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-export function statsLabel(trip: Trip): string {
-  const parts = [plural(trip.moments.length, 'stop'), plural(photoCount(trip), 'photo')];
+/** "sun, nov 15" */
+export function shortDate(trip: Trip): string {
+  const d = new Date(trip.startAt);
+  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`.toLowerCase();
+}
+
+/** "6 stops · 18 photos · 1 person"; `short` drops the photo count. */
+export function statsLabel(trip: Trip, short = false): string {
+  const parts = [plural(trip.moments.length, 'stop')];
+  if (!short) parts.push(plural(photoCount(trip), 'photo'));
   if (trip.people.length) parts.push(plural(trip.people.length, 'person', 'people'));
   return parts.join(' · ');
 }
@@ -53,5 +61,5 @@ export function paletteFor(trip: Trip): string[] {
   const tints = [...trip.moments]
     .sort((a, b) => a.order - b.order)
     .map((m) => tintFor(new Date(m.startAt).getHours(), m.isGoldenHour));
-  return [...new Set([...tints, colors.accent, colors.text])].slice(0, 5);
+  return [...new Set([...tints, colors.sky, colors.pink])].slice(0, 5);
 }
