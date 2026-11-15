@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, type MutationCtx } from './_generated/server';
+import { internalMutation, mutation, type MutationCtx } from './_generated/server';
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -25,5 +25,12 @@ export const ensure = mutation({
     const shareCode = await newShareCode(ctx);
     const userId = await ctx.db.insert('users', { deviceId, name, shareCode });
     return { userId, name, shareCode };
+  },
+});
+
+export const linkWhop = internalMutation({
+  args: { userId: v.id('users'), whopUserId: v.string() },
+  handler: async (ctx, { userId, whopUserId }) => {
+    await ctx.db.patch(userId, { whopUserId });
   },
 });

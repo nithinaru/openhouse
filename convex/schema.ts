@@ -23,6 +23,7 @@ export default defineSchema({
     name: v.string(),
     avatarStorageId: v.optional(v.id('_storage')),
     shareCode: v.string(),
+    whopUserId: v.optional(v.string()),
   })
     .index('by_deviceId', ['deviceId'])
     .index('by_shareCode', ['shareCode']),
@@ -125,6 +126,9 @@ export default defineSchema({
     items: v.optional(v.array(dropItem)),
     priceCents: v.optional(v.number()),
     hostFeeCents: v.optional(v.number()),
+    promoId: v.optional(v.id('promos')),
+    referrerUserId: v.optional(v.id('users')),
+    paidAt: v.optional(v.number()),
     whopCheckoutId: v.optional(v.string()),
     whopPaymentId: v.optional(v.string()),
     status: v.union(v.literal('pending'), v.literal('paid'), v.literal('fulfilled'), v.literal('refunded')),
@@ -132,17 +136,53 @@ export default defineSchema({
     .index('by_posterId', ['posterId'])
     .index('by_userId', ['userId'])
     .index('by_whopCheckoutId', ['whopCheckoutId'])
-    .index('by_whopPaymentId', ['whopPaymentId']),
+    .index('by_whopPaymentId', ['whopPaymentId'])
+    .index('by_dropId_and_paidAt', ['dropId', 'paidAt']),
 
   drops: defineTable({
     tripId: v.id('trips'),
     userId: v.id('users'),
+    hostUserId: v.id('users'),
     title: v.string(),
     venue: v.object({ name: v.string(), address: v.string(), lat: v.number(), lng: v.number() }),
     closesAt: v.number(),
     whopProductId: v.string(),
     editions: v.array(v.object({ edition, stock: v.number(), claimed: v.number(), whopPlanId: v.string() })),
-  }).index('by_tripId', ['tripId']),
+    grossCents: v.number(),
+    paidOrders: v.number(),
+  })
+    .index('by_tripId', ['tripId'])
+    .index('by_hostUserId', ['hostUserId']),
+
+  promos: defineTable({
+    dropId: v.id('drops'),
+    friendUserId: v.id('users'),
+    issuerUserId: v.id('users'),
+    code: v.string(),
+    whopPromoCodeId: v.string(),
+    usedOrderId: v.optional(v.id('orders')),
+  })
+    .index('by_code', ['code'])
+    .index('by_dropId_and_friendUserId', ['dropId', 'friendUserId']),
+
+  referrers: defineTable({
+    userId: v.id('users'),
+    dropId: v.id('drops'),
+    code: v.string(),
+    whopAffiliateId: v.string(),
+    whopOverrideId: v.string(),
+    sales: v.number(),
+    earnedCents: v.number(),
+  })
+    .index('by_userId_and_dropId', ['userId', 'dropId'])
+    .index('by_code_and_dropId', ['code', 'dropId']),
+
+  payouts: defineTable({
+    hostUserId: v.id('users'),
+    amountCents: v.number(),
+    whopTransferId: v.optional(v.string()),
+    at: v.number(),
+  }).index('by_hostUserId', ['hostUserId']),
 
   gifts: defineTable({
     orderId: v.id('orders'),
@@ -161,7 +201,8 @@ export default defineSchema({
     renewsAt: v.optional(v.number()),
   })
     .index('by_userId', ['userId'])
-    .index('by_whopMembershipId', ['whopMembershipId']),
+    .index('by_whopMembershipId', ['whopMembershipId'])
+    .index('by_status', ['status']),
 
   listings: defineTable({
     userId: v.id('users'),

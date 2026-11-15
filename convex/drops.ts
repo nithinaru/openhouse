@@ -18,6 +18,8 @@ const SIZED = new Set(['hoodie', 'tee']);
 const MAX_ITEMS = 20;
 const PRESENCE_M = 300;
 const HOST_SHARE = 0.1;
+const PROMO_PERCENT_OFF = 20;
+const REFERRAL_SHARE = 0.1;
 const OPEN_MS = 24 * 3600_000;
 const DEMO_DEVICE_ID = 'demo-me';
 
@@ -125,7 +127,13 @@ export const insert = internalMutation({
       .withIndex('by_tripId', (q) => q.eq('tripId', args.tripId))
       .first();
     if (existing) return view(existing);
-    const dropId = await ctx.db.insert('drops', { ...args, editions: args.editions.map((e) => ({ ...e, claimed: 0 })) });
+    const dropId = await ctx.db.insert('drops', {
+      ...args,
+      hostUserId: args.userId,
+      editions: args.editions.map((e) => ({ ...e, claimed: 0 })),
+      grossCents: 0,
+      paidOrders: 0,
+    });
     return view((await ctx.db.get(dropId))!);
   },
 });
@@ -188,13 +196,21 @@ const checkoutArgs = {
   userId: v.id('users'),
   edition: editionValidator,
   items: v.array(dropItem),
+  promoCode: v.optional(v.string()),
+  referralCode: v.optional(v.string()),
 };
 
-type StartedOrder = { orderId: Id<'orders'>; priceCents: number; whopProductId: string; title: string };
+type StartedOrder = {
+  orderId: Id<'orders'>;
+  priceCents: number;
+  whopProductId: string;
+  title: string;
+  affiliateCode: string | null;
+};
 
 export const startOrder = internalMutation({
   args: checkoutArgs,
-  handler: async (ctx, { dropId, userId, edition, items }): Promise<StartedOrder> => {
+  handler: async (ctx, { dropId, userId, edition, items, promoCode, referralCode }): Promise<StartedOrder> => {
     const drop = await ctx.db.get(dropId);
     if (!drop) throw new Error('Drop not found');
     if (Date.now() >= drop.closesAt) throw new Error('closed');
@@ -209,7 +225,24 @@ export const startOrder = internalMutation({
     });
     if (edition === 'was_there' && !(await wasThere(ctx, userId, drop))) throw new Error('not at the venue');
 
-    const price = cartCents(cart);
+    let promo: Doc<'promos'> | null = null;
+    if (promoCode !== undefined) {
+      promo = await ctx.db
+        .query('promos')
+        .withIndex('by_code', (q) => q.eq('code', promoCode.trim().toUpperCase()))
+        .unique();
+      if (!promo || promo.dropId !== dropId || promo.usedOrderId) throw new Error('code not valid');
+    }
+    const referrer = referralCode
+      ? await ctx.db
+          .query('referrers')
+          .withIndex('by_code_and_dropId', (q) => q.eq('code', referralCode.trim()).eq('dropId', dropId))
+          .first()
+      : null;
+    const referrerUserId = referrer && referrer.userId !== userId ? referrer.userId : undefined;
+
+    const fullPrice = cartCents(cart);
+    const price = promo ? Math.round((fullPrice * (100 - PROMO_PERCENT_OFF)) / 100) : fullPrice;
     const orderId = await ctx.db.insert('orders', {
       userId,
       tripId: drop.tripId,
@@ -219,20 +252,32 @@ export const startOrder = internalMutation({
       items: cart,
       priceCents: price,
       hostFeeCents: Math.round(price * HOST_SHARE),
+      promoId: promo?._id,
+      referrerUserId,
       status: 'pending',
     });
     const title = `${EDITION_TITLE[edition]} · ${cart.length === 1 ? cart[0].piece : `${cart.length} pieces`}`;
-    return { orderId, priceCents: price, whopProductId: drop.whopProductId, title };
+    return {
+      orderId,
+      priceCents: price,
+      whopProductId: drop.whopProductId,
+      title,
+      affiliateCode: referrerUserId ? referrer!.code : null,
+    };
   },
 });
 
 export const checkout = action({
   args: checkoutArgs,
   handler: async (ctx, args): Promise<{ purchaseUrl: string; orderId: Id<'orders'> }> => {
-    const { orderId, priceCents, whopProductId, title }: StartedOrder = await ctx.runMutation(internal.drops.startOrder, args);
+    const { orderId, priceCents, whopProductId, title, affiliateCode }: StartedOrder = await ctx.runMutation(
+      internal.drops.startOrder,
+      args,
+    );
     const config = await whop().checkoutConfigurations.create({
       mode: 'payment',
       metadata: { orderId },
+      affiliate_code: affiliateCode,
       variant: {
         product_id: whopProductId,
         title,
@@ -247,11 +292,28 @@ export const checkout = action({
   },
 });
 
-export async function adjustClaimed(ctx: MutationCtx, order: Doc<'orders'>, delta: 1 | -1) {
+export async function applyDropPayment(ctx: MutationCtx, order: Doc<'orders'>, delta: 1 | -1) {
   if (order.product !== 'drop' || !order.dropId || !order.edition) return;
   const drop = await ctx.db.get(order.dropId);
   if (!drop) return;
+  const cents = order.priceCents ?? 0;
   await ctx.db.patch(drop._id, {
     editions: drop.editions.map((e) => (e.edition === order.edition ? { ...e, claimed: Math.max(0, e.claimed + delta) } : e)),
+    grossCents: Math.max(0, drop.grossCents + delta * cents),
+    paidOrders: Math.max(0, drop.paidOrders + delta),
   });
+  const promo = delta === 1 && order.promoId ? await ctx.db.get(order.promoId) : null;
+  if (promo && !promo.usedOrderId) await ctx.db.patch(promo._id, { usedOrderId: order._id });
+  if (order.referrerUserId) {
+    const referrer = await ctx.db
+      .query('referrers')
+      .withIndex('by_userId_and_dropId', (q) => q.eq('userId', order.referrerUserId!).eq('dropId', drop._id))
+      .unique();
+    if (referrer) {
+      await ctx.db.patch(referrer._id, {
+        sales: Math.max(0, referrer.sales + delta),
+        earnedCents: Math.max(0, referrer.earnedCents + delta * Math.round(cents * REFERRAL_SHARE)),
+      });
+    }
+  }
 }

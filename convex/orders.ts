@@ -3,7 +3,7 @@ import { action, internalMutation, query, type QueryCtx } from './_generated/ser
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import { posterStyle, printSize, product as productValidator } from './schema';
-import { adjustClaimed } from './drops';
+import { applyDropPayment } from './drops';
 import { hasPlus } from './memberships';
 import { dollars, purchaseUrlOf, whop } from './whop';
 
@@ -156,8 +156,8 @@ export const markPaid = internalMutation({
         : null);
     if (!order) return null;
     if (order.status !== 'pending') return order._id;
-    await ctx.db.patch(order._id, { status: 'paid', whopPaymentId: args.whopPaymentId });
-    await adjustClaimed(ctx, order, 1);
+    await ctx.db.patch(order._id, { status: 'paid', whopPaymentId: args.whopPaymentId, paidAt: Date.now() });
+    await applyDropPayment(ctx, order, 1);
     if (order.giftToUserId) {
       await ctx.db.insert('gifts', {
         orderId: order._id,
@@ -181,7 +181,7 @@ export const markRefunded = internalMutation({
     if (!order) return null;
     if (order.status === 'refunded') return order._id;
     await ctx.db.patch(order._id, { status: 'refunded' });
-    if (order.status === 'paid' || order.status === 'fulfilled') await adjustClaimed(ctx, order, -1);
+    if (order.status === 'paid' || order.status === 'fulfilled') await applyDropPayment(ctx, order, -1);
     return order._id;
   },
 });
