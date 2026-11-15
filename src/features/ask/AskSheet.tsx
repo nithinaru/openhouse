@@ -8,9 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { pickVoice } from '@/features/replay/narrator';
 import type { Trip } from '@/lib/types';
-import { colors, ease, radius, size, space, type } from '@/theme';
+import { colors, ease, fonts, radius, size, space, type } from '@/theme';
 import { ArrowIcon, SpeakerIcon } from '@/theme/icons';
-import { Button, Chip, Press, SheetHeader } from '@/theme/ui';
+import { Button, Chip, Press, SheetHeader, Sticker } from '@/theme/ui';
 
 import { askQuestion, type AskResult } from './askBackend';
 import { CitedStopCard } from './CitedStopCard';
@@ -19,10 +19,10 @@ import { StreamedAnswer } from './StreamedAnswer';
 const EASE_OUT = ease.out;
 
 export const SUGGESTIONS = [
-  'When did I meet Rohan?',
-  'Where was golden hour?',
-  'What was the weather at lunch?',
-  'Where did I spend the longest?',
+  'when did i meet rohan?',
+  'where was golden hour?',
+  'what was the weather at lunch?',
+  'where did i spend the longest?',
 ];
 
 type State =
@@ -105,7 +105,7 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.header}>
-        <SheetHeader eyebrow={trip.title} title="Ask your day" onClose={() => router.back()} />
+        <SheetHeader eyebrow={trip.title} title="ask your day" onClose={() => router.back()} />
       </View>
 
       <ScrollView
@@ -116,7 +116,7 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
       >
         {state.kind === 'idle' ? (
           <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(120)} style={{ gap: space.md }}>
-            <Text style={styles.hint}>Your photos know where you were, when, and who with. Ask anything.</Text>
+            <Text style={styles.hint}>your photos know where you were, when, and who with. ask anything.</Text>
             <View style={styles.chips}>
               {SUGGESTIONS.map((s, i) => (
                 <Animated.View key={s} entering={FadeInDown.duration(260).delay(60 + i * 45).easing(EASE_OUT)}>
@@ -127,11 +127,11 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
           </Animated.View>
         ) : (
           <View style={{ gap: space.lg }}>
-            <Text style={styles.question}>{state.question}</Text>
+            <Sticker label={state.question} rotate={-2} style={{ maxWidth: '100%' }} />
 
             {state.kind === 'thinking' ? (
               <Animated.Text entering={FadeIn.duration(160)} style={styles.thinking}>
-                Looking through your day…
+                looking through your day…
               </Animated.Text>
             ) : (
               <>
@@ -146,14 +146,14 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
                     <View style={styles.answerActions}>
                       <Button
                         variant="secondary"
-                        label={speaking ? 'Stop' : 'Read aloud'}
-                        accessibilityLabel={speaking ? 'Stop reading' : 'Read the answer aloud'}
+                        label={speaking ? 'stop' : 'read aloud'}
+                        accessibilityLabel={speaking ? 'stop reading' : 'read the answer aloud'}
                         onPress={showMe}
                         trailing={<SpeakerIcon color={colors.text} />}
                         style={styles.showMe}
                       />
                       <Text style={styles.source}>
-                        {state.result.source === 'claude' ? 'Answered by Claude from your memories' : 'Answered on this phone'}
+                        {state.result.source === 'claude' ? 'answered by claude from your memories' : 'answered on this phone'}
                       </Text>
                     </View>
 
@@ -174,20 +174,20 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="When did I…"
+          placeholder="when did i…"
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           returnKeyType="send"
           onSubmitEditing={() => ask(text)}
           submitBehavior="blurAndSubmit"
           autoCorrect
-          accessibilityLabel="Ask a question about this day"
+          accessibilityLabel="ask a question about this day"
         />
         <Press
           onPress={() => ask(text)}
           disabled={!text.trim()}
           accessibilityRole="button"
-          accessibilityLabel="Ask"
+          accessibilityLabel="ask"
           scaleTo={0.92}
           haptic="none"
           style={[styles.send, !text.trim() && { opacity: 0.4 }]}
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
   hint: { ...type.body, color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   chipText: { fontSize: 15, lineHeight: 20 },
-  question: { ...type.label, color: colors.textMuted },
   thinking: { ...type.body, color: colors.textMuted },
   answerActions: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.sm },
   showMe: { minHeight: size.hit, paddingHorizontal: space.md },
@@ -226,9 +225,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
     color: colors.text,
+    fontFamily: fonts.medium,
     fontSize: 17,
   },
   send: {

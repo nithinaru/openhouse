@@ -47,13 +47,47 @@ export type PressProps = Omit<PressableProps, 'style' | 'children'> & {
   haptic?: Haptic;
 };
 
+/** Style keys that place the control among its siblings; they belong on the outer Pressable. */
+const OUTER_KEYS = new Set([
+  'flex',
+  'flexGrow',
+  'flexShrink',
+  'flexBasis',
+  'alignSelf',
+  'position',
+  'top',
+  'left',
+  'right',
+  'bottom',
+  'zIndex',
+  'margin',
+  'marginTop',
+  'marginBottom',
+  'marginLeft',
+  'marginRight',
+  'marginHorizontal',
+  'marginVertical',
+]);
+
+function splitStyle(style: StyleProp<ViewStyle>): [ViewStyle, ViewStyle] {
+  const flat = (StyleSheet.flatten(style) ?? {}) as Record<string, unknown>;
+  const outer: Record<string, unknown> = {};
+  const inner: Record<string, unknown> = {};
+  for (const k in flat) (OUTER_KEYS.has(k) ? outer : inner)[k] = flat[k];
+  // A control told to grow should fill its outer box too.
+  if (outer.flex != null || outer.flexGrow != null) inner.flexGrow = 1;
+  return [outer as ViewStyle, inner as ViewStyle];
+}
+
 export function Press({ children, style, scaleTo = 0.97, haptic: h = 'light', onPressIn, onPressOut, onPress, ...rest }: PressProps) {
   const scale = useSharedValue(1);
   const animated = useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
+  const [outer, inner] = splitStyle(style);
 
   return (
     <Pressable
       {...rest}
+      style={outer}
       pressRetentionOffset={{ top: 20, left: 20, right: 20, bottom: 20 }}
       onPressIn={(e) => {
         scale.set(withTiming(scaleTo, { duration: duration.press, easing: ease.out, reduceMotion: ReduceMotion.System }));
@@ -68,7 +102,7 @@ export function Press({ children, style, scaleTo = 0.97, haptic: h = 'light', on
         onPress?.(e);
       }}
     >
-      <Animated.View style={[style, animated]}>{children}</Animated.View>
+      <Animated.View style={[inner, animated]}>{children}</Animated.View>
     </Pressable>
   );
 }

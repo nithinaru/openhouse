@@ -6,7 +6,7 @@ import { WalkInViewer } from '@/features/walkin/WalkInViewer';
 import { getDemoMoment, getDemoTrip } from '@/lib/demo/demoTrip';
 import { colors, space } from '@/theme';
 import { PinIcon } from '@/theme/icons';
-import { Chip, CloseButton } from '@/theme/ui';
+import { CloseButton, Sticker } from '@/theme/ui';
 
 export default function WalkInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,7 +27,7 @@ export default function WalkInScreen() {
 
       {moment?.placeName ? (
         <View pointerEvents="none" style={[styles.caption, { bottom: insets.bottom + space.md }]}>
-          <Chip tone="media" icon={<PinIcon size={14} color={colors.textMuted} />} label={moment.placeName} />
+          <Sticker label={moment.placeName} rotate={-3} icon={<PinIcon size={14} color={colors.pinkEdge} />} />
         </View>
       ) : null}
     </View>
@@ -35,7 +35,7 @@ export default function WalkInScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
+  root: { flex: 1, backgroundColor: colors.sky },
   close: { position: 'absolute', left: space.md },
   caption: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center' },
 });

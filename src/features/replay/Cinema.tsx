@@ -5,12 +5,11 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { colors, ease, film } from '@/theme';
 
-const INK = colors.ink;
 const PAPER = colors.bg;
 const LETTERBOX_H = film.letterboxH;
 const EASE_IN_OUT = ease.inOut;
 
-// Letterbox bars that slide in during flights and out when the camera lands.
+// Sky letterbox bars that slide in during flights and out when the camera lands.
 export function Letterbox({ visible, topInset }: { visible: boolean; topInset: number }) {
   const t = useSharedValue(0);
   useEffect(() => {
@@ -71,7 +70,7 @@ export function TopScrim({ height }: { height: number }) {
 }
 
 const styles = StyleSheet.create({
-  bar: { position: 'absolute', left: 0, right: 0, backgroundColor: INK },
+  bar: { position: 'absolute', left: 0, right: 0, backgroundColor: colors.sky },
   scrim: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   topScrim: { position: 'absolute', left: 0, right: 0, top: 0 },
 });

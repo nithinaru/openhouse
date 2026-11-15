@@ -14,7 +14,7 @@ import { QrCard } from '@/features/people/QrCard';
 import { Viewfinder } from '@/features/people/Viewfinder';
 import { EASE_OUT } from '@/features/stop/motion';
 import { colors, radius, space, type } from '@/theme';
-import { Button, SheetHeader } from '@/theme/ui';
+import { Button, SheetHeader, SkyBackground } from '@/theme/ui';
 
 type Tab = 'code' | 'scan';
 const TABS: Tab[] = ['code', 'scan'];
@@ -27,14 +27,14 @@ export default function PeopleScreen() {
   const [preview, setPreview] = useState<PairResult | null>(null);
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.lg, paddingHorizontal: space.lg, gap: space.lg }}>
+    <SkyBackground variant="fade" style={{ paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.lg, paddingHorizontal: space.lg, gap: space.lg }}>
       <View style={{ gap: space.xs }}>
         <SheetHeader
-          title="People"
+          title="people"
           onTitleLongPress={() => setPreview(preview ? null : demoPair('RHN42X'))}
           onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         />
-        <Text style={type.caption}>Scan each other to share the day</Text>
+        <Text style={type.caption}>scan each other to share the day</Text>
       </View>
 
       <Segmented value={tab} onChange={setTab} />
@@ -45,14 +45,14 @@ export default function PeopleScreen() {
         <Animated.View key="code" entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm }}>
           {/* TODO(convex): name + shareCode from api.users.me. */}
           <QrCard name={DEMO_MY_NAME} code={DEMO_MY_SHARE_CODE} />
-          <Text style={[type.caption, { textAlign: 'center', maxWidth: 280, marginTop: space.md }]}>Have a friend scan this. You’ll each show up on the other’s map, right where you met.</Text>
+          <Text style={[type.caption, { textAlign: 'center', maxWidth: 280, marginTop: space.md }]}>have a friend scan this. you’ll each show up on the other’s map, right where you met.</Text>
         </Animated.View>
       ) : (
         <Animated.View key="scan" entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={{ flex: 1 }}>
           <Scanner />
         </Animated.View>
       )}
-    </View>
+    </SkyBackground>
   );
 }
 
@@ -82,7 +82,7 @@ function Segmented({ value, onChange }: { value: Tab; onChange: (t: Tab) => void
           accessibilityState={{ selected: value === t }}
           style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 36 }}
         >
-          <Text style={[type.label, { color: value === t ? colors.text : colors.textMuted }]}>{t === 'code' ? 'My code' : 'Scan'}</Text>
+          <Text style={[type.label, { color: value === t ? colors.accentInk : colors.textMuted }]}>{t === 'code' ? 'my code' : 'scan'}</Text>
         </Pressable>
       ))}
     </View>
@@ -104,7 +104,7 @@ function Scanner() {
     const code = parsePairCode(data);
     if (!code) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setState({ kind: 'error', message: 'That is not an Openhouse code.' });
+      setState({ kind: 'error', message: 'that is not an openhouse code' });
       return;
     }
 
@@ -113,7 +113,7 @@ function Scanner() {
     try {
       const loc = await Location.requestForegroundPermissionsAsync();
       if (!loc.granted) {
-        setState({ kind: 'error', message: 'Location is needed to drop a pin where you met.' });
+        setState({ kind: 'error', message: 'location is needed to drop a pin where you met' });
         return;
       }
       const pos =
@@ -124,7 +124,7 @@ function Scanner() {
       setState({ kind: 'paired', result });
     } catch (e) {
       console.warn('[people] pair failed', e);
-      setState({ kind: 'error', message: 'Could not pair. Try again.' });
+      setState({ kind: 'error', message: 'could not pair. try again' });
     }
   }
 
@@ -144,11 +144,11 @@ function Scanner() {
   if (!permission.granted) {
     return (
       <View style={[styles.center, { gap: space.md }]}>
-        <Text style={[type.body, { textAlign: 'center' }]}>Openhouse needs the camera to scan a friend’s code.</Text>
+        <Text style={[type.body, { textAlign: 'center' }]}>openhouse needs the camera to scan a friend’s code</Text>
         {permission.canAskAgain ? (
-          <PrimaryButton label="Allow camera" onPress={requestPermission} />
+          <PrimaryButton label="allow camera" onPress={requestPermission} />
         ) : (
-          <PrimaryButton label="Open Settings" onPress={() => Linking.openSettings()} />
+          <PrimaryButton label="open settings" onPress={() => Linking.openSettings()} />
         )}
       </View>
     );
@@ -170,18 +170,18 @@ function Scanner() {
         <Viewfinder locked={state.kind === 'pairing'} />
         {state.kind === 'pairing' && (
           <Animated.View entering={FadeIn.duration(160)} style={styles.pairing}>
-            <ActivityIndicator color={colors.text} />
-            <Text style={[type.caption, { color: colors.text }]}>Pairing…</Text>
+            <ActivityIndicator color={colors.onMedia} />
+            <Text style={[type.label, { color: colors.onMedia }]}>pairing…</Text>
           </Animated.View>
         )}
       </View>
       {state.kind === 'error' ? (
         <View style={{ alignItems: 'center', gap: space.sm }}>
           <Text style={type.caption}>{state.message}</Text>
-          <PrimaryButton label="Try again" onPress={reset} />
+          <PrimaryButton label="try again" onPress={reset} />
         </View>
       ) : (
-        <Text style={[type.caption, { textAlign: 'center' }]}>Point at a friend’s Openhouse code.</Text>
+        <Text style={[type.caption, { textAlign: 'center' }]}>point at a friend’s openhouse code</Text>
       )}
     </View>
   );
@@ -195,11 +195,9 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   segment: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.bg,
     borderRadius: radius.full,
     padding: space.xs,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
   },
   segmentPill: {
     position: 'absolute',
@@ -207,9 +205,7 @@ const styles = StyleSheet.create({
     bottom: space.xs,
     left: space.xs,
     borderRadius: radius.full,
-    backgroundColor: colors.elevated,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.lineStrong,
+    backgroundColor: colors.ink,
   },
   pairing: {
     position: 'absolute',

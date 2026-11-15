@@ -146,9 +146,9 @@ const pts = (points: Shared['points']) => points.map((p) => `${p.x},${p.y}`).joi
 
 // ── Minimal light: paper, one ink, one route color. ──────────────────────────
 function Minimal({ trip, stops, points, faces, stats, id }: Shared) {
-  const paper = trip.palette[2] ?? colors.text;
-  const ink = trip.palette[0] ?? colors.bg;
-  const route = trip.palette[4] ?? colors.accent;
+  const paper = trip.palette[2] ?? colors.bg;
+  const ink = trip.palette[0] ?? colors.ink;
+  const route = trip.palette[4] ?? colors.pinkEdge;
   const muted = trip.palette[3] ?? colors.textMuted;
   const swatch = 14;
 
@@ -185,7 +185,7 @@ function Minimal({ trip, stops, points, faces, stats, id }: Shared) {
 function Night({ trip, stops, points, faces, stats, id }: Shared) {
   const paper = '#0D1424';
   const ink = '#EDE6D6';
-  const glow = trip.palette[1] ?? colors.accent;
+  const glow = trip.palette[1] ?? '#D9A441';
   const muted = '#7E8AA3';
   const first = stops[0];
 

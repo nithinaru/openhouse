@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/brand/icon-1024.png",
     "scheme": "openhouse",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/brand/icon-1024.png",
       "bundleIdentifier": "com.nithinaru.openhouse",

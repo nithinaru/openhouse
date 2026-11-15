@@ -14,7 +14,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { EASE_IN_OUT, EASE_OUT } from '@/features/stop/motion';
-import { colors, fonts, space, type } from '@/theme';
+import { colors, fonts, shadow, space, type } from '@/theme';
 import { Button } from '@/theme/ui';
 
 const AV = 88;
@@ -22,7 +22,7 @@ const START = 150; // px each avatar travels in from
 const REST = AV / 2 - 10; // final offset from center: the two overlap by 20px
 const APPROACH_MS = 520;
 const SPARKS = 12;
-const SPARK_COLORS = [colors.accent, colors.text];
+const SPARK_COLORS = [colors.pinkEdge, colors.ink, colors.skyDeep];
 
 type Person = { name: string; avatarUri?: string };
 
@@ -82,12 +82,12 @@ export function PairCelebration({ me, friend, onAgain }: { me: Person; friend: P
       </View>
 
       <Animated.View entering={FadeInDown.duration(380).delay(textDelay).easing(EASE_OUT)} style={{ alignItems: 'center', gap: space.xs }}>
-        <Text style={type.title}>You and {friend.name}</Text>
-        <Text style={[type.body, { color: colors.textMuted, textAlign: 'center' }]}>You’ll show up on each other’s map.</Text>
+        <Text style={type.title}>you and {friend.name}</Text>
+        <Text style={[type.body, { color: colors.textMuted, textAlign: 'center' }]}>you’ll show up on each other’s map</Text>
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(380).delay(textDelay + 120).easing(EASE_OUT)}>
-        <Button label="Scan another" onPress={onAgain} />
+        <Button label="scan another" onPress={onAgain} />
       </Animated.View>
     </View>
   );
@@ -97,8 +97,8 @@ function Avatar({ person }: { person: Person }) {
   return person.avatarUri ? (
     <Image source={{ uri: person.avatarUri }} style={styles.avatar} contentFit="cover" />
   ) : (
-    <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accent }]}>
-      <Text style={{ color: colors.accentInk, fontFamily: fonts.serif, fontSize: 36 }}>{person.name.slice(0, 1).toUpperCase()}</Text>
+    <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.pink }]}>
+      <Text style={{ color: colors.text, fontFamily: fonts.bold, fontSize: 36 }}>{person.name.slice(0, 1).toLowerCase()}</Text>
     </View>
   );
 }
@@ -129,6 +129,6 @@ const styles = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.lg },
   stage: { width: '100%', height: AV + 80, alignItems: 'center', justifyContent: 'center' },
   avatarWrap: { position: 'absolute' },
-  avatar: { width: AV, height: AV, borderRadius: AV / 2, borderWidth: 3, borderColor: colors.bg, backgroundColor: colors.surface },
-  ring: { position: 'absolute', width: AV, height: AV, borderRadius: AV / 2, borderWidth: 2, borderColor: colors.accent },
+  avatar: { width: AV, height: AV, borderRadius: AV / 2, borderWidth: 4, borderColor: colors.bg, backgroundColor: colors.surface, ...shadow.print },
+  ring: { position: 'absolute', width: AV, height: AV, borderRadius: AV / 2, borderWidth: 2, borderStyle: 'dashed', borderColor: colors.pinkEdge },
 });

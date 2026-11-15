@@ -2,55 +2,39 @@ import { StyleSheet, Text, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { colors, fonts, radius, shadow, space } from '@/theme';
+import { Sticker } from '@/theme/ui';
 
 import { pairUrl } from './pair';
 
 const QR = 200;
 const CARD_W = QR + space.lg * 2;
 
-/** Your pairing code, printed on a paper card. */
+/** Your pairing code, on a white card pinned slightly crooked, with your name tag. */
 export function QrCard({ name, code }: { name: string; code: string }) {
   return (
-    <View style={styles.card} accessible accessibilityLabel={`Your Openhouse code, ${code.split('').join(' ')}`}>
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{name.slice(0, 1).toUpperCase()}</Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
-          </Text>
-          <Text style={styles.sub}>Openhouse</Text>
-        </View>
+    <View style={styles.wrap} accessible accessibilityLabel={`your openhouse code, ${code.split('').join(' ')}`}>
+      <View style={styles.card}>
+        <QRCode value={pairUrl(code)} size={QR} color={colors.ink} backgroundColor={colors.bg} />
+        <Text style={styles.code}>{code.split('').join(' ')}</Text>
       </View>
-      <QRCode value={pairUrl(code)} size={QR} color={colors.bg} backgroundColor={colors.text} />
-      <Text style={styles.code}>{code.split('').join(' ')}</Text>
+      <Sticker label={`@${name.toLowerCase()}`} rotate={-6} style={styles.tag} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: { alignItems: 'center' },
   card: {
     width: CARD_W,
     padding: space.lg,
-    paddingTop: space.md,
+    paddingBottom: space.md,
     borderRadius: radius.lg,
-    backgroundColor: colors.text,
-    alignItems: 'center',
-    gap: space.md,
-    ...shadow.float,
-  },
-  header: { flexDirection: 'row', alignItems: 'center', gap: space.sm, alignSelf: 'stretch' },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     backgroundColor: colors.bg,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: space.md,
+    transform: [{ rotate: '-2deg' }],
+    ...shadow.float,
   },
-  avatarText: { color: colors.text, fontFamily: fonts.serif, fontSize: 18 },
-  name: { color: colors.bg, fontSize: 17, lineHeight: 22, fontWeight: '600' },
-  sub: { color: colors.textFaint, fontSize: 13, lineHeight: 18 },
-  code: { color: colors.bg, fontFamily: fonts.mono, fontSize: 15, letterSpacing: 2, fontVariant: ['tabular-nums'] },
+  tag: { alignSelf: 'center', marginTop: -16 },
+  code: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 15, letterSpacing: 2, fontVariant: ['tabular-nums'] },
 });

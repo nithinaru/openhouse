@@ -16,7 +16,7 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import type { Photo } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
+import { colors, fonts, radius, space, type } from '@/theme';
 
 import { ChevronsIcon } from './Icons';
 import { clamp, EASE_IN_OUT } from './motion';
@@ -114,7 +114,7 @@ export function AngleCompare({ mine, theirs, friendName, width, reduced }: Props
   return (
     <View style={{ gap: space.sm }}>
       <GestureDetector gesture={pan}>
-        <View style={{ width, height, borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.surface }}>
+        <View style={{ width, height, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.surface }}>
           <Image source={{ uri: mine.uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={150} />
 
           <Animated.View style={[StyleSheet.absoluteFill, { overflow: 'hidden' }, clipStyle]}>
@@ -129,7 +129,7 @@ export function AngleCompare({ mine, theirs, friendName, width, reduced }: Props
           </Animated.View>
 
           <Animated.View pointerEvents="none" style={[styles.label, { left: space.sm }, youLabel]}>
-            <Text style={styles.labelText}>You</Text>
+            <Text style={styles.labelText}>you</Text>
           </Animated.View>
           <Animated.View pointerEvents="none" style={[styles.label, { right: space.sm }, themLabel]}>
             <Text style={styles.labelText}>{friendName}</Text>
@@ -148,7 +148,7 @@ export function AngleCompare({ mine, theirs, friendName, width, reduced }: Props
                 Haptics.selectionAsync();
                 setPick(i);
               }}
-              style={[styles.thumb, i === pick && { borderColor: colors.accent }]}
+              style={[styles.thumb, i === pick && { borderColor: colors.ink }]}
               accessibilityRole="button"
               accessibilityLabel={`${friendName}'s photo ${i + 1}`}
             >
@@ -156,7 +156,7 @@ export function AngleCompare({ mine, theirs, friendName, width, reduced }: Props
             </Pressable>
           ))}
           <Text style={[type.caption, { alignSelf: 'center', marginLeft: space.xs }]}>
-            {theirs.length} from {friendName}
+            {theirs.length} from {friendName.toLowerCase()}
           </Text>
         </View>
       ) : null}
@@ -165,14 +165,16 @@ export function AngleCompare({ mine, theirs, friendName, width, reduced }: Props
 }
 
 const styles = StyleSheet.create({
-  line: { position: 'absolute', top: 0, left: 0, width: 2, backgroundColor: colors.text },
+  line: { position: 'absolute', top: 0, left: 0, width: 3, backgroundColor: colors.onMedia },
   handle: {
     position: 'absolute',
     left: 0,
     width: HANDLE,
     height: HANDLE,
     borderRadius: HANDLE / 2,
-    backgroundColor: colors.text,
+    backgroundColor: colors.ink,
+    borderWidth: 3,
+    borderColor: colors.onMedia,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -188,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     backgroundColor: colors.scrim,
   },
-  labelText: { color: colors.text, fontSize: 12, fontWeight: '500' },
+  labelText: { color: colors.text, fontFamily: fonts.semibold, fontSize: 12, textTransform: 'lowercase' },
   thumb: {
     width: 48,
     height: 48,

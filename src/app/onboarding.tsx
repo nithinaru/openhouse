@@ -205,8 +205,13 @@ function AskPhotos({
         <Print uri={a?.uri} width={printW} rotate={-11} style={{ position: 'absolute', transform: [{ translateX: -printW * 0.42 }, { rotate: '-11deg' }] }} />
         <Print uri={c?.uri} width={printW} rotate={9} style={{ position: 'absolute', transform: [{ translateX: printW * 0.42 }, { translateY: 10 }, { rotate: '9deg' }] }} />
         <Print uri={b?.uri} width={printW * 1.08} rotate={-2} style={{ position: 'absolute', transform: [{ translateY: 18 }, { rotate: '-2deg' }] }} />
-        <Sticker label="only from your camera roll" tone="paper" rotate={-5} style={[styles.fanSticker, { top: 0, left: space.lg }]} />
-        <Sticker label="your day, rebuilt" rotate={-4} style={[styles.fanSticker, { bottom: 0, right: space.lg }]} />
+        <Sticker
+          label="only from your camera roll"
+          tone="paper"
+          rotate={-5}
+          style={[styles.fanSticker, { top: '50%', marginTop: -printW * 0.6 - 30, left: space.lg }]}
+        />
+        <Sticker label="your day, rebuilt" rotate={-4} style={[styles.fanSticker, { top: '50%', marginTop: printW * 0.6 + 4, right: space.lg }]} />
       </View>
 
       <View style={styles.askActions}>

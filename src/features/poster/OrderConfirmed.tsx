@@ -51,7 +51,7 @@ export function OrderConfirmed({ palette, detail }: Props) {
   }));
   const checkProps = useAnimatedProps(() => ({ strokeDashoffset: CHECK_LEN * (1 - check.get()) }));
 
-  const colorsFor = palette.length ? palette : [colors.accent, colors.text];
+  const colorsFor = palette.length ? palette : [colors.pinkEdge, colors.ink, colors.skyDeep];
 
   return (
     <Animated.View entering={reduced ? FadeIn.duration(200) : FadeIn.duration(260)} style={styles.card}>
@@ -76,7 +76,7 @@ export function OrderConfirmed({ palette, detail }: Props) {
           </Svg>
         </Animated.View>
       </View>
-      <Text style={[type.heading, { marginTop: space.md }]}>Order confirmed</Text>
+      <Text style={[type.heading, { marginTop: space.md }]}>order confirmed</Text>
       <Text style={[type.caption, { textAlign: 'center', marginTop: space.xs }]}>{detail}</Text>
     </Animated.View>
   );
@@ -136,6 +136,7 @@ const styles = StyleSheet.create({
     height: BADGE,
     borderRadius: BADGE / 2,
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderStyle: 'dashed',
+    borderColor: colors.pinkEdge,
   },
 });

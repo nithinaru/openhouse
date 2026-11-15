@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { Moment } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
+import { colors, radius, shadow, space, type } from '@/theme';
 import { ChevronRightIcon } from '@/theme/icons';
 import { Press, Stamp } from '@/theme/ui';
 
@@ -15,7 +15,7 @@ export function CitedStopCard({ moment, onPress }: { moment: Moment; onPress: ()
     <Press
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`Open ${moment.placeName ?? 'stop'}, ${formatTime(moment.startAt)}`}
+      accessibilityLabel={`open ${moment.placeName ?? 'stop'}, ${formatTime(moment.startAt)}`}
       style={styles.card}
     >
       {hero ? (
@@ -25,11 +25,11 @@ export function CitedStopCard({ moment, onPress }: { moment: Moment; onPress: ()
       )}
       <View style={styles.meta}>
         <Text style={styles.place} numberOfLines={1}>
-          {moment.placeName ?? 'Stop'}
+          {moment.placeName ?? 'stop'}
         </Text>
         <Stamp>
           {formatTime(moment.startAt)}
-          {moment.weather ? ` · ${Math.round(moment.weather.tempF)}°F` : ''}
+          {moment.weather ? ` · ${Math.round(moment.weather.tempF)}°f` : ''}
           {moment.isGoldenHour ? ' · golden hour' : ''}
         </Stamp>
       </View>
@@ -46,11 +46,10 @@ const styles = StyleSheet.create({
     padding: space.sm,
     paddingRight: space.md,
     borderRadius: radius.lg,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
+    backgroundColor: colors.bg,
+    ...shadow.chip,
   },
-  photo: { width: 64, height: 64, borderRadius: radius.sm },
+  photo: { width: 64, height: 64, borderRadius: radius.sm, transform: [{ rotate: '-3deg' }], borderWidth: 3, borderColor: colors.bg },
   meta: { flex: 1, gap: space.xs },
-  place: { ...type.label, fontSize: 16 },
+  place: { ...type.heading, fontSize: 18, lineHeight: 22 },
 });

@@ -23,7 +23,7 @@ import { HeroPager } from '@/features/stop/HeroPager';
 import type { Person, Photo } from '@/lib/types';
 import { colors, ease, radius, shadow, space, type } from '@/theme';
 import { ArrowIcon, ChatIcon, CloudIcon, SunIcon } from '@/theme/icons';
-import { Button, Chip, CloseButton, Cutout, formatClock, Press, Print } from '@/theme/ui';
+import { Button, Chip, CloseButton, Cutout, formatClock, Press, Print, Sticker } from '@/theme/ui';
 
 const EASE_OUT = ease.out;
 const EASE_IN_OUT = ease.inOut;
@@ -229,13 +229,14 @@ export default function StopScreen() {
       <Animated.View pointerEvents="box-none" style={[styles.bottomBar, { paddingBottom: insets.bottom + space.md }, contentFade]}>
         <BottomFade width={width} />
         <View style={styles.actions}>
-          <Button
-            label={plus ? 'walk in' : 'walk in · plus'}
-            onPress={walkIn}
-            accessibilityHint="step inside this moment in 3d"
-            trailing={<ArrowIcon color={colors.accentInk} />}
-            style={{ flex: 1 }}
-          />
+          <View style={{ flex: 1 }}>
+            <Button
+              label={plus ? 'walk in' : 'walk in · plus'}
+              onPress={walkIn}
+              accessibilityHint="step inside this moment in 3d"
+              trailing={<ArrowIcon color={colors.accentInk} />}
+            />
+          </View>
           <Press onPress={ask} accessibilityRole="button" accessibilityLabel="ask about this day" scaleTo={0.92} style={styles.askButton}>
             <ChatIcon size={22} color={colors.text} />
           </Press>
@@ -253,43 +254,44 @@ function Scene({ person, photos, width, at }: { person: Person; photos: Photo[];
   const cutH = Math.round(cutW * 1.5);
   const printW = Math.round(width * 0.58);
   const printH = Math.round(printW * 1.04);
-  const tilts = [7, -4, 3];
-  const stack = photos.slice(0, 3);
+  const [front, ...back] = photos.slice(0, 3);
+  const left = width - printW;
   return (
     <View style={{ width, height: Math.max(cutH + 24, printH + cutH * 0.3 + 12) }}>
-      {stack.length ? (
-        <View
-          style={{ position: 'absolute', top: 0, bottom: 0, left: width - printW, width: printW }}
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-        >
-          {stack
-            .map((p, i) => ({ p, fromTop: i }))
-            .reverse()
-            .map(({ p, fromTop }) => (
-              <Print
-                key={p.id}
-                uri={p.uri}
-                width={printW}
-                height={printH}
-                rotate={tilts[fromTop % tilts.length]}
-                caption={fromTop === 0 ? `${person.name}'s angle` : undefined}
-                meta={fromTop === 0 ? `${at} · by @${person.name.toLowerCase()}` : undefined}
-                style={{ position: 'absolute', top: fromTop === 0 ? cutH * 0.3 : (stack.length - fromTop) * 22 - 22 }}
-              />
-            ))}
-        </View>
-      ) : null}
+      {/* Back prints peek out behind the standee; the front print overlaps it, like a3. */}
+      {back
+        .slice()
+        .reverse()
+        .map((p, i, arr) => (
+          <Print
+            key={p.id}
+            uri={p.uri}
+            width={printW}
+            height={printH}
+            rotate={i % 2 ? -4 : 6}
+            style={{ position: 'absolute', left, top: (arr.length - 1 - i) * 24 }}
+          />
+        ))}
       <Cutout
         uri={person.avatarUri}
         name={person.name}
         width={cutW}
         height={cutH}
         rotate={-3}
-        tag={`@${person.name.toLowerCase()} · ${at}`}
-        tagRotate={-6}
         style={{ position: 'absolute', left: 0, top: 0 }}
       />
+      {front ? (
+        <Print
+          uri={front.uri}
+          width={printW}
+          height={printH}
+          rotate={4}
+          caption={`${person.name}'s angle`}
+          meta={`${at} · by @${person.name.toLowerCase()}`}
+          style={{ position: 'absolute', left, top: cutH * 0.3 }}
+        />
+      ) : null}
+      <Sticker label={`@${person.name.toLowerCase()} · ${at}`} rotate={-6} style={{ position: 'absolute', left: -4, top: cutH - 22 }} />
     </View>
   );
 }

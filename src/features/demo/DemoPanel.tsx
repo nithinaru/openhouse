@@ -103,7 +103,7 @@ export function DemoPanel() {
 
         <Section title="Stage">
           <Action label="Load demo trip" detail="Opens the YC day Replay, cached on the phone" onPress={loadDemoTrip} primary />
-          <Action label="Reset onboarding" detail="Back to “Let Openhouse read your photos”" onPress={resetOnboarding} />
+          <Action label="Reset onboarding" detail="back to the sky splash" onPress={resetOnboarding} />
         </Section>
 
         <Section title="Simulate">

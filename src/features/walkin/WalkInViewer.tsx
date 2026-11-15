@@ -33,8 +33,8 @@ function heroPhoto(moment: Moment): Photo | undefined {
 export function pickSource(moment: Moment | undefined, palette: string[]): WalkInSource {
   const common = {
     palette,
-    fogColor: colors.bg,
-    arrowColor: colors.accent,
+    fogColor: colors.sky,
+    arrowColor: colors.bg,
     textColor: colors.text,
   };
 
@@ -163,14 +163,14 @@ export function WalkInViewer({ moment, palette = [], onNodeChange }: Props) {
       />
       {source.kind === 'hosted' && hostedLoading && !error ? (
         <View style={[StyleSheet.absoluteFill, styles.center]} pointerEvents="none">
-          <ActivityIndicator color={colors.accent} />
-          <Text style={[type.caption, styles.gap]}>Walking in…</Text>
+          <ActivityIndicator color={colors.ink} />
+          <Text style={[type.caption, styles.gap]}>walking in…</Text>
         </View>
       ) : null}
       {error && source.kind === 'hosted' ? (
         // The splat page renders its own status text; only overlay hosted pages.
         <View style={[StyleSheet.absoluteFill, styles.center, styles.errorBg]} pointerEvents="none">
-          <Text style={[type.body, styles.errorText]}>{"Couldn't open this place."}</Text>
+          <Text style={[type.body, styles.errorText]}>{"couldn't open this place"}</Text>
           <Text style={[type.caption, styles.errorText, styles.gap]}>{error}</Text>
         </View>
       ) : null}
@@ -179,9 +179,9 @@ export function WalkInViewer({ moment, palette = [], onNodeChange }: Props) {
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, backgroundColor: colors.bg },
+  fill: { flex: 1, backgroundColor: colors.sky },
   center: { alignItems: 'center', justifyContent: 'center', padding: space.xl },
-  errorBg: { backgroundColor: colors.bg },
+  errorBg: { backgroundColor: colors.sky },
   errorText: { textAlign: 'center' },
   gap: { marginTop: space.sm },
 });

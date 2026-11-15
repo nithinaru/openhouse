@@ -28,7 +28,7 @@ import { POSTER_VARIANTS } from '@/features/poster/Poster';
 import { EASE_IN_OUT } from '@/features/stop/motion';
 import { PressScale } from '@/features/stop/PressScale';
 import { getDemoTrip } from '@/lib/demo/demoTrip';
-import { colors, radius, space, type } from '@/theme';
+import { colors, fonts, radius, space, type } from '@/theme';
 import { Button, SheetHeader } from '@/theme/ui';
 
 const SIZES = [
@@ -107,7 +107,7 @@ export default function FrameScreen() {
     try {
       const perm = await requestPermissionsAsync(true);
       if (!perm.granted) {
-        setMessage('Allow Photos access to save the poster.');
+        setMessage('allow photos access to save the poster');
         return;
       }
       const ref = frameRefs.current[index];
@@ -116,10 +116,10 @@ export default function FrameScreen() {
       // TODO(convex): also upload `uri` to Convex storage and create the poster record (§5.8).
       await Asset.create(uri);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setMessage('Saved to Photos');
+      setMessage('saved to photos');
     } catch (e) {
       console.warn('[frame] save failed', e);
-      setMessage('Could not save the poster.');
+      setMessage('could not save the poster');
     } finally {
       setSaving(false);
     }
@@ -133,16 +133,16 @@ export default function FrameScreen() {
       if (checkout) {
         await WebBrowser.openBrowserAsync(checkout.url);
         // Never mark paid on browser close: wait for the webhook to update the order.
-        setMessage('Confirming your order…');
+        setMessage('confirming your order…');
         const paid = await waitForPaid(checkout.orderId);
         setMessage(paid ? null : 'Payment not confirmed yet. It will show here once Whop confirms it.');
         if (paid) setServerConfirmed(true);
       } else {
-        setMessage('Checkout opens once the backend is live');
+        setMessage('checkout opens once the backend is live');
       }
     } catch (e) {
       console.warn('[frame] checkout failed', e);
-      setMessage('Could not open checkout.');
+      setMessage('could not open checkout');
     } finally {
       setCheckingOut(false);
     }
@@ -155,11 +155,11 @@ export default function FrameScreen() {
     >
       <View style={{ paddingHorizontal: space.lg, gap: space.xs }}>
         <SheetHeader
-          title="Frame it"
+          title="frame it"
           onTitleLongPress={() => setPreviewConfirmed((v) => !v)}
           onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         />
-        <Text style={type.caption}>Your day, printed and framed. Swipe to change the style</Text>
+        <Text style={type.caption}>your day, printed and framed. swipe to change the style</Text>
       </View>
 
       {/* The wall */}
@@ -197,7 +197,7 @@ export default function FrameScreen() {
         </View>
         <View style={{ flexDirection: 'row', gap: 6 }}>
           {POSTER_VARIANTS.map((v, i) => (
-            <View key={v.id} style={[styles.dot, i === index && { backgroundColor: colors.text, width: 16 }]} />
+            <View key={v.id} style={[styles.dot, i === index && { backgroundColor: colors.ink, width: 16 }]} />
           ))}
         </View>
       </View>
@@ -233,10 +233,10 @@ export default function FrameScreen() {
         ) : styleLocked ? (
           <Button label="unlock this style with plus" onPress={openPlus} />
         ) : (
-          <Button label={`Frame this · $${sizeInfo.price}`} onPress={frameThis} loading={checkingOut} />
+          <Button label={`frame this · $${sizeInfo.price}`} onPress={frameThis} loading={checkingOut} />
         )}
 
-        <Button variant="secondary" label="Save to Photos" onPress={save} loading={saving} />
+        <Button variant="secondary" label="save to photos" onPress={save} loading={saving} />
 
         {message && <Text style={[type.caption, { textAlign: 'center' }]}>{message}</Text>}
       </View>
@@ -305,15 +305,15 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 52,
     paddingHorizontal: space.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
     borderColor: colors.line,
     backgroundColor: colors.bg,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  sizeActive: { borderColor: colors.text, backgroundColor: colors.surface },
-  sizeLabel: { color: colors.textMuted, fontSize: 15, fontWeight: '500' },
-  sizePrice: { color: colors.textMuted, fontSize: 15, fontWeight: '500', fontVariant: ['tabular-nums'] },
+  sizeActive: { borderColor: colors.ink, backgroundColor: colors.bg },
+  sizeLabel: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 15 },
+  sizePrice: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 15, fontVariant: ['tabular-nums'] },
 });

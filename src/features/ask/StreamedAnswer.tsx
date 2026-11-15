@@ -46,6 +46,6 @@ export function StreamedAnswer({ text, onDone }: { text: string; onDone?: () => 
 }
 
 const styles = StyleSheet.create({
-  answer: { ...type.story, fontSize: 24, lineHeight: 32 },
-  caret: { color: colors.accent, fontSize: 20 },
+  answer: { ...type.story, fontSize: 24, lineHeight: 31, letterSpacing: -0.5 },
+  caret: { color: colors.pinkEdge, fontSize: 20 },
 });

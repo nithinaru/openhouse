@@ -17,7 +17,7 @@ import { colors } from '@/theme';
 
 const CORNER = 34;
 const STROKE = 4;
-const SHADE = colors.scrim;
+const SHADE = colors.shade;
 
 /**
  * Overlay for the camera: dims everything but a square window, draws corner
@@ -69,9 +69,9 @@ export function Viewfinder({ locked }: { locked: boolean }) {
               <Svg width={size - 24} height={2}>
                 <Defs>
                   <LinearGradient id="scanLine" x1="0" y1="0" x2="1" y2="0">
-                    <Stop offset="0" stopColor={colors.accent} stopOpacity="0" />
-                    <Stop offset="0.5" stopColor={colors.accent} stopOpacity="1" />
-                    <Stop offset="1" stopColor={colors.accent} stopOpacity="0" />
+                    <Stop offset="0" stopColor={colors.pink} stopOpacity="0" />
+                    <Stop offset="0.5" stopColor={colors.pink} stopOpacity="1" />
+                    <Stop offset="1" stopColor={colors.pink} stopOpacity="0" />
                   </LinearGradient>
                 </Defs>
                 <Rect width={size - 24} height={2} fill="url(#scanLine)" />
@@ -85,11 +85,11 @@ export function Viewfinder({ locked }: { locked: boolean }) {
 }
 
 function Corner({ style, lock }: { style: ViewStyle; lock: SharedValue<number> }) {
-  const color = useAnimatedStyle(() => ({ borderColor: interpolateColor(lock.get(), [0, 1], [colors.text, colors.accent]) }));
+  const color = useAnimatedStyle(() => ({ borderColor: interpolateColor(lock.get(), [0, 1], [colors.onMedia, colors.pink]) }));
   return <Animated.View style={[styles.corner, style, color]} />;
 }
 
 const styles = StyleSheet.create({
   shade: { position: 'absolute', backgroundColor: SHADE },
-  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: colors.text },
+  corner: { position: 'absolute', width: CORNER, height: CORNER, borderColor: colors.onMedia },
 });
