@@ -34,6 +34,8 @@
   .tile .who { position: absolute; left: 10px; bottom: 10px; display: flex; align-items: center; gap: 5px; padding: 4px 9px 4px 4px; border-radius: 14px; background: rgba(255,255,255,.92); font-weight: 700; font-size: 11px; white-space: nowrap; }
   .who .av { width: 18px; height: 18px; border-radius: 9px; background: #f7c5dd; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
   .who .cam { color: #8a8a8a; font-weight: 600; }
+  .cand { position: absolute; background-size: cover; background-position: center; backface-visibility: hidden; box-shadow: 0 12px 28px rgba(0,0,0,.55); }
+  .cand.edge { box-shadow: 0 0 0 2px rgba(255,255,255,.85), 0 12px 28px rgba(0,0,0,.55); }
   .vignette { position: absolute; inset: 0; pointer-events: none; background:
       radial-gradient(circle at 1.5px 1.5px, rgba(0,0,0,0) .8px, rgba(0,0,0,.16) 1.5px) 0 0/3px 3px,
       linear-gradient(rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 17%, rgba(0,0,0,0) 66%, rgba(0,0,0,.6) 100%); }
@@ -120,6 +122,23 @@ const ROOMS = {
       { a: 240, img: 'assets/living-a240.jpg', who: 'sol',   cam: '0.5x',    rz: -1.0, dx: 6,  dy: -8 },
       { a: 300, img: 'assets/living-a300.jpg', who: 'jules', cam: 'digicam', rz: 1.3,  dx: -3, dy: 4 },
     ],
+    // candid shots: posed pics, selfies, close-ups. sized + placed like real photos, not aligned to the room
+    candids: [
+      { a: 20,  img: 'assets/cand-L7.jpg', w: 118, h: 118, y: -196, rz: 5,  edge: true },
+      { a: 70,  img: 'assets/cand-L1.jpg', w: 172, h: 172, y: -138, rz: -4, edge: true },
+      { a: 88,  img: 'assets/cand-L2.jpg', w: 98,  h: 174, y: 96,   rz: 2 },
+      { a: 136, img: 'assets/cand-L3.jpg', w: 204, h: 153, y: -46,  rz: 2 },
+      { a: 212, img: 'assets/cand-L4.jpg', w: 150, h: 150, y: -158, rz: -3, edge: true },
+      { a: 262, img: 'assets/cand-L5.jpg', w: 140, h: 187, y: -112, rz: 4,  edge: true },
+      { a: 315, img: 'assets/cand-L6.jpg', w: 192, h: 144, y: 118,  rz: -2 },
+      // tighter re-crops of other shots from the night, dropped in wherever someone took them
+      { a: 42,  img: 'assets/cand-L4.jpg', w: 104, h: 138, y: 168,  rz: -5, bs: '170%', bp: '55% 30%' },
+      { a: 108, img: 'assets/living-a000.jpg', w: 132, h: 99, y: 178, rz: 3, edge: true, bs: '230%', bp: '35% 30%' },
+      { a: 160, img: 'assets/cand-L1.jpg', w: 118, h: 118, y: 172,  rz: -4, bs: '165%', bp: '40% 25%' },
+      { a: 232, img: 'assets/cand-L2.jpg', w: 86,  h: 152, y: -172, rz: 3,  edge: true, bs: '140%', bp: '50% 35%' },
+      { a: 286, img: 'assets/living-a120.jpg', w: 150, h: 112, y: 176, rz: -3, bs: '210%', bp: '55% 25%' },
+      { a: 342, img: 'assets/cand-L3.jpg', w: 120, h: 120, y: -160, rz: 4,  edge: true, bs: '150%', bp: '50% 45%' },
+    ],
     arrows: [{ a: 184, label: 'kitchen' }],
   },
   kitchen: {
@@ -131,6 +150,20 @@ const ROOMS = {
       { a: 180, img: 'assets/kitchen-a180.jpg', who: 'theo',  cam: 'iphone',  rz: -0.9, dx: 3,  dy: -5 },
       { a: 240, img: 'assets/kitchen-a240.jpg', who: 'ines',  cam: 'film',    rz: 1.4,  dx: -5, dy: 7 },
       { a: 300, img: 'assets/kitchen-a300.jpg', who: 'sol',   cam: '0.5x',    rz: -1.1, dx: 4,  dy: -3 },
+    ],
+    candids: [
+      { a: 30,  img: 'assets/cand-K6.jpg', w: 150, h: 150, y: 150,  rz: -4, edge: true },
+      { a: 77,  img: 'assets/cand-K1.jpg', w: 170, h: 170, y: -128, rz: 3 },
+      { a: 150, img: 'assets/cand-K2.jpg', w: 100, h: 178, y: 92,   rz: -3, edge: true },
+      { a: 202, img: 'assets/cand-K3.jpg', w: 120, h: 120, y: -172, rz: 4,  edge: true },
+      { a: 296, img: 'assets/cand-K4.jpg', w: 200, h: 150, y: 104,  rz: -2 },
+      { a: 345, img: 'assets/cand-K5.jpg', w: 130, h: 173, y: -150, rz: 3 },
+      { a: 4,   img: 'assets/kitchen-a240.jpg', w: 130, h: 98, y: -168, rz: 2, bs: '210%', bp: '50% 40%' },
+      { a: 55,  img: 'assets/cand-K2.jpg', w: 108, h: 108, y: -176, rz: 4,  edge: true, bs: '175%', bp: '50% 14%' },
+      { a: 120, img: 'assets/kitchen-a000.jpg', w: 150, h: 112, y: 166, rz: -3, bs: '210%', bp: '40% 40%' },
+      { a: 176, img: 'assets/cand-K5.jpg', w: 98,  h: 130, y: -156, rz: -4, bs: '150%', bp: '50% 60%' },
+      { a: 246, img: 'assets/cand-K1.jpg', w: 140, h: 105, y: 156,  rz: 3,  edge: true, bs: '175%', bp: '50% 30%' },
+      { a: 328, img: 'assets/cand-K6.jpg', w: 108, h: 144, y: -168, rz: -4, edge: true, bs: '150%', bp: '50% 40%' },
     ],
     arrows: [{ a: 300, label: 'living room' }],
   },
@@ -159,6 +192,17 @@ function buildRoom(rootId, room) {
     cyl.appendChild(el);
     return el;
   });
+  room.candEls = (room.candids || []).map((c) => {
+    const el = document.createElement('div');
+    el.className = 'cand' + (c.edge ? ' edge' : '');
+    el.style.left = `${195 - c.w / 2}px`; el.style.top = `${422 - c.h / 2 + c.y}px`;
+    el.style.width = `${c.w}px`; el.style.height = `${c.h}px`;
+    el.style.backgroundImage = `url(${c.img})`;
+    if (c.bs) { el.style.backgroundSize = c.bs; el.style.backgroundPosition = c.bp || 'center'; }
+    el._c = c;
+    cyl.appendChild(el);
+    return el;
+  });
   room.arrowEls = room.arrows.map((a) => {
     const w = document.createElement('div');
     w.innerHTML = `<div class="arrow"><div class="ring"></div><svg width="60" height="52" viewBox="0 0 60 52"><path d="M10 38L30 14L50 38" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="arrowLabel">${a.label} ↑</div>`;
@@ -184,7 +228,7 @@ function keyed(t, keys) {                                   // piecewise easeIO 
   return keys[keys.length - 1][1];
 }
 
-function drawRoom(room, yaw, { develop = () => 1, arrowOn = 1, arrowPress = 0 }) {
+function drawRoom(room, yaw, { develop = () => 1, candDevelop = () => 1, arrowOn = 1, arrowPress = 0 }) {
   room.cyl.style.transform = `translateZ(${R}px) rotateY(${yaw}deg)`;
   for (const p of room.panels) p.style.visibility = Math.abs(wrap(p._a - yaw)) < 100 ? 'visible' : 'hidden';
   room.tileEls.forEach((el, i) => {
@@ -193,6 +237,12 @@ function drawRoom(room, yaw, { develop = () => 1, arrowOn = 1, arrowPress = 0 })
     el.style.transform = `rotateY(${-t.a}deg) translateZ(${-R + 3}px) translate(${t.dx}px, ${t.dy}px) rotateZ(${t.rz}deg) scale(${lerp(1.06, 1, dev)})`;
     el.style.opacity = dev;
     el.firstChild.style.filter = `blur(${lerp(9, 0, dev)}px)`;
+  });
+  room.candEls.forEach((el, i) => {
+    const c = el._c, d = wrap(c.a - yaw), dev = candDevelop(i);
+    el.style.visibility = Math.abs(d) < 100 ? 'visible' : 'hidden';
+    el.style.transform = `rotateY(${-c.a}deg) translateZ(${-R + 16 + (i % 3) * 4}px) rotateZ(${c.rz}deg) scale(${lerp(1.12, 1, dev)})`;
+    el.style.opacity = dev;
   });
   for (const { a, arrow, label } of room.arrowEls) {
     const d = wrap(a.a - yaw), vis = Math.abs(d) < 38;
@@ -247,6 +297,7 @@ function render(t) {
   const livOrder = [2, 1, 0, 5, 4, 3]; // develops in the order you look at them
   const livFront = drawRoom(ROOMS.living, livYaw, {
     develop: (i) => ease(seg(t, 3000 + livOrder.indexOf(i) * 520, 3700 + livOrder.indexOf(i) * 520)),
+    candDevelop: (i) => { const k = (i * 5) % 13; return ease(seg(t, 3400 + k * 210, 3800 + k * 210)); },
     arrowOn: ease(seg(t, 7700, 8200)) * (1 - ease(seg(t, 9000, 9400))),
     arrowPress: Math.sin(Math.PI * seg(t, 8650, 8950)),
   });
@@ -261,6 +312,7 @@ function render(t) {
   const kitYaw = keyed(t, KIT_YAW);
   const kitFront = drawRoom(ROOMS.kitchen, kitYaw, {
     develop: (i) => ease(seg(t, 10200 + [2, 1, 0, 3, 5, 4][i] * 280, 10800 + [2, 1, 0, 3, 5, 4][i] * 280)),
+    candDevelop: (i) => { const k = (i * 5) % 12; return ease(seg(t, 10500 + k * 150, 10900 + k * 150)); },
     arrowOn: ease(seg(t, 15200, 15700)),
   });
   $('roomKitchen').style.opacity = kitIn;
