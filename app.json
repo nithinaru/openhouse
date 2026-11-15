@@ -96,7 +96,13 @@
           "cameraPermission": "Openhouse scans a friend's code to add them to your trip."
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "openhouse shows which friends were there with you, so you can see the day from where they stood."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
