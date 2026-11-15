@@ -15,7 +15,8 @@ import { isDemoTripId, useTrips } from '@/lib/data/trips';
 import type { Person } from '@/lib/types';
 import { colors, duration, ease, fonts, space, type } from '@/theme';
 import { ArrowIcon, HouseIcon, MapIcon, PeopleIcon, PlusIcon } from '@/theme/icons';
-import { Chip, Dock, Press, Sticker, Wordmark } from '@/theme/ui';
+import { AppDock } from '@/features/dock/Dock';
+import { Chip, Press, Sticker, Wordmark } from '@/theme/ui';
 
 import { shortDate, statsLabel } from '@/features/home/tripMeta';
 
@@ -169,36 +170,7 @@ export default function HomeScreen() {
       </ScrollView>
 
       <View pointerEvents="box-none" style={[styles.dock, { bottom: insets.bottom + space.sm }]}>
-        <Dock
-          items={[
-            {
-              key: 'home',
-              label: 'home',
-              icon: (c) => <HouseIcon color={c} />,
-              onPress: () => {},
-              active: true,
-            },
-            {
-              key: 'replay',
-              label: 'replay your latest day',
-              icon: (c) => <MapIcon size={20} color={c} />,
-              onPress: () => (latest ? openTrip(latest.id) : router.push('/onboarding')),
-            },
-            {
-              key: 'add',
-              label: 'add today',
-              icon: (c) => <PlusIcon size={22} color={c} />,
-              onPress: () => router.push('/onboarding'),
-              tone: 'pink',
-            },
-            {
-              key: 'people',
-              label: 'people',
-              icon: (c) => <PeopleIcon size={20} color={c} />,
-              onPress: () => router.push('/people'),
-            },
-          ]}
-        />
+        <AppDock active="home" tripId={latest?.id} />
       </View>
     </View>
   );

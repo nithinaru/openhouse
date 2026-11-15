@@ -50,5 +50,5 @@ export const UNDEPLOYED_PATHS: string[] = Object.values(FN as Record<string, FnD
 
 // Seeded demo data on the deployment (internal mutation seed:demo, user deviceId "demo-me").
 // The app prefers this live trip when the backend is up and falls back to src/lib/demo/demoTrip.ts.
-export const DEMO_REMOTE_TRIP_ID = 'js763zz1855h72srqbj04qnqc98j84y7';
+export const DEMO_REMOTE_TRIP_ID = 'js7cwkv07k2jd4by1tgexhpzn18j9xfs';
 export const DEMO_REMOTE_USER_ID = 'jx7d6e90rvthgb9wxsgpjhy9198j953v';
