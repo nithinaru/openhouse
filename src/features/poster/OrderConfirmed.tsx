@@ -1,6 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   useAnimatedProps,
@@ -78,6 +79,9 @@ export function OrderConfirmed({ palette, detail }: Props) {
       </View>
       <Text style={[type.heading, { marginTop: space.md }]}>order confirmed</Text>
       <Text style={[type.caption, { textAlign: 'center', marginTop: space.xs }]}>{detail}</Text>
+      <Pressable onPress={() => router.push('/whop/chat')} accessibilityRole="link" hitSlop={8} style={{ marginTop: space.sm }}>
+        <Text style={[type.label, { textDecorationLine: 'underline' }]}>join the owners chat →</Text>
+      </Pressable>
     </Animated.View>
   );
 }

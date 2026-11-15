@@ -3,6 +3,7 @@
 // No expo-clipboard in this app, so a code sticker taps to the system share sheet (which has
 // "copy") and long-presses open a big selectable code for manual copy.
 
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, Share, StyleSheet, Text, TextInput, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
@@ -284,6 +285,9 @@ export function ReferralCard({ referral }: { referral: Referral }) {
         {referral.url}
       </Text>
       <Button variant="secondary" label="share your link" onPress={share} />
+      <Press onPress={() => router.push('/whop/connect')} haptic="selection" accessibilityRole="link" style={{ alignSelf: 'center', paddingVertical: space.xs }}>
+        <Text style={[type.label, { textDecorationLine: 'underline' }]}>connect whop to get paid →</Text>
+      </Press>
     </View>
   );
 }

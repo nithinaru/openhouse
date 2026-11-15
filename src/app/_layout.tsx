@@ -64,6 +64,9 @@ export default function RootLayout() {
             <Stack.Screen name="plus" options={{ presentation: 'modal' }} />
             <Stack.Screen name="gift/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="gift/inbox" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="whop/app" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="whop/chat" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="whop/connect" options={{ presentation: 'modal' }} />
             <Stack.Screen name="house/[id]" />
             <Stack.Screen name="house/person/[id]" />
           </Stack>

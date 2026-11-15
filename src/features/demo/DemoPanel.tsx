@@ -153,6 +153,21 @@ export function DemoPanel() {
           />
         </Section>
 
+        <Section title="whop">
+          <Action label="whop app" detail="wish you were here installed in a whop community" onPress={() => {
+              router.back();
+              router.push('/whop/app');
+            }} />
+          <Action label="owners chat" detail="was there hoodie owners, unlocked by purchase" onPress={() => {
+              router.back();
+              router.push('/whop/chat');
+            }} />
+          <Action label="sign in with whop" detail="oauth consent, then referral payouts" onPress={() => {
+              router.back();
+              router.push('/whop/connect');
+            }} />
+        </Section>
+
         <Section title="Plus">
           <Action
             label={`Plus lock: ${flags.plusLocked}`}
