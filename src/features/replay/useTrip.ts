@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
 
 import { getDemoTrip } from '@/lib/demo/demoTrip';
+import { getTrip } from '@/lib/ingest/store';
 import type { Moment, Trip } from '@/lib/types';
 
-// TODO: once '@/lib/ingest/store' lands, try `getTrip(id)` from it first and
-// fall back to the demo trip only when it returns nothing:
-//   import { getTrip } from '@/lib/ingest/store';
-//   return getTrip(id) ?? getDemoTrip(id);
+// Ingested trip from this session first, demo trip otherwise.
+// TODO: swap for the Convex trips.get query once it lands.
 export function loadTrip(id?: string): Trip {
-  return getDemoTrip(id);
+  return (id ? getTrip(id) : undefined) ?? getDemoTrip(id);
 }
 
 export function useTrip(id?: string): Trip {

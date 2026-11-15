@@ -44,6 +44,8 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~58.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -52,7 +54,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "node --test src/**/*.test.ts",
+    "test": "node --test src/lib/cluster/cluster.test.ts src/lib/ingest/exif.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "private": true
