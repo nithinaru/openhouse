@@ -54,18 +54,16 @@ export function Tee({ art, side, edition, serial, width }: DesignProps & { width
           <SvgText x={100} y={144} fontSize={9.5} fontFamily={SANS_BOLD} fill={ink} textAnchor="middle" letterSpacing={-0.4}>
             {art.eventTitle}
           </SvgText>
-          {art.stops.slice(0, 8).map((s, i) => {
-            const col = i % 2;
-            const row = Math.floor(i / 2);
-            const x = col ? 102 : 58;
-            const y = 156 + row * 7;
+          {art.stops.slice(0, 6).map((s, i) => {
+            // One column: number + time right-aligned, place left-aligned, so nothing collides.
+            const y = 154 + i * 5.6;
             return (
               <G key={s.id}>
-                <SvgText x={x} y={y} fontSize={3.6} fontFamily={MONO} fill={ink} fillOpacity={0.7}>
-                  {`${String(i + 1).padStart(2, '0')} ${s.time}`}
+                <SvgText x={86} y={y} fontSize={3.6} fontFamily={MONO} fill={ink} fillOpacity={0.7} textAnchor="end">
+                  {`${String(i + 1).padStart(2, '0')}  ${s.time}`}
                 </SvgText>
-                <SvgText x={x + 19} y={y} fontSize={4} fontFamily={SANS} fill={ink}>
-                  {s.name.length > 15 ? `${s.name.slice(0, 14)}…` : s.name}
+                <SvgText x={90} y={y} fontSize={4} fontFamily={SANS} fill={ink}>
+                  {s.name.length > 18 ? `${s.name.slice(0, 17)}…` : s.name}
                 </SvgText>
               </G>
             );
