@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=390, initial-scale=1" />
+<title>openhouse — step in (street view)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 390px; height: 844px; overflow: hidden; background: #0a0a0a; }
+  body { font-family: 'Inter Tight', system-ui, sans-serif; color: #0a0a0a; -webkit-font-smoothing: antialiased; }
+  .screen { position: absolute; inset: 0; overflow: hidden; }
+  .abs { position: absolute; }
+  .layer { position: absolute; inset: 0; will-change: transform, opacity, filter; }
+
+  /* ready screen */
+  #ready { background: #b4d2f0; }
+  #ready .title { top: 92px; left: 0; right: 0; text-align: center; }
+  #ready .tag { display: inline-block; padding: 5px 12px; border-radius: 16px; background: #f7c5dd; border: 1.5px dashed #e2549e; font-weight: 700; font-size: 13px; transform: rotate(3deg); }
+  #ready h1 { margin-top: 10px; font-weight: 700; font-size: 32px; line-height: 34px; letter-spacing: -0.035em; }
+  #ready .sub { margin-top: 6px; font-weight: 500; font-size: 15px; color: #3d5e82; }
+  #diorama { left: -30px; top: 236px; width: 450px; height: 450px; background: url(assets/diorama.jpg) center/cover; filter: contrast(1.22) saturate(1.18); transform-origin: 34% 52%; }
+  #ready .fadeTop { left: 0; right: 0; top: 226px; height: 70px; background: linear-gradient(#b4d2f0 10%, rgba(180,210,240,0)); }
+  #ready .fadeBot { left: 0; right: 0; top: 600px; height: 110px; background: linear-gradient(rgba(180,210,240,0), #b4d2f0 85%); }
+  #stepBtn { left: 24px; right: 24px; bottom: 58px; height: 56px; border-radius: 28px; background: #0a0a0a; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 18px; }
+  #ready .hint { left: 0; right: 0; bottom: 30px; text-align: center; font-weight: 600; font-size: 14px; color: #3d5e82; }
+
+  /* street view */
+  .env { position: absolute; left: -40px; top: -40px; width: 470px; height: 924px; background-size: cover; background-position: center; }
+  .grain { position: absolute; inset: 0; background-image: radial-gradient(circle at 1.5px 1.5px, rgba(0,0,0,0) 0.8px, rgba(0,0,0,0.22) 1.5px); background-size: 3px 3px; pointer-events: none; }
+  .scrim { position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 20%, rgba(0,0,0,0) 62%, rgba(0,0,0,.65) 100%); }
+  .stage { position: absolute; inset: 0; perspective: 760px; perspective-origin: 50% 46%; }
+  .card { position: absolute; transform-style: preserve-3d; will-change: transform, opacity; }
+  .card .ph { border: 4px solid #fff; border-radius: 12px; background-size: cover; background-position: center; box-shadow: 0 18px 40px rgba(0,0,0,.55); }
+  .card .chip { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px; border-radius: 16px; background: #fff; white-space: nowrap; font-weight: 700; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+  .chip .av { width: 20px; height: 20px; border-radius: 10px; background: #f7c5dd; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; }
+  .chip .cam { color: #8a8a8a; font-weight: 600; }
+
+  .floorArrow { position: absolute; left: 50%; width: 120px; height: 120px; margin-left: -60px; transform-style: preserve-3d; }
+  .floorArrow .disc { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(rgba(255,255,255,.35), rgba(255,255,255,0) 70%); border: 2px solid rgba(255,255,255,.75); }
+  .floorArrow svg { position: absolute; left: 30px; top: 22px; }
+  .arrowLabel { position: absolute; left: 50%; transform: translateX(-50%); padding: 6px 12px; border-radius: 16px; background: #fff; font-weight: 700; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+
+  .topbar { position: absolute; left: 0; right: 0; top: 54px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; }
+  .circleBtn { width: 40px; height: 40px; border-radius: 20px; background: #fff; display: flex; align-items: center; justify-content: center; }
+  .pill { height: 40px; padding: 0 16px; border-radius: 20px; background: #fff; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; letter-spacing: -0.02em; white-space: nowrap; }
+  .pill .muted { color: #8a8a8a; font-weight: 500; font-size: 13px; }
+  .minimap { position: absolute; left: 16px; bottom: 34px; width: 92px; height: 92px; border-radius: 22px; background: #fff; box-shadow: 0 6px 20px rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; }
+  .bottomText { position: absolute; left: 122px; right: 16px; bottom: 44px; color: #fff; font-weight: 700; font-size: 18px; line-height: 21px; letter-spacing: -0.02em; }
+  .bottomText .sub { display: block; margin-top: 6px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,.75); letter-spacing: 0; }
+
+  .statusbar { position: absolute; left: 0; right: 0; top: 0; height: 54px; display: flex; align-items: center; justify-content: space-between; padding: 6px 30px 0 52px; font-family: system-ui; font-weight: 600; font-size: 17px; z-index: 50; }
+  .touch { position: absolute; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; background: rgba(255,255,255,.55); border: 2px solid rgba(255,255,255,.95); box-shadow: 0 0 0 6px rgba(255,255,255,.18); z-index: 60; pointer-events: none; }
+  .flash { position: absolute; inset: 0; background: #fff; pointer-events: none; z-index: 40; }
+</style>
+</head>
+<body>
+<div class="screen" id="root">
+
+  <!-- ===== street view: living room ===== -->
+  <div class="layer" id="svA">
+    <div class="env" id="envA" style="background-image:url(assets/living-iphone.jpg)"></div>
+    <div class="grain"></div>
+    <div class="scrim"></div>
+    <div class="stage" id="stageA">
+      <div class="card" id="cA1"><div class="ph" style="width:132px;height:176px;background-image:url(assets/living-digicam.jpg)"></div><div class="chip"><span class="av">t</span>@theo <span class="cam">· digicam</span></div></div>
+      <div class="card" id="cA2"><div class="ph" style="width:122px;height:162px;background-image:url(assets/living-film.jpg)"></div><div class="chip"><span class="av">i</span>@ines <span class="cam">· film</span></div></div>
+      <div class="card" id="cA3"><div class="ph" style="width:104px;height:138px;background-image:url(assets/living-05x.jpg)"></div><div class="chip"><span class="av">s</span>@sol <span class="cam">· 0.5x</span></div></div>
+      <div class="floorArrow" id="arrowA">
+        <div class="disc"></div>
+        <svg width="60" height="60" viewBox="0 0 60 60"><path d="M10 40L30 18L50 40" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="arrowLabel" id="labelA">kitchen ↑</div>
+  </div>
+
+  <!-- ===== street view: kitchen ===== -->
+  <div class="layer" id="svB">
+    <div class="env" id="envB" style="background-image:url(assets/kitchen-iphone.jpg)"></div>
+    <div class="grain"></div>
+    <div class="scrim"></div>
+    <div class="stage" id="stageB">
+      <div class="card" id="cB1"><div class="ph" style="width:134px;height:178px;background-image:url(assets/kitchen-digicam.jpg)"></div><div class="chip"><span class="av">j</span>@jules <span class="cam">· digicam</span></div></div>
+      <div class="card" id="cB2"><div class="ph" style="width:124px;height:164px;background-image:url(assets/kitchen-film.jpg)"></div><div class="chip"><span class="av">m</span>@maya <span class="cam">· film</span></div></div>
+      <div class="card" id="cB3"><div class="ph" style="width:96px;height:128px;background-image:url(assets/living-05x.jpg);background-position:30% 40%"></div><div class="chip"><span class="av">s</span>@sol <span class="cam">· 0.5x</span></div></div>
+      <div class="floorArrow" id="arrowB">
+        <div class="disc"></div>
+        <svg width="60" height="60" viewBox="0 0 60 60"><path d="M10 40L30 18L50 40" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="arrowLabel" id="labelB">stairs ↑</div>
+  </div>
+
+  <!-- shared street view chrome -->
+  <div class="layer" id="svUI">
+    <div class="topbar">
+      <div class="circleBtn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M3 8L9 3L15 8V15H3Z" stroke="#0a0a0a" stroke-width="2" stroke-linejoin="round"/></svg></div>
+      <div class="pill"><span id="roomEmoji">🎃</span><span id="roomName">living room</span><span class="muted" id="roomTime">· 11:12 pm</span></div>
+      <div class="circleBtn"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2V12M5 6L9 2L13 6M3 11V15H15V11" stroke="#0a0a0a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </div>
+    <div class="minimap">
+      <svg width="78" height="78" viewBox="0 0 78 78" fill="none">
+        <rect x="3" y="3" width="72" height="72" rx="6" fill="#f3f3f3"/>
+        <rect id="mmLiving" x="3" y="3" width="44" height="72" rx="6" fill="#fbe3ee" stroke="#0a0a0a" stroke-width="1.5"/>
+        <rect id="mmKitchen" x="47" y="39" width="28" height="36" fill="#f3f3f3" stroke="#0a0a0a" stroke-width="1.5"/>
+        <rect x="47" y="3" width="28" height="36" stroke="#0a0a0a" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <g id="mmYou"><path d="M0 0L-12 -22H12Z" fill="#0a0a0a" fill-opacity=".18"/><circle r="5" fill="#0a0a0a" stroke="#fff" stroke-width="2"/></g>
+      </svg>
+    </div>
+    <div class="bottomText" id="bottomText">tap the arrow to<br/>walk forward<span class="sub" id="bottomSub">3 photos around you</span></div>
+  </div>
+
+  <!-- ===== ready screen (on top at start) ===== -->
+  <div class="layer" id="ready">
+    <div class="abs" id="diorama"></div>
+    <div class="abs fadeTop"></div>
+    <div class="abs fadeBot"></div>
+    <div class="abs title" id="readyTitle">
+      <span class="tag">ready 🎉</span>
+      <h1>halloween at<br/>the delancey house</h1>
+      <div class="sub">3 rooms · 41 people · 2,310 photos</div>
+    </div>
+    <div class="abs" id="stepBtn">step in <span>👣</span></div>
+    <div class="abs hint" id="readyHint">drag to spin · tap any cutout</div>
+  </div>
+
+  <div class="flash" id="flash"></div>
+  <div class="statusbar" id="statusbar"><span>9:41</span><svg width="82" height="22" viewBox="0 0 82 22" fill="currentColor"><path d="M3.7 13H2.5a1 1 0 0 0-1 1v2.5a1 1 0 0 0 1 1h1.2a1 1 0 0 0 1-1V14a1 1 0 0 0-1-1m5.2-2.5H7.7a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h1.2a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1M14.1 8h-1.2a1 1 0 0 0-1 1v7.5a1 1 0 0 0 1 1h1.2a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1m5.2-2.5h-1.2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h1.2a1 1 0 0 0 1-1v-10a1 1 0 0 0-1-1"/><path fill-rule="evenodd" d="M36.57 7.8c2.49 0 4.88.92 6.68 2.58.14.13.36.12.49 0l1.3-1.27a.34.34 0 0 0 0-.5 12.55 12.55 0 0 0-16.93 0 .34.34 0 0 0 0 .5l1.3 1.26c.13.13.34.14.48 0a10 10 0 0 1 6.68-2.57m0 4.22a5.4 5.4 0 0 1 3.67 1.44c.14.13.35.13.48 0l1.3-1.33a.37.37 0 0 0-.01-.52 7.9 7.9 0 0 0-10.88 0 .37.37 0 0 0 0 .52l1.29 1.32c.13.14.34.14.48 0 1-.92 2.31-1.43 3.67-1.43m2.52 2.8q0 .15-.1.28l-2.18 2.45a.3.3 0 0 1-.24.11.3.3 0 0 1-.24-.1l-2.18-2.46a.43.43 0 0 1 .01-.56 3.44 3.44 0 0 1 4.82 0 .4.4 0 0 1 .11.28" clip-rule="evenodd"/><path fill-rule="evenodd" opacity=".35" d="M70.5 5c2.05 0 3.08 0 3.88.34a4.3 4.3 0 0 1 2.28 2.28c.34.8.34 1.83.34 3.88s0 3.08-.34 3.88a4.3 4.3 0 0 1-2.28 2.28c-.8.34-1.83.34-3.88.34h-12c-2.05 0-3.08 0-3.88-.34a4.3 4.3 0 0 1-2.28-2.28c-.34-.8-.34-1.83-.34-3.88s0-3.08.34-3.88a4.3 4.3 0 0 1 2.28-2.28C55.42 5 56.45 5 58.5 5zM58.28 6c-1.85 0-2.77 0-3.48.36a3.3 3.3 0 0 0-1.44 1.44C53 8.5 53 9.43 53 11.28v.44c0 1.85 0 2.77.36 3.48a3.3 3.3 0 0 0 1.44 1.44c.7.36 1.63.36 3.48.36h12.44c1.85 0 2.77 0 3.48-.36a3.3 3.3 0 0 0 1.44-1.44c.36-.7.36-1.63.36-3.48v-.44c0-1.85 0-2.77-.36-3.48a3.3 3.3 0 0 0-1.44-1.44C73.5 6 72.57 6 70.72 6z" clip-rule="evenodd"/><path d="M54 11c0-1.4 0-2.1.27-2.63a2.5 2.5 0 0 1 1.1-1.1C55.9 7 56.6 7 58 7h13c1.4 0 2.1 0 2.64.27q.72.37 1.09 1.1C75 8.9 75 9.6 75 11v1c0 1.4 0 2.1-.27 2.64a2.5 2.5 0 0 1-1.1 1.09C73.1 16 72.4 16 71 16H58c-1.4 0-2.1 0-2.63-.27a2.5 2.5 0 0 1-1.1-1.1C54 14.1 54 13.4 54 12z"/><path opacity=".35" d="M78 9.5v4.08a2.2 2.2 0 0 0 1.33-2.04A2.2 2.2 0 0 0 78 9.5"/></svg></div>
+  <div class="touch" id="touch"></div>
+</div>
+
+<script>
+const TOTAL = 13000;
+const $ = (id) => document.getElementById(id);
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = (t) => { t = clamp(t); return 1 - Math.pow(1 - t, 3); };          // ease-out cubic
+const easeIO = (t) => { t = clamp(t); return t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; };
+const seg = (t, a, b) => clamp((t - a) / (b - a));
+const spring = (t) => { t = clamp(t); return 1 - Math.exp(-6 * t) * Math.cos(9 * t); };
+
+function setCard(el, { x, y, z, ry, s = 1, o = 1 }) {
+  el.style.transform = `translate3d(${x}px, ${y}px, ${z}px) rotateY(${ry}deg) scale(${s})`;
+  el.style.opacity = o;
+}
+function setArrow(el, label, { y, s = 1, o = 1, labelY }) {
+  el.style.top = `${y}px`;
+  el.style.transform = `rotateX(64deg) scale(${s})`;
+  el.style.opacity = o;
+  label.style.top = `${labelY}px`;
+  label.style.opacity = o;
+}
+function touch(t, at, x, y) {
+  const p = seg(t, at - 250, at + 350);
+  const on = t > at - 250 && t < at + 350;
+  const el = $('touch');
+  if (!on) return false;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  const press = seg(t, at - 100, at + 60);
+  el.style.transform = `scale(${lerp(1.15, .8, ease(press))})`;
+  el.style.opacity = p < .2 ? p / .2 : p > .75 ? (1 - p) / .25 : 1;
+  return true;
+}
+
+function render(t) {
+  t = ((t % TOTAL) + TOTAL) % TOTAL;
+  $('touch').style.opacity = 0;
+
+  // ---------- 0–1.5s ready, tap at 1.2s ----------
+  const tapped = seg(t, 1150, 1300);
+  $('stepBtn').style.transform = `scale(${1 - .04 * Math.sin(Math.PI * tapped)})`;
+  touch(t, 1220, 195, 844 - 58 - 28);
+
+  // ---------- 1.5–3.0s dive into the house ----------
+  const dive = easeIO(seg(t, 1450, 2950));
+  $('diorama').style.transform = `scale(${lerp(1, 5.2, dive)}) translateY(${lerp(0, 20, dive)}px)`;
+  $('diorama').style.filter = `contrast(1.22) saturate(1.18) blur(${lerp(0, 6, seg(t, 2300, 2950))}px)`;
+  const uiOut = ease(seg(t, 1450, 1850));
+  for (const el of document.querySelectorAll('#ready .fadeTop, #ready .fadeBot')) el.style.opacity = 1 - ease(seg(t, 1450, 1900));
+  for (const id of ['readyTitle', 'stepBtn', 'readyHint']) { $(id).style.opacity = 1 - uiOut; $(id).style.translate = `0 ${uiOut * (id === 'readyTitle' ? -20 : 20)}px`; }
+  $('ready').style.opacity = 1 - ease(seg(t, 2350, 3000));
+  $('ready').style.background = `rgba(180,210,240,${1 - dive})`;
+
+  // ---------- street view A (living room) 2.4–7.6s ----------
+  const aIn = ease(seg(t, 2400, 3300));
+  const push = easeIO(seg(t, 6550, 7650));                       // forward push A→B
+  const look = Math.sin(Math.PI * seg(t, 4200, 6100)) * 1;          // look-around sway
+  $('svA').style.opacity = aIn * (1 - ease(seg(t, 7050, 7650)));
+  $('envA').style.transform = `translateX(${look * -26}px) scale(${lerp(1.18, 1, aIn) * lerp(1, 2.1, push)})`;
+  $('envA').style.filter = `blur(${lerp(10, 1.2, aIn) + push * 10}px) brightness(${lerp(.75, .95, aIn)})`;
+
+  const pop = (i) => spring(seg(t, 3200 + i * 140, 3900 + i * 140));
+  const fly = (dx, dy) => ({ x: dx * push * 2.6, y: dy * push * 1.6, z: push * 520 });
+  const cards = [
+    ['cA1', { x: 18, y: 250, z: -40, ry: 28 }, [-180, -40]],
+    ['cA2', { x: 248, y: 270, z: -60, ry: -30 }, [190, -30]],
+    ['cA3', { x: 158, y: 196, z: -260, ry: -6 }, [10, -90]],
+  ];
+  cards.forEach(([id, base, [dx, dy]], i) => {
+    const p = pop(i), f = fly(dx, dy);
+    setCard($(id), { x: base.x + look * 22 + f.x, y: base.y + f.y, z: base.z + f.z, ry: base.ry, s: lerp(.6, 1, p), o: clamp(p * 1.4) * (1 - push) });
+  });
+  const aArrow = ease(seg(t, 3900, 4400));
+  const aTap = Math.sin(Math.PI * seg(t, 6250, 6550));
+  setArrow($('arrowA'), $('labelA'), { y: lerp(560, 540, aArrow) + push * 220, s: (1 - .12 * aTap) * lerp(1, 1.8, push), o: aArrow * (1 - ease(seg(t, 6600, 7000))), labelY: lerp(500, 482, aArrow) + push * 200 });
+  touch(t, 6420, 195, 600);
+
+  // ---------- street view B (kitchen) 7.0–13s ----------
+  const bIn = ease(seg(t, 7050, 8000));
+  const look2 = Math.sin(Math.PI * seg(t, 9600, 11600));
+  $('svB').style.opacity = bIn;
+  $('envB').style.transform = `translateX(${look2 * 24}px) scale(${lerp(1.55, 1, bIn)})`;
+  $('envB').style.filter = `blur(${lerp(12, 1.2, bIn)}px) brightness(${lerp(1.25, .95, bIn)})`;
+  const popB = (i) => spring(seg(t, 7900 + i * 150, 8600 + i * 150));
+  [
+    ['cB1', { x: 14, y: 236, z: -30, ry: 30 }],
+    ['cB2', { x: 252, y: 262, z: -50, ry: -28 }],
+    ['cB3', { x: 170, y: 190, z: -280, ry: 8 }],
+  ].forEach(([id, base], i) => {
+    const p = popB(i);
+    setCard($(id), { x: base.x - look2 * 20, y: base.y, z: base.z, ry: base.ry, s: lerp(.6, 1, p), o: clamp(p * 1.4) });
+  });
+  const bArrow = ease(seg(t, 8700, 9200));
+  setArrow($('arrowB'), $('labelB'), { y: lerp(560, 540, bArrow), s: 1, o: bArrow, labelY: lerp(500, 482, bArrow) });
+
+  // forward flash
+  $('flash').style.opacity = .22 * Math.sin(Math.PI * seg(t, 6950, 7350));
+
+  // ---------- shared UI ----------
+  const uiIn = ease(seg(t, 3300, 3800));
+  $('svUI').style.opacity = uiIn * (1 - .6 * Math.sin(Math.PI * seg(t, 6600, 7800)));
+  const inKitchen = t > 7250;
+  $('roomName').textContent = inKitchen ? 'kitchen' : 'living room';
+  $('roomEmoji').textContent = inKitchen ? '🍬' : '🎃';
+  $('roomTime').textContent = inKitchen ? '· 11:40 pm' : '· 11:12 pm';
+  $('bottomSub').textContent = inKitchen ? '3 new photos around you' : '3 photos around you';
+  $('mmLiving').setAttribute('fill', inKitchen ? '#f3f3f3' : '#fbe3ee');
+  $('mmKitchen').setAttribute('fill', inKitchen ? '#fbe3ee' : '#f3f3f3');
+  const mv = easeIO(seg(t, 6600, 7600));
+  $('mmYou').setAttribute('transform', `translate(${lerp(25, 61, mv)} ${lerp(56, 62, mv)}) rotate(${lerp(0, 70, mv)})`);
+  $('statusbar').style.color = t < 2600 ? '#0a0a0a' : '#fff';
+}
+
+// preview: autoplay unless ?t= is given (used for frame capture)
+const params = new URLSearchParams(location.search);
+window.render = render;
+if (params.has('t')) { render(+params.get('t')); }
+else {
+  const start = performance.now();
+  const loop = (now) => { render(now - start); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>

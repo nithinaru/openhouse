@@ -19,3 +19,9 @@ Visual language adapted from a consumer map app's site and onboarding (sky photo
 2. `a2-room-cutouts` — standees placed in the real room, "4 people stood here", time slider
 3. `a3-their-night` — one person's cutout + their photos, "stand where she stood"
 4. `a4-your-nights` — website-style night cards, who's inside, add tonight
+
+## Create a moment (`create-a-moment/`)
+End-to-end flow: create → pick location → invite → photos matched by location + time → house builds → fast-forward → step inside. See its README.
+
+## Step inside (`step-inside/`)
+Walking through a finished moment: footprints at every photo spot, camera-true photos snapping into the 3D room, angles of one moment, who-stood-where map, and the motion spec.
