@@ -36,6 +36,7 @@ export const checkout = action({
         billing_period: 30,
         currency: 'usd',
         renewal_price: dollars(PLUS_PRICE_CENTS),
+        trial_period_days: 7,
       },
     });
     return { purchaseUrl: purchaseUrlOf(config), checkoutId: config.id };
