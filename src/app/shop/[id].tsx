@@ -34,6 +34,19 @@ export default function ShopScreen() {
     >
       <SheetHeader eyebrow={trip.title} title="make something from this day" onClose={close} />
 
+      <Press
+        onPress={() => router.push({ pathname: '/drop/[id]', params: { id: trip.id } })}
+        accessibilityRole="button"
+        accessibilityLabel="open the drop, a limited merch collection from this day"
+        style={styles.drop}
+      >
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={type.label}>the drop →</Text>
+          <Text style={type.caption}>a limited merch collection designed from this day · “was there” edition</Text>
+        </View>
+        <ArrowIcon color={colors.text} />
+      </Press>
+
       {trip.people.length ? (
         <Section title="send as a gift">
           <FriendPicker people={trip.people} selected={giftId} onSelect={setGiftId} />
@@ -71,6 +84,17 @@ export default function ShopScreen() {
 }
 
 const styles = StyleSheet.create({
+  drop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.pink,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.pinkEdge,
+  },
   sell: {
     flexDirection: 'row',
     alignItems: 'center',

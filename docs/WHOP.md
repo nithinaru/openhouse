@@ -226,3 +226,94 @@ app then opens that trip's Replay. `trips:get` should allow reading a trip the c
 
 Webhook events on `/whop`: `payment.succeeded`, `membership.activated`, `membership.deactivated`,
 `refund.created`.
+
+---
+
+## 5. The drop (limited merch collection per day)
+
+A six-piece merch collection auto-designed from one trip (hoodie, route-map tee, cutout tote,
+dad cap, sticker sheet, enamel pin), sold as a limited Whop drop with two editions:
+`was_there` (only buyers whose own photos put them within 300 m of the venue) and `public`.
+App: `src/app/drop/[id].tsx`, `src/features/drop/*` (prices in `src/features/drop/catalog.ts`).
+Until these functions exist the app shows launch numbers (112 of 180 claimed, closes in ~2h 14m)
+and checkout reports "coming online".
+
+Whop shape (verify field names on docs.whop.com before shipping): **one product per drop**,
+one plan per edition with a limited run (`stock: 180, unlimited_stock: false` for `was_there`,
+`stock: 500` for `public`), `plan_type: 'one_time'`. Checkout via
+`checkoutConfigurations.create({ plan_id, metadata: { dropOrderId }, ... })` with the cart total
+as the price. The organizer fee (10% to the host, e.g. YC) goes out as `application_fee_amount`
+on the host's connected company where supported; otherwise record it on the order and pay out
+with `client.transfers.create` after the drop closes.
+
+Prices (cents, server is the source of truth; the app shows the same numbers):
+
+| piece | price | sizes |
+| --- | --- | --- |
+| `hoodie` | 7200 | xs s m l xl xxl |
+| `tee` | 3800 | xs s m l xl xxl |
+| `tote` | 2800 | — |
+| `cap` | 3200 | — |
+| `stickers` | 800 | — |
+| `pin` | 1400 | — |
+| all six (`items` covers every piece once) | 14900 bundle | — |
+
+### `drops:create` (action)
+
+Args `{ userId: Id<'users'>, tripId: Id<'trips'> }`. Idempotent: returns the existing drop for
+the trip if there is one, otherwise creates the Whop product + edition plans and a `drops` row.
+
+```ts
+{
+  dropId: Id<'drops'>,
+  title: string,              // "the drop · yc hackathon day"
+  closesAt: number,           // ms epoch; default createdAt + 24h, demo trip: end of demo day
+  editions: Array<{ edition: 'was_there' | 'public', stock: number, claimed: number }>,
+}
+```
+
+### `drops:get` (query)
+
+Args `{ dropId: Id<'drops'> }` → same shape as `drops:create`, or `null`. `claimed` is live
+(the app polls every 5 s and animates the bar).
+
+### `drops:checkout` (action)
+
+```ts
+{
+  dropId: Id<'drops'>,
+  userId: Id<'users'>,
+  edition: 'was_there' | 'public',
+  items: Array<{ piece: 'hoodie' | 'tee' | 'tote' | 'cap' | 'stickers' | 'pin', size?: string }>,
+}
+```
+
+Returns `{ purchaseUrl: string, orderId: Id<'orders'> }`.
+
+- Server re-checks presence for `was_there`: at least one of the user's photos (or a moment
+  when photos have no GPS) within 300 m of the drop's venue. The demo trip always qualifies.
+  Throw `"not at the venue"` otherwise; never trust the client.
+- Throw `"sold out"` when `claimed >= stock` for that edition, `"closed"` after `closesAt`.
+- `size` is required for `hoodie` and `tee` (`xs`–`xxl`), ignored otherwise.
+- Insert an `orders` row `{ product: 'drop', dropId, edition, items, priceCents, status: 'pending' }`
+  and put `{ orderId }` in Whop `metadata`.
+
+Paid state: the app polls the existing **`orders:get { orderId }`** until `status` is `paid` /
+`fulfilled` (same `waitForOrder` path as prints). `orders:get` may return `product: 'drop'`;
+the app only reads `status`.
+
+### Webhook `/whop`
+
+`payment.succeeded` for a drop order → `orders.markPaid` and, in the same mutation,
+`drops.editions[edition].claimed += 1` (once per order, not per item, so "112 of 180" counts
+people). `refund.created` → decrement it again.
+
+Schema needs (Capy owns schema): table `drops` `{ tripId, userId, title, venue: { name, address,
+lat, lng }, closesAt, whopProductId, editions: [{ edition, stock, claimed, whopPlanId }] }`,
+index `by_tripId`; `orders` gains `dropId?`, `edition?`, `items?`, `product` gains `'drop'`.
+
+| path | kind | status |
+| --- | --- | --- |
+| `drops:create` | action | new |
+| `drops:get` | query | new |
+| `drops:checkout` | action | new |

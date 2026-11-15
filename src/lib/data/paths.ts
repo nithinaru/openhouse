@@ -39,6 +39,11 @@ export const FN = {
   listingsGet: { path: 'listings:get', kind: 'query', deployed: false }, // { listingId } -> Listing | null
   listingsCheckout: { path: 'listings:checkout', kind: 'action', deployed: false }, // { listingId, buyerUserId } -> { purchaseUrl, orderId }
   listingsHasAccess: { path: 'listings:hasAccess', kind: 'query', deployed: false }, // { listingId, userId } -> { access, tripId }
+
+  // The drop: limited merch collection per day (contract in docs/WHOP.md, "the drop").
+  dropsCreate: { path: 'drops:create', kind: 'action', deployed: false }, // { userId, tripId } -> Drop
+  dropsGet: { path: 'drops:get', kind: 'query', deployed: false }, // { dropId } -> Drop | null (live counts)
+  dropsCheckout: { path: 'drops:checkout', kind: 'action', deployed: false }, // { dropId, userId, edition, items } -> { purchaseUrl, orderId }
 } as const satisfies Record<string, FnDef>;
 
 export type FnName = keyof typeof FN;
