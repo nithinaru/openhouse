@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as drops from "../drops.js";
 import type * as files from "../files.js";
 import type * as gifts from "../gifts.js";
 import type * as http from "../http.js";
@@ -30,6 +31,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  drops: typeof drops;
   files: typeof files;
   gifts: typeof gifts;
   http: typeof http;

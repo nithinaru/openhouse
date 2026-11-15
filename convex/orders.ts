@@ -3,13 +3,14 @@ import { action, internalMutation, query, type QueryCtx } from './_generated/ser
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import { posterStyle, printSize, product as productValidator } from './schema';
+import { adjustClaimed } from './drops';
 import { hasPlus } from './memberships';
 import { dollars, purchaseUrlOf, whop } from './whop';
 
 type Product = Infer<typeof productValidator>;
 type PrintSize = Infer<typeof printSize>;
 
-const PRICE_CENTS: Record<Product, Record<string, number>> = {
+const PRICE_CENTS: Record<Exclude<Product, 'drop'>, Record<string, number>> = {
   print: { '12x16': 3900, '18x24': 5900 },
   postcards: { '': 1800 },
   zine: { digital: 1200, printed: 2900 },
@@ -31,7 +32,7 @@ export async function heroThumbUrl(ctx: QueryCtx, moment: Doc<'moments'> | null)
   return (photo.thumbStorageId ? await ctx.storage.getUrl(photo.thumbStorageId) : null) ?? photo.thumbUrl ?? null;
 }
 
-function checkoutTitle(product: Product, variant: string | null, giftName: string | null) {
+function checkoutTitle(product: Exclude<Product, 'drop'>, variant: string | null, giftName: string | null) {
   const base =
     product === 'print'
       ? `Framed print ${variant}`
@@ -82,6 +83,7 @@ export const create = internalMutation({
   handler: async (ctx, args): Promise<CreatedOrder> => {
     const { userId, tripId, momentId } = args;
     const product = args.product ?? 'print';
+    if (product === 'drop') throw new Error('Drop orders go through drops:checkout');
     const trip = await ctx.db.get(tripId);
     if (!trip || trip.userId !== userId) throw new Error('Trip not found for this user');
     if (momentId) {
@@ -155,6 +157,7 @@ export const markPaid = internalMutation({
     if (!order) return null;
     if (order.status !== 'pending') return order._id;
     await ctx.db.patch(order._id, { status: 'paid', whopPaymentId: args.whopPaymentId });
+    await adjustClaimed(ctx, order, 1);
     if (order.giftToUserId) {
       await ctx.db.insert('gifts', {
         orderId: order._id,
@@ -176,7 +179,9 @@ export const markRefunded = internalMutation({
       .withIndex('by_whopPaymentId', (q) => q.eq('whopPaymentId', whopPaymentId))
       .unique();
     if (!order) return null;
-    if (order.status !== 'refunded') await ctx.db.patch(order._id, { status: 'refunded' });
+    if (order.status === 'refunded') return order._id;
+    await ctx.db.patch(order._id, { status: 'refunded' });
+    if (order.status === 'paid' || order.status === 'fulfilled') await adjustClaimed(ctx, order, -1);
     return order._id;
   },
 });
