@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@expo/ui": "~58.0.28",
+    "convex": "^1.50.0",
     "expo": "~58.0.25",
     "expo-audio": "~58.0.12",
     "expo-camera": "~58.0.14",
