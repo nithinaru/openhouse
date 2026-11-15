@@ -128,6 +128,10 @@ export async function startDropCheckout(args: {
   drop: Drop;
   edition: Edition;
   items: DropItem[];
+  /** "was there" code from a friend (promos:forFriend). Server validates and discounts. */
+  promoCode?: string | null;
+  /** Referral code from an opened drop link (referrals:link). Becomes Whop affiliate_code. */
+  referralCode?: string | null;
 }): Promise<Result<CheckoutStart>> {
   if (!args.drop.dropId) return unavailable('soon', 'coming online. the whop drop turns on with the next backend deploy');
   const owner = await ownerFor(args.trip.id);
@@ -137,6 +141,8 @@ export async function startDropCheckout(args: {
     userId: owner.userId,
     edition: args.edition,
     items: args.items.map((i) => (i.size ? { piece: i.piece, size: i.size } : { piece: i.piece })),
+    ...(args.promoCode ? { promoCode: args.promoCode } : {}),
+    ...(args.referralCode ? { referralCode: args.referralCode } : {}),
   });
   if (!res.ok) return res;
   const start = readCheckout(res.value);

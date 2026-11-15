@@ -142,6 +142,17 @@ export function DemoPanel() {
           </View>
         </Section>
 
+        <Section title="For hosts">
+          <Action
+            label="For hosts"
+            detail="YC's dashboard: revenue, sell-through, live Whop payments, payout. Long-press its title for a fake sale"
+            onPress={() => {
+              router.back();
+              router.push('/host');
+            }}
+          />
+        </Section>
+
         <Section title="Openhouse+">
           <Action
             label={`Plus lock: ${flags.plusLocked}`}
@@ -173,7 +184,7 @@ export function DemoPanel() {
       {overlay ? (
         <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(160)} style={[StyleSheet.absoluteFill, styles.overlay, { paddingTop: insets.top + space.xl, paddingBottom: insets.bottom + space.lg }]}>
           {overlay === 'pair' && friend ? (
-            <PairCelebration me={{ name: DEMO_MY_NAME }} friend={{ name: friend.name, avatarUri: friend.avatarUri }} onAgain={() => setOverlay(null)} />
+            <PairCelebration me={{ name: DEMO_MY_NAME }} friend={{ name: friend.name, avatarUri: friend.avatarUri, shareCode: friend.shareCode }} onAgain={() => setOverlay(null)} />
           ) : null}
           {overlay === 'paid' ? (
             <View style={{ flex: 1, justifyContent: 'center' }}>

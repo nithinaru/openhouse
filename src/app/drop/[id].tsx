@@ -24,6 +24,8 @@ import {
 } from '@/features/drop/model';
 import { EditionToggle, LiveCounter, PieceRow, WearingStrip, type Wearer } from '@/features/drop/parts';
 import { PieceSheet } from '@/features/drop/PieceSheet';
+import { discounted, PROMO_PERCENT_OFF, useReferral } from '@/features/drop/promo';
+import { FriendCodes, PromoField, ReferralCard } from '@/features/drop/PromoParts';
 import { ShareCardSaver } from '@/features/drop/ShareCard';
 import { useTrip } from '@/features/replay/useTrip';
 import { colors, duration, ease, fonts, radius, shadow, space, type } from '@/theme';
@@ -37,7 +39,7 @@ const WEAR_TAGS: string[] = ['hoodie · m', 'route tee', 'cutout tote', 'dad cap
 // The drop: a limited collection designed from the day, sold as a Whop drop. "was there" is
 // the edition only people verified at the venue by their own photos can buy.
 export default function DropScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, ref } = useLocalSearchParams<{ id: string; ref?: string }>();
   const trip = useTrip(id);
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -47,6 +49,9 @@ export default function DropScreen() {
   const venue = useMemo(() => venueFor(trip), [trip]);
   const presence = useMemo(() => presenceFor(trip, venue), [trip, venue]);
   const drop = useDrop(trip);
+  const referral = useReferral({ tripId: trip.id, dropId: drop.dropId, bundleCents: BUNDLE_CENTS });
+  const [promoCode, setPromoCode] = useState<string | null>(null);
+  const bundleCents = promoCode ? discounted(BUNDLE_CENTS, PROMO_PERCENT_OFF) : BUNDLE_CENTS;
   const purchase = usePurchase<DropPaid>();
 
   const [editionPick, setEdition] = useState<Edition>('was_there');
@@ -78,7 +83,7 @@ export default function DropScreen() {
 
   const buy = (items: DropItem[]) => {
     setOpen(null);
-    void purchase.buy(() => startDropCheckout({ trip, drop, edition, items }), confirmDropPaid);
+    void purchase.buy(() => startDropCheckout({ trip, drop, edition, items, promoCode, referralCode: typeof ref === 'string' ? ref : null }), confirmDropPaid);
   };
   const itemFor = (p: PieceId): DropItem => (PIECES[p].sizes ? { piece: p, size: sizes[p] ?? 'm' } : { piece: p });
 
@@ -143,14 +148,15 @@ export default function DropScreen() {
           <View style={styles.bundleHead}>
             <Text style={type.heading}>the full drop</Text>
             <Text style={styles.bundlePrice}>
-              {formatCents(BUNDLE_CENTS)} <Text style={styles.strike}>{formatCents(PIECES_TOTAL_CENTS)}</Text>
+              {formatCents(bundleCents)} <Text style={styles.strike}>{formatCents(promoCode ? BUNDLE_CENTS : PIECES_TOTAL_CENTS)}</Text>
             </Text>
           </View>
           <Text style={type.caption}>
             all six pieces · hoodie {sizes.hoodie ?? 'm'} · tee {sizes.tee ?? 'm'} · change sizes on each piece
           </Text>
+          <PromoField applied={promoCode} onApply={setPromoCode} onClear={() => setPromoCode(null)} />
           <Button
-            label={soldOut ? 'sold out' : `get the full drop · ${formatCents(BUNDLE_CENTS)}`}
+            label={soldOut ? 'sold out' : `get the full drop · ${formatCents(bundleCents)}`}
             disabled={soldOut}
             loading={purchase.busy && open == null}
             onPress={() => buy(PIECE_ORDER.map(itemFor))}
@@ -173,11 +179,23 @@ export default function DropScreen() {
         ) : null}
 
         <View style={styles.host}>
-          <Text style={type.label}>organizer: {art.venueName}</Text>
-          <Text style={type.caption}>
-            {Math.round(HOST_SHARE * 100)}% to the host · paid out through whop
-          </Text>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text style={type.label}>organizer: {art.venueName}</Text>
+            <Text style={type.caption}>
+              {Math.round(HOST_SHARE * 100)}% to the host · paid out through whop
+            </Text>
+          </View>
+          <Button variant="quiet" label="host view" onPress={() => router.push('/host')} accessibilityHint="opens the organizer dashboard" />
         </View>
+
+        <FriendCodes
+          friends={trip.people.map((p) => ({ name: p.name, shareCode: p.shareCode, avatarUri: p.avatarUri }))}
+          dropId={drop.dropId}
+          tripId={trip.id}
+          onUse={setPromoCode}
+        />
+
+        <ReferralCard referral={referral} />
 
         <Section title="who's wearing it">
           <WearingStrip wearers={wearers} />

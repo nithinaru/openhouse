@@ -41,7 +41,7 @@ export default function PeopleScreen() {
       <Segmented value={tab} onChange={setTab} />
 
       {preview ? (
-        <PairCelebration key={`preview-${preview.shareCode}`} me={ME} friend={{ name: preview.friendName, avatarUri: preview.avatarUri }} onAgain={() => setPreview(null)} />
+        <PairCelebration key={`preview-${preview.shareCode}`} me={ME} friend={{ name: preview.friendName, avatarUri: preview.avatarUri, shareCode: preview.shareCode }} onAgain={() => setPreview(null)} />
       ) : tab === 'code' ? (
         <Animated.View key="code" entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm }}>
           {/* TODO(convex): name + shareCode from api.users.me. */}
@@ -156,7 +156,7 @@ function Scanner() {
   }
 
   if (state.kind === 'paired') {
-    return <PairCelebration me={ME} friend={{ name: state.result.friendName, avatarUri: state.result.avatarUri }} onAgain={reset} />;
+    return <PairCelebration me={ME} friend={{ name: state.result.friendName, avatarUri: state.result.avatarUri, shareCode: state.result.shareCode }} onAgain={reset} />;
   }
 
   return (

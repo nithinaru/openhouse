@@ -317,3 +317,117 @@ index `by_tripId`; `orders` gains `dropId?`, `edition?`, `items?`, `product` gai
 | `drops:create` | action | new |
 | `drops:get` | query | new |
 | `drops:checkout` | action | new |
+
+---
+
+## 6. Hosts, promo codes, referrals
+
+App: `src/app/host/index.tsx`, `src/features/host/*`, `src/features/drop/promo.ts`,
+`src/features/drop/PromoParts.tsx`. Paths in `src/lib/data/paths.ts` (`hostStats`, `hostPayout`,
+`promosForFriend`, `referralsLink`). Until these are deployed the app shows preview values
+(labeled "preview") and never pretends money moved.
+
+Every Whop call named below was checked against the installed `@whop/sdk` types
+(`node_modules/@whop/sdk/dist/cjs/api/resources/*`): `payments` (`list`, `summary`, `retrieve`),
+`memberships` (`list`, `applyPromoCode`, `assignAffiliate`), `plans` (`retrieve`, fields
+`stock`, `unlimited_stock`, `member_count`), `promoCodes` (`create`, `list`, `retrieve`,
+`deactivate`), `affiliates` (`create`, `retrieve`, sub-resource `affiliates.overrides.create`),
+`transfers` (`create`, `list`, `retrieve`), `ledgerAccounts` (`retrieve`, `balances[]`),
+`checkoutConfigurations` (`create`, fields `affiliate_code`, `variant.application_fee_amount`).
+
+### `host:stats` (query)
+
+Args `{ userId: Id<'users'> }` (the organizer; the demo uses the seeded demo user). Returns:
+
+```ts
+{
+  grossCents: number,          // sum of paid drop orders for drops this user hosts
+  orders: number,              // count of those orders
+  members: number,             // active Openhouse+ memberships (memberships table)
+  drop: { editions: Array<{ edition: 'was_there' | 'public', stock: number, claimed: number }> },
+  feeBalanceCents: number,     // 10% of grossCents minus everything already paid out
+  recent: Array<{
+    who: string,               // buyer users.name, lowercase is fine
+    item: string,              // "the hoodie", "the full drop"
+    edition?: 'was_there' | 'public',
+    amountCents: number,
+    at: number,                // ms epoch the payment succeeded
+  }>,                          // newest first, at most 12
+}
+```
+
+The app polls this every 3 s, so compute it from Convex rows written by the `/whop` webhook
+(`payment.succeeded` already marks drop orders paid and bumps `claimed`), not by calling Whop
+per poll. Whop sources: `payments` (webhook `payment.succeeded`; reconcile with
+`client.payments.list({ product_id, statuses: ['paid'] })` or `client.payments.summary`),
+`memberships` (`membership.activated` webhook; reconcile with
+`client.memberships.list({ product_id: WHOP_PLUS_PRODUCT_ID, statuses: ['active'] })`),
+`plans` (one plan per edition with `stock` and `unlimited_stock: false`; `claimed` is ours,
+`client.plans.retrieve({ id }).stock` is the remaining Whop stock).
+
+Schema needs (Capy owns schema): `drops.hostUserId` (default the creator), `orders.paidAt`,
+`orders.priceCents` on drop orders, table `payouts { hostUserId, amountCents, whopTransferId, at }`.
+
+### `host:payout` (action)
+
+Args `{ userId: Id<'users'> }` → `{ transferId: string, amountCents: number }`.
+
+Pays the host's whole `feeBalanceCents` with
+`client.transfers.create({ amount: dollars(amountCents), currency: 'usd', origin_id: <our company ledger / company id>, destination_id: <host's company or user id>, idempotence_key: <payout row id>, notes: 'openhouse host fee', metadata: { payoutId } })`.
+Insert the `payouts` row first (idempotence key), then patch `whopTransferId`. Throw
+`"nothing to pay out"` when the balance is 0. Optionally read
+`client.ledgerAccounts.retrieve({ id })` first and throw `"balance not settled yet"` when
+`balances[].balance` (usd) is below the amount. Where connected companies work in sandbox, prefer
+`variant.application_fee_amount` on each drop checkout so the fee never needs a transfer; then
+`host:payout` only reports what already went out.
+
+### `promos:forFriend` (action)
+
+Args `{ userId: Id<'users'>, friendShareCode: string, dropId: Id<'drops'> }` →
+`{ code: string, percentOff: number, expiresAt: number }`.
+
+- `userId` is the person who was there; `friendShareCode` is the `users.shareCode` of someone
+  they paired with. Throw `"not paired"` unless a `pairings` row links the two users.
+- Idempotent per `(dropId, friendUserId)`: return the existing code.
+- `code` = friend's name uppercased, letters/digits only, max 12 chars, plus `-WASTHERE`
+  (`ROHAN-WASTHERE`); add a digit on collision. `percentOff: 20`. `expiresAt` = `drops.closesAt`.
+- Whop: `client.promoCodes.create({ account_id: <our company>, code, promo_type: 'percentage', amount_off: 20, base_currency: 'usd', new_users_only: false, one_per_customer: true, promo_duration_months: 1, stock: 1, unlimited_stock: false, expires_at: <ISO>, product_id: drops.whopProductId })`.
+  Save `{ dropId, friendUserId, issuerUserId, code, whopPromoCodeId }` in table `promos`
+  (index `by_code`, `by_dropId_and_friendUserId`).
+
+### `drops:checkout` — new optional args
+
+```ts
+{ ...existing, promoCode?: string, referralCode?: string }
+```
+
+- `promoCode`: look it up in `promos` (`by_code`), check the drop matches and it isn't expired
+  or used, and charge the discounted total. The installed SDK's
+  `checkoutConfigurations.create` has **no promo code field**, so apply the discount to
+  `variant.initial_price` and store `promoId` on the order; mark it used in the webhook. The same
+  code also exists as a Whop `promoCodes` object, so it works if typed on Whop's hosted checkout,
+  and `client.memberships.applyPromoCode` is there for renewals. Throw `"code not valid"`
+  otherwise. The app sends it only after the user applies a code and shows "applied".
+- `referralCode`: pass as `affiliate_code` to `checkoutConfigurations.create` (field exists in the
+  SDK) and store `referrerUserId` on the order. Comes from the `?ref=` param of a drop link.
+
+### `referrals:link` (action)
+
+Args `{ userId: Id<'users'>, dropId: Id<'drops'> }` →
+`{ url: string, earnedCents: number, clicks: number, sales: number }`.
+
+- First call per user: `client.affiliates.create({ account_id: <our company>, user_identifier: <user's whop id or email> })`,
+  then `client.affiliates.overrides.create({ id: affiliateId, body: { override_type: 'rev_share', id: affiliateId, product_id: drops.whopProductId, commission_type: 'percentage', commission_value: 10 } })`.
+  Save `{ userId, whopAffiliateId, code }` in table `referrers`.
+- `url` = `openhouse://drop/<tripId>?ref=<code>` (or an https page that redirects there).
+- `sales` / `earnedCents` from paid orders with `referrerUserId` (10% of each); `clicks` is
+  optional (0 is fine). `client.affiliates.retrieve({ id })` gives `total_referrals_count` and
+  `total_referral_earnings_usd` to reconcile. The app polls every 5 s.
+
+| path | kind | status |
+| --- | --- | --- |
+| `host:stats` | query | new |
+| `host:payout` | action | new |
+| `promos:forFriend` | action | new |
+| `referrals:link` | action | new |
+| `drops:checkout` | action | new optional `promoCode`, `referralCode` |

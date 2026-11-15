@@ -43,7 +43,13 @@ export const FN = {
   // The drop: limited merch collection per day (contract in docs/WHOP.md, "the drop").
   dropsCreate: { path: 'drops:create', kind: 'action', deployed: false }, // { userId, tripId } -> Drop
   dropsGet: { path: 'drops:get', kind: 'query', deployed: false }, // { dropId } -> Drop | null (live counts)
-  dropsCheckout: { path: 'drops:checkout', kind: 'action', deployed: false }, // { dropId, userId, edition, items } -> { purchaseUrl, orderId }
+  dropsCheckout: { path: 'drops:checkout', kind: 'action', deployed: false }, // { dropId, userId, edition, items, promoCode?, referralCode? } -> { purchaseUrl, orderId }
+
+  // Hosts, promo codes, referrals (contract in docs/WHOP.md §6).
+  hostStats: { path: 'host:stats', kind: 'query', deployed: false }, // { userId } -> HostStats (polled every 3 s)
+  hostPayout: { path: 'host:payout', kind: 'action', deployed: false }, // { userId } -> { transferId, amountCents }
+  promosForFriend: { path: 'promos:forFriend', kind: 'action', deployed: false }, // { userId, friendShareCode, dropId } -> { code, percentOff, expiresAt }
+  referralsLink: { path: 'referrals:link', kind: 'action', deployed: false }, // { userId, dropId } -> { url, earnedCents, clicks, sales }
 } as const satisfies Record<string, FnDef>;
 
 export type FnName = keyof typeof FN;

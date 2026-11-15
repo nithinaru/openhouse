@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+import { PairPromo } from '@/features/drop/PromoParts';
 import { EASE_IN_OUT, EASE_OUT } from '@/features/stop/motion';
 import { colors, fonts, shadow, space, type } from '@/theme';
 import { Button } from '@/theme/ui';
@@ -24,7 +25,7 @@ const APPROACH_MS = 520;
 const SPARKS = 12;
 const SPARK_COLORS = [colors.pinkEdge, colors.ink, colors.skyDeep];
 
-type Person = { name: string; avatarUri?: string };
+type Person = { name: string; avatarUri?: string; /** Friend only: their users.shareCode, for the "was there" code. */ shareCode?: string };
 
 function meetHaptic() {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -85,6 +86,8 @@ export function PairCelebration({ me, friend, onAgain }: { me: Person; friend: P
         <Text style={type.title}>you and {friend.name}</Text>
         <Text style={[type.body, { color: colors.textMuted, textAlign: 'center' }]}>you’ll show up on each other’s map</Text>
       </Animated.View>
+
+      {friend.shareCode ? <PairPromo friendName={friend.name} friendShareCode={friend.shareCode} delay={textDelay + 80} /> : null}
 
       <Animated.View entering={FadeInDown.duration(380).delay(textDelay + 120).easing(EASE_OUT)}>
         <Button label="scan another" onPress={onAgain} />
