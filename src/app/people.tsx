@@ -65,7 +65,7 @@ function Scanner() {
 
     const code = parsePairCode(data);
     if (!code) {
-      setState({ kind: 'error', message: 'That is not an Openhouse code.' });
+      setState({ kind: 'error', message: 'That is not an Wish You Were Here code.' });
       return;
     }
 
@@ -104,7 +104,7 @@ function Scanner() {
   if (!permission.granted) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md }}>
-        <Text style={[type.body, { textAlign: 'center' }]}>Openhouse needs the camera to scan a friend's code.</Text>
+        <Text style={[type.body, { textAlign: 'center' }]}>Wish You Were Here needs the camera to scan a friend’s code.</Text>
         {permission.canAskAgain ? (
           <PrimaryButton label="Allow camera" onPress={requestPermission} />
         ) : (
@@ -147,7 +147,7 @@ function Scanner() {
           <PrimaryButton label="Try again" onPress={reset} />
         </View>
       ) : (
-        <Text style={[type.caption, { textAlign: 'center' }]}>Point at a friend's Openhouse code.</Text>
+        <Text style={[type.caption, { textAlign: 'center' }]}>Point at a friend’s Wish You Were Here code.</Text>
       )}
     </View>
   );

@@ -5,8 +5,8 @@ Paste the **Project context** block into Capy's project instructions (or at the 
 ## Project context
 
 ```
-Project: Openhouse (repo nithinaru/openhouse). YC Consumer Mobile Hackathon, Nov 15.
-Openhouse turns your camera roll into a narrated, walk-through replay of your day:
+Project: Wish You Were Here, formerly Openhouse (repo nithinaru/openhouse). YC Consumer Mobile Hackathon, Nov 15.
+Wish You Were Here turns your camera roll into a narrated, walk-through replay of your day:
 where you stood, which way you faced, who was there. Full brief: docs/BUILD.md.
 
 Stack (fixed): Expo SDK 58 + Expo Router + TypeScript (routes in src/app/), Convex backend, Revyl cloud iPhone checks.

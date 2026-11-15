@@ -29,7 +29,7 @@ function progressLabel(p: IngestProgress): string {
 
 function failureMessage(e: unknown): string {
   if (e instanceof IngestError) {
-    if (e.code === 'denied') return 'Openhouse needs photo access to find your stops. You can allow it in Settings.';
+    if (e.code === 'denied') return 'Wish You Were Here needs photo access to find your stops. You can allow it in Settings.';
     if (e.code === 'no-geotagged') return 'None of your recent photos have a location.';
   }
   return 'Something went wrong reading your photos.';
@@ -58,7 +58,7 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={{ flex: 1, justifyContent: 'center', padding: space.lg, gap: space.md }}>
-        <Text style={type.title}>Openhouse</Text>
+        <Text style={type.title}>Wish You Were Here</Text>
         <Text style={type.body}>Turns today&apos;s photos into a replay of where you went.</Text>
 
         {running && (
@@ -87,7 +87,7 @@ export default function OnboardingScreen() {
           }}
         >
           <Text style={[type.body, { color: colors.bg }]}>
-            {state.kind === 'failed' ? 'Try again' : 'Let Openhouse read your photos'}
+            {state.kind === 'failed' ? 'Try again' : 'Let Wish You Were Here read your photos'}
           </Text>
         </Pressable>
         {state.kind === 'failed' && (

@@ -11,7 +11,7 @@ export default function TripsScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={{ padding: space.md, gap: space.md }}>
-        <Text style={type.title}>Openhouse</Text>
+        <Text style={type.title}>Wish You Were Here</Text>
         {trips.map((t) => {
           const hero = t.moments[0]?.photos[0];
           return (

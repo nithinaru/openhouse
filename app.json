@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Openhouse",
+    "name": "Wish You Were Here",
     "slug": "openhouse",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -39,21 +39,21 @@
       [
         "expo-media-library",
         {
-          "photosPermission": "Openhouse reads your photos and their locations to rebuild your day.",
-          "savePhotosPermission": "Openhouse saves your trip posters.",
+          "photosPermission": "Wish You Were Here reads your photos and their locations to rebuild your day.",
+          "savePhotosPermission": "Wish You Were Here saves your trip posters.",
           "isAccessMediaLocationEnabled": true
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Openhouse names the places in your photos and drops a pin where you meet friends."
+          "locationWhenInUsePermission": "Wish You Were Here names the places in your photos and drops a pin where you meet friends."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Openhouse scans a friend's code to add them to your trip."
+          "cameraPermission": "Wish You Were Here scans a friend's code to add them to your trip."
         }
       ]
     ],
