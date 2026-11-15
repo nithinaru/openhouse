@@ -5,7 +5,17 @@ export const lens = v.union(v.literal('front'), v.literal('wide'), v.literal('ul
 export const weather = v.object({ tempF: v.number(), summary: v.string() });
 export const posterStyle = v.union(v.literal('minimal'), v.literal('night'), v.literal('field'));
 export const printSize = v.union(v.literal('12x16'), v.literal('18x24'));
-export const product = v.union(v.literal('print'), v.literal('postcards'), v.literal('zine'), v.literal('film'));
+export const product = v.union(v.literal('print'), v.literal('postcards'), v.literal('zine'), v.literal('film'), v.literal('drop'));
+export const edition = v.union(v.literal('was_there'), v.literal('public'));
+export const piece = v.union(
+  v.literal('hoodie'),
+  v.literal('tee'),
+  v.literal('tote'),
+  v.literal('cap'),
+  v.literal('stickers'),
+  v.literal('pin'),
+);
+export const dropItem = v.object({ piece, size: v.optional(v.string()) });
 
 export default defineSchema({
   users: defineTable({
@@ -110,6 +120,11 @@ export default defineSchema({
     momentId: v.optional(v.id('moments')),
     giftToUserId: v.optional(v.id('users')),
     downloadStorageId: v.optional(v.id('_storage')),
+    dropId: v.optional(v.id('drops')),
+    edition: v.optional(edition),
+    items: v.optional(v.array(dropItem)),
+    priceCents: v.optional(v.number()),
+    hostFeeCents: v.optional(v.number()),
     whopCheckoutId: v.optional(v.string()),
     whopPaymentId: v.optional(v.string()),
     status: v.union(v.literal('pending'), v.literal('paid'), v.literal('fulfilled'), v.literal('refunded')),
@@ -118,6 +133,16 @@ export default defineSchema({
     .index('by_userId', ['userId'])
     .index('by_whopCheckoutId', ['whopCheckoutId'])
     .index('by_whopPaymentId', ['whopPaymentId']),
+
+  drops: defineTable({
+    tripId: v.id('trips'),
+    userId: v.id('users'),
+    title: v.string(),
+    venue: v.object({ name: v.string(), address: v.string(), lat: v.number(), lng: v.number() }),
+    closesAt: v.number(),
+    whopProductId: v.string(),
+    editions: v.array(v.object({ edition, stock: v.number(), claimed: v.number(), whopPlanId: v.string() })),
+  }).index('by_tripId', ['tripId']),
 
   gifts: defineTable({
     orderId: v.id('orders'),
