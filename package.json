@@ -8,6 +8,7 @@
     "@whop/sdk": "^2.8.1",
     "convex": "^1.50.0",
     "expo": "~58.0.25",
+    "expo-asset": "~58.0.21",
     "expo-audio": "~58.0.12",
     "expo-camera": "~58.0.14",
     "expo-constants": "~58.0.16",
@@ -61,7 +62,7 @@
     "lint": "expo lint",
     "test": "node --test src/lib/cluster/cluster.test.ts src/lib/ingest/exif.test.ts",
     "typecheck": "tsc --noEmit",
-    "convex": "convex dev"
+    "convex:dev": "convex dev"
   },
   "private": true
 }
