@@ -25,12 +25,6 @@ export const prepare = internalQuery({
       .unique();
     if (!friend || friend._id === userId) throw new Error('not paired');
 
-    const existing = await ctx.db
-      .query('promos')
-      .withIndex('by_dropId_and_friendUserId', (q) => q.eq('dropId', dropId).eq('friendUserId', friend._id))
-      .first();
-    if (existing) return { existing: { code: existing.code, percentOff: PERCENT_OFF, expiresAt: drop.closesAt } };
-
     const pairedAsA = await ctx.db
       .query('pairings')
       .withIndex('by_userA', (q) => q.eq('userA', userId))
@@ -44,6 +38,12 @@ export const prepare = internalQuery({
         .filter((q) => q.eq(q.field('userA'), friend._id))
         .first());
     if (!paired) throw new Error('not paired');
+
+    const existing = await ctx.db
+      .query('promos')
+      .withIndex('by_dropId_and_friendUserId', (q) => q.eq('dropId', dropId).eq('friendUserId', friend._id))
+      .first();
+    if (existing) return { existing: { code: existing.code, percentOff: PERCENT_OFF, expiresAt: drop.closesAt } };
     if (Date.now() >= drop.closesAt) throw new Error('closed');
 
     const base =

@@ -10,7 +10,6 @@ type Edition = Infer<typeof editionValidator>;
 const HOST_SHARE = 0.1;
 const RECENT = 12;
 const MAX_DROPS = 50;
-const MAX_PAYOUTS = 1000;
 const MAX_MEMBERS = 1000;
 const ALL_PIECES = 6;
 
@@ -31,21 +30,27 @@ async function hostedDrops(ctx: QueryCtx, userId: Id<'users'>) {
     .take(MAX_DROPS);
 }
 
-async function balanceCents(ctx: QueryCtx, userId: Id<'users'>, drops: Doc<'drops'>[]) {
-  const gross = drops.reduce((sum, d) => sum + d.grossCents, 0);
-  const payouts = await ctx.db
-    .query('payouts')
-    .withIndex('by_hostUserId', (q) => q.eq('hostUserId', userId))
-    .take(MAX_PAYOUTS);
-  const paidOut = payouts.filter((p) => p.whopTransferId).reduce((sum, p) => sum + p.amountCents, 0);
-  return { gross, balance: Math.max(0, Math.round(gross * HOST_SHARE) - paidOut), pending: payouts.find((p) => !p.whopTransferId) ?? null };
+async function ledger(ctx: QueryCtx, userId: Id<'users'>) {
+  let gross = 0;
+  let orders = 0;
+  for await (const drop of ctx.db.query('drops').withIndex('by_hostUserId', (q) => q.eq('hostUserId', userId))) {
+    gross += drop.grossCents;
+    orders += drop.paidOrders;
+  }
+  let paidOut = 0;
+  let pending: Doc<'payouts'> | null = null;
+  for await (const payout of ctx.db.query('payouts').withIndex('by_hostUserId', (q) => q.eq('hostUserId', userId))) {
+    if (payout.whopTransferId) paidOut += payout.amountCents;
+    else pending = payout;
+  }
+  return { gross, orders, balance: Math.max(0, Math.round(gross * HOST_SHARE) - paidOut), pending };
 }
 
 export const stats = query({
   args: { userId: v.id('users') },
   handler: async (ctx, { userId }) => {
     const drops = await hostedDrops(ctx, userId);
-    const { gross, balance } = await balanceCents(ctx, userId, drops);
+    const { gross, orders, balance } = await ledger(ctx, userId);
 
     const paid: Doc<'orders'>[] = [];
     for (const drop of drops) {
@@ -76,7 +81,7 @@ export const stats = query({
 
     return {
       grossCents: gross,
-      orders: drops.reduce((sum, d) => sum + d.paidOrders, 0),
+      orders,
       members: members.length,
       drop: { editions: (drops[0]?.editions ?? []).map(({ edition, stock, claimed }) => ({ edition, stock, claimed })) },
       feeBalanceCents: balance,
@@ -85,19 +90,34 @@ export const stats = query({
   },
 });
 
-type StartedPayout = { payoutId: Id<'payouts'>; amountCents: number; destinationId: string };
+type StartedPayout = { payoutId: Id<'payouts'>; amountCents: number; destinationId: string; submitted: boolean };
 
 export const startPayout = internalMutation({
   args: { userId: v.id('users') },
-  handler: async (ctx, { userId }): Promise<StartedPayout> => {
+  handler: async (ctx, { userId }): Promise<StartedPayout | null> => {
     const host = await ctx.db.get(userId);
     if (!host) throw new Error('User not found');
     if (!host.whopUserId) throw new Error('host has no whop account');
-    const { balance, pending } = await balanceCents(ctx, userId, await hostedDrops(ctx, userId));
-    if (pending) return { payoutId: pending._id, amountCents: pending.amountCents, destinationId: host.whopUserId };
-    if (balance <= 0) throw new Error('nothing to pay out');
+    const { balance, pending } = await ledger(ctx, userId);
+    const destinationId = host.whopUserId;
+    if (pending?.submittedAt) return { payoutId: pending._id, amountCents: pending.amountCents, destinationId, submitted: true };
+    if (balance <= 0) {
+      if (pending) await ctx.db.delete(pending._id);
+      return null;
+    }
+    if (pending) {
+      await ctx.db.patch(pending._id, { amountCents: balance, at: Date.now() });
+      return { payoutId: pending._id, amountCents: balance, destinationId, submitted: false };
+    }
     const payoutId = await ctx.db.insert('payouts', { hostUserId: userId, amountCents: balance, at: Date.now() });
-    return { payoutId, amountCents: balance, destinationId: host.whopUserId };
+    return { payoutId, amountCents: balance, destinationId, submitted: false };
+  },
+});
+
+export const submitPayout = internalMutation({
+  args: { payoutId: v.id('payouts') },
+  handler: async (ctx, { payoutId }) => {
+    await ctx.db.patch(payoutId, { submittedAt: Date.now() });
   },
 });
 
@@ -113,12 +133,17 @@ export const payout = action({
   handler: async (ctx, { userId }): Promise<{ transferId: string; amountCents: number }> => {
     const companyId = env.WHOP_COMPANY_ID;
     if (!companyId) throw new Error('WHOP_COMPANY_ID is not set');
-    const { payoutId, amountCents, destinationId }: StartedPayout = await ctx.runMutation(internal.host.startPayout, { userId });
+    const started: StartedPayout | null = await ctx.runMutation(internal.host.startPayout, { userId });
+    if (!started) throw new Error('nothing to pay out');
+    const { payoutId, amountCents, destinationId, submitted } = started;
 
     const client = whop();
-    const ledger = await client.ledgerAccounts.retrieve({ id: companyId });
-    const usd = ledger.balances.find((b) => b.currency === 'usd')?.balance ?? 0;
-    if (usd < dollars(amountCents)) throw new Error('balance not settled yet');
+    if (!submitted) {
+      const account = await client.ledgerAccounts.retrieve({ id: companyId });
+      const usd = account.balances.find((b) => b.currency === 'usd')?.balance ?? 0;
+      if (usd < dollars(amountCents)) throw new Error('balance not settled yet');
+      await ctx.runMutation(internal.host.submitPayout, { payoutId });
+    }
 
     const transfer = await client.transfers.create({
       type: 'balance',

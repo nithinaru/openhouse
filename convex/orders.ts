@@ -3,7 +3,7 @@ import { action, internalMutation, query, type QueryCtx } from './_generated/ser
 import { internal } from './_generated/api';
 import type { Doc, Id } from './_generated/dataModel';
 import { posterStyle, printSize, product as productValidator } from './schema';
-import { applyDropPayment } from './drops';
+import { applyDropPayment, whopPromoFields } from './drops';
 import { hasPlus } from './memberships';
 import { dollars, purchaseUrlOf, whop } from './whop';
 
@@ -143,7 +143,12 @@ export const setCheckout = internalMutation({
 });
 
 export const markPaid = internalMutation({
-  args: { orderId: v.optional(v.string()), whopCheckoutId: v.optional(v.string()), whopPaymentId: v.optional(v.string()) },
+  args: {
+    orderId: v.optional(v.string()),
+    whopCheckoutId: v.optional(v.string()),
+    whopPaymentId: v.optional(v.string()),
+    whopPromoCodeId: v.optional(v.string()),
+  },
   handler: async (ctx, args): Promise<Id<'orders'> | null> => {
     const id = args.orderId ? ctx.db.normalizeId('orders', args.orderId) : null;
     const order =
@@ -156,8 +161,14 @@ export const markPaid = internalMutation({
         : null);
     if (!order) return null;
     if (order.status !== 'pending') return order._id;
-    await ctx.db.patch(order._id, { status: 'paid', whopPaymentId: args.whopPaymentId, paidAt: Date.now() });
-    await applyDropPayment(ctx, order, 1);
+    const fields = {
+      status: 'paid' as const,
+      whopPaymentId: args.whopPaymentId,
+      paidAt: Date.now(),
+      ...(await whopPromoFields(ctx, order, args.whopPromoCodeId)),
+    };
+    await ctx.db.patch(order._id, fields);
+    await applyDropPayment(ctx, { ...order, ...fields }, 1);
     if (order.giftToUserId) {
       await ctx.db.insert('gifts', {
         orderId: order._id,

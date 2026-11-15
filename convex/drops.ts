@@ -20,6 +20,9 @@ const PRESENCE_M = 300;
 const HOST_SHARE = 0.1;
 const PROMO_PERCENT_OFF = 20;
 const REFERRAL_SHARE = 0.1;
+const PROMO_HOLD_MS = 30 * 60_000;
+
+const discounted = (cents: number) => Math.round((cents * (100 - PROMO_PERCENT_OFF)) / 100);
 const OPEN_MS = 24 * 3600_000;
 const DEMO_DEVICE_ID = 'demo-me';
 
@@ -206,6 +209,7 @@ type StartedOrder = {
   whopProductId: string;
   title: string;
   affiliateCode: string | null;
+  releasedCheckoutId: string | null;
 };
 
 export const startOrder = internalMutation({
@@ -226,12 +230,18 @@ export const startOrder = internalMutation({
     if (edition === 'was_there' && !(await wasThere(ctx, userId, drop))) throw new Error('not at the venue');
 
     let promo: Doc<'promos'> | null = null;
+    let releasedCheckoutId: string | null = null;
     if (promoCode !== undefined) {
       promo = await ctx.db
         .query('promos')
         .withIndex('by_code', (q) => q.eq('code', promoCode.trim().toUpperCase()))
         .unique();
       if (!promo || promo.dropId !== dropId || promo.usedOrderId) throw new Error('code not valid');
+      const holder = promo.heldByOrderId ? await ctx.db.get(promo.heldByOrderId) : null;
+      if (holder?.status === 'pending') {
+        if (Date.now() < holder._creationTime + PROMO_HOLD_MS) throw new Error('code not valid');
+        releasedCheckoutId = holder.whopCheckoutId ?? null;
+      }
     }
     const referrer = referralCode
       ? await ctx.db
@@ -242,7 +252,7 @@ export const startOrder = internalMutation({
     const referrerUserId = referrer && referrer.userId !== userId ? referrer.userId : undefined;
 
     const fullPrice = cartCents(cart);
-    const price = promo ? Math.round((fullPrice * (100 - PROMO_PERCENT_OFF)) / 100) : fullPrice;
+    const price = promo ? discounted(fullPrice) : fullPrice;
     const orderId = await ctx.db.insert('orders', {
       userId,
       tripId: drop.tripId,
@@ -256,6 +266,7 @@ export const startOrder = internalMutation({
       referrerUserId,
       status: 'pending',
     });
+    if (promo) await ctx.db.patch(promo._id, { heldByOrderId: orderId });
     const title = `${EDITION_TITLE[edition]} · ${cart.length === 1 ? cart[0].piece : `${cart.length} pieces`}`;
     return {
       orderId,
@@ -263,6 +274,7 @@ export const startOrder = internalMutation({
       whopProductId: drop.whopProductId,
       title,
       affiliateCode: referrerUserId ? referrer!.code : null,
+      releasedCheckoutId,
     };
   },
 });
@@ -270,11 +282,17 @@ export const startOrder = internalMutation({
 export const checkout = action({
   args: checkoutArgs,
   handler: async (ctx, args): Promise<{ purchaseUrl: string; orderId: Id<'orders'> }> => {
-    const { orderId, priceCents, whopProductId, title, affiliateCode }: StartedOrder = await ctx.runMutation(
+    const { orderId, priceCents, whopProductId, title, affiliateCode, releasedCheckoutId }: StartedOrder = await ctx.runMutation(
       internal.drops.startOrder,
       args,
     );
-    const config = await whop().checkoutConfigurations.create({
+    const client = whop();
+    if (releasedCheckoutId) {
+      await client.checkoutConfigurations.delete({ id: releasedCheckoutId }).catch((e: unknown) => {
+        console.warn('[whop] could not delete the expired promo checkout', releasedCheckoutId, e);
+      });
+    }
+    const config = await client.checkoutConfigurations.create({
       mode: 'payment',
       metadata: { orderId },
       affiliate_code: affiliateCode,
@@ -291,6 +309,17 @@ export const checkout = action({
     return { purchaseUrl, orderId };
   },
 });
+
+export async function whopPromoFields(ctx: MutationCtx, order: Doc<'orders'>, whopPromoCodeId: string | undefined) {
+  if (order.product !== 'drop' || order.promoId || !whopPromoCodeId || order.priceCents === undefined) return {};
+  const promo = await ctx.db
+    .query('promos')
+    .withIndex('by_whopPromoCodeId', (q) => q.eq('whopPromoCodeId', whopPromoCodeId))
+    .unique();
+  if (!promo || promo.dropId !== order.dropId) return {};
+  const priceCents = discounted(order.priceCents);
+  return { promoId: promo._id, priceCents, hostFeeCents: Math.round(priceCents * HOST_SHARE) };
+}
 
 export async function applyDropPayment(ctx: MutationCtx, order: Doc<'orders'>, delta: 1 | -1) {
   if (order.product !== 'drop' || !order.dropId || !order.edition) return;

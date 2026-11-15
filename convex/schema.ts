@@ -160,9 +160,11 @@ export default defineSchema({
     issuerUserId: v.id('users'),
     code: v.string(),
     whopPromoCodeId: v.string(),
+    heldByOrderId: v.optional(v.id('orders')),
     usedOrderId: v.optional(v.id('orders')),
   })
     .index('by_code', ['code'])
+    .index('by_whopPromoCodeId', ['whopPromoCodeId'])
     .index('by_dropId_and_friendUserId', ['dropId', 'friendUserId']),
 
   referrers: defineTable({
@@ -181,6 +183,7 @@ export default defineSchema({
     hostUserId: v.id('users'),
     amountCents: v.number(),
     whopTransferId: v.optional(v.string()),
+    submittedAt: v.optional(v.number()),
     at: v.number(),
   }).index('by_hostUserId', ['hostUserId']),
 
