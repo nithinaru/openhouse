@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -9,11 +9,12 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { Moment } from '@/lib/types';
-import { colors, radius, space } from '@/theme';
+import { colors, ease, space, type } from '@/theme';
 
-import { EASE_OUT, SERIF } from './film';
 import { splitWords } from './narrator';
 import { formatTime } from './stats';
+
+const EASE_OUT = ease.out;
 
 type Props = {
   moment: Moment;
@@ -22,33 +23,34 @@ type Props = {
   onPress: () => void;
 };
 
-// Place / time / weather chips, then the narration revealed word by word.
+// Time stamp, place, weather, then the narration revealed word by word.
 // Every word is laid out from the start (opacity 0), so lines never reflow.
 export function KineticCaption({ moment, progress, reducedMotion, onPress }: Props) {
   const text = moment.narration ?? moment.caption ?? '';
   const { words } = useMemo(() => splitWords(text), [text]);
 
-  const chips = [
-    moment.placeName,
-    formatTime(moment.startAt),
-    moment.weather ? `${Math.round(moment.weather.tempF)}° ${moment.weather.summary}` : undefined,
-    moment.isGoldenHour ? 'Golden hour' : undefined,
-  ].filter(Boolean) as string[];
+  const meta: { key: string; text: string; style: object }[] = [
+    { key: 'time', text: formatTime(moment.startAt), style: styles.stamp },
+    ...(moment.placeName ? [{ key: 'place', text: moment.placeName, style: styles.place }] : []),
+    ...(moment.weather
+      ? [{ key: 'wx', text: `${Math.round(moment.weather.tempF)}° ${moment.weather.summary}`, style: styles.muted }]
+      : []),
+    ...(moment.isGoldenHour ? [{ key: 'gold', text: 'Golden hour', style: styles.golden }] : []),
+  ];
 
   return (
     <Animated.View entering={FadeIn.duration(320).easing(EASE_OUT)} exiting={FadeOut.duration(200)}>
       <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${moment.placeName ?? 'Stop'}. ${text}`}>
-        <View style={styles.chips}>
-          {chips.map((c, i) => (
-            <Animated.View
-              key={c}
+        <View style={styles.meta}>
+          {meta.map((m, i) => (
+            <Animated.Text
+              key={m.key}
               entering={FadeIn.duration(280).delay(80 * i).easing(EASE_OUT)}
-              style={[styles.chip, i === 0 && styles.chipPrimary]}
+              style={m.style}
+              numberOfLines={1}
             >
-              <Text style={[styles.chipText, i === 0 && styles.chipTextPrimary]} numberOfLines={1}>
-                {c}
-              </Text>
-            </Animated.View>
+              {m.text}
+            </Animated.Text>
           ))}
         </View>
         <View style={styles.words}>
@@ -76,32 +78,24 @@ function Word({
     const t = interpolate(progress.get(), [i, i + 1], [0, 1], 'clamp');
     return {
       opacity: t,
-      transform: reducedMotion ? [] : [{ translateY: (1 - t) * 7 }],
+      transform: reducedMotion ? [] : [{ translateY: (1 - t) * 6 }],
     };
   });
   return <Animated.Text style={[styles.word, style]}>{word} </Animated.Text>;
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2, marginBottom: space.sm + 2 },
-  chip: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: radius.full,
-    backgroundColor: 'rgba(242,238,230,0.10)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(242,238,230,0.18)',
-  },
-  chipPrimary: { backgroundColor: colors.accent, borderColor: colors.accent },
-  chipText: { fontSize: 12, fontWeight: '600', color: colors.text, letterSpacing: 0.2 },
-  chipTextPrimary: { color: '#1A1408' },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', columnGap: space.md, rowGap: space.xs, marginBottom: space.sm },
+  stamp: { ...type.stamp },
+  place: { ...type.label },
+  muted: { ...type.callout, color: colors.textMuted },
+  golden: { ...type.callout, color: colors.accent },
   words: { flexDirection: 'row', flexWrap: 'wrap' },
   word: {
-    fontFamily: SERIF,
-    fontSize: 23,
-    lineHeight: 31,
-    color: colors.text,
-    textShadowColor: 'rgba(0,0,0,0.55)',
+    ...type.story,
+    fontSize: 24,
+    lineHeight: 32,
+    textShadowColor: 'rgba(0,0,0,0.5)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,
   },

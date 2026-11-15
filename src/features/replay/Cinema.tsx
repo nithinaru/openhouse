@@ -3,7 +3,11 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { EASE_IN_OUT, INK, LETTERBOX_H } from './film';
+import { colors, ease, film } from '@/theme';
+
+const INK = colors.ink;
+const LETTERBOX_H = film.letterboxH;
+const EASE_IN_OUT = ease.inOut;
 
 // Letterbox bars that slide in during flights and out when the camera lands.
 export function Letterbox({ visible, topInset }: { visible: boolean; topInset: number }) {

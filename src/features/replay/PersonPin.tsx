@@ -5,9 +5,9 @@ import { Marker } from 'react-native-maps';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 
 import type { Pairing, Person } from '@/lib/types';
-import { colors, radius, type } from '@/theme';
+import { colors, ease, radius, type } from '@/theme';
 
-import { EASE_OUT } from './film';
+const EASE_OUT = ease.out;
 
 const SIZE = 40;
 const GAP = 6;
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.accent,
+    borderColor: colors.lineStrong,
   },
-  labelText: { fontSize: 12, fontWeight: '700', color: colors.text },
+  labelText: { fontSize: 12, fontWeight: '600', color: colors.text },
 });

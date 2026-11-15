@@ -1,9 +1,10 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PressableScale } from '@/features/home/PressableScale';
 import type { Moment } from '@/lib/types';
-import { colors, radius, space } from '@/theme';
+import { colors, radius, space, type } from '@/theme';
+import { ChevronRightIcon } from '@/theme/icons';
+import { Press, Stamp } from '@/theme/ui';
 
 import { formatTime } from './localAnswer';
 
@@ -11,7 +12,7 @@ import { formatTime } from './localAnswer';
 export function CitedStopCard({ moment, onPress }: { moment: Moment; onPress: () => void }) {
   const hero = moment.photos.find((p) => p.id === moment.heroPhotoId) ?? moment.photos[0];
   return (
-    <PressableScale
+    <Press
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Open ${moment.placeName ?? 'stop'}, ${formatTime(moment.startAt)}`}
@@ -26,14 +27,14 @@ export function CitedStopCard({ moment, onPress }: { moment: Moment; onPress: ()
         <Text style={styles.place} numberOfLines={1}>
           {moment.placeName ?? 'Stop'}
         </Text>
-        <Text style={styles.time}>
+        <Stamp>
           {formatTime(moment.startAt)}
           {moment.weather ? ` · ${Math.round(moment.weather.tempF)}°F` : ''}
           {moment.isGoldenHour ? ' · golden hour' : ''}
-        </Text>
+        </Stamp>
       </View>
-      <Text style={styles.chev}>›</Text>
-    </PressableScale>
+      <ChevronRightIcon color={colors.textMuted} />
+    </Press>
   );
 }
 
@@ -44,14 +45,12 @@ const styles = StyleSheet.create({
     gap: space.md,
     padding: space.sm,
     paddingRight: space.md,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.line,
   },
   photo: { width: 64, height: 64, borderRadius: radius.sm },
-  meta: { flex: 1, gap: 2 },
-  place: { fontSize: 16, fontWeight: '600', color: colors.text },
-  time: { fontSize: 13, color: colors.textMuted, fontVariant: ['tabular-nums'] },
-  chev: { fontSize: 24, color: colors.textMuted, marginTop: -2 },
+  meta: { flex: 1, gap: space.xs },
+  place: { ...type.label, fontSize: 16 },
 });

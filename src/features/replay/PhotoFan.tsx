@@ -13,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { Moment, Photo } from '@/lib/types';
-import { colors, radius } from '@/theme';
+import { colors, radius, shadow } from '@/theme';
 
 const CARD_W = 136;
 const CARD_H = 102;
@@ -132,11 +132,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: CARD_W,
     height: CARD_H,
-    borderRadius: radius.sm,
+    borderRadius: radius.xs,
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: colors.text,
     backgroundColor: colors.surface,
+    ...shadow.print,
   },
   hero: { width: CARD_W + 12, height: CARD_H + 9 },
   fill: { flex: 1 },

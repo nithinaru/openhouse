@@ -14,15 +14,15 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import { EASE_IN_OUT, EASE_OUT } from '@/features/stop/motion';
-import { PressScale } from '@/features/stop/PressScale';
-import { colors, radius, space, type } from '@/theme';
+import { colors, fonts, space, type } from '@/theme';
+import { Button } from '@/theme/ui';
 
 const AV = 88;
 const START = 150; // px each avatar travels in from
 const REST = AV / 2 - 10; // final offset from center: the two overlap by 20px
 const APPROACH_MS = 520;
 const SPARKS = 12;
-const SPARK_COLORS = [colors.accent, colors.text, '#E8B85A', '#C2593B'];
+const SPARK_COLORS = [colors.accent, colors.text];
 
 type Person = { name: string; avatarUri?: string };
 
@@ -87,9 +87,7 @@ export function PairCelebration({ me, friend, onAgain }: { me: Person; friend: P
       </Animated.View>
 
       <Animated.View entering={FadeInDown.duration(380).delay(textDelay + 120).easing(EASE_OUT)}>
-        <PressScale onPress={onAgain} accessibilityRole="button" style={styles.button}>
-          <Text style={[type.body, { color: colors.bg, fontWeight: '600' }]}>Scan another</Text>
-        </PressScale>
+        <Button label="Scan another" onPress={onAgain} />
       </Animated.View>
     </View>
   );
@@ -100,7 +98,7 @@ function Avatar({ person }: { person: Person }) {
     <Image source={{ uri: person.avatarUri }} style={styles.avatar} contentFit="cover" />
   ) : (
     <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accent }]}>
-      <Text style={{ color: colors.bg, fontSize: 34, fontWeight: '700' }}>{person.name.slice(0, 1).toUpperCase()}</Text>
+      <Text style={{ color: colors.accentInk, fontFamily: fonts.serif, fontSize: 36 }}>{person.name.slice(0, 1).toUpperCase()}</Text>
     </View>
   );
 }
@@ -133,5 +131,4 @@ const styles = StyleSheet.create({
   avatarWrap: { position: 'absolute' },
   avatar: { width: AV, height: AV, borderRadius: AV / 2, borderWidth: 3, borderColor: colors.bg, backgroundColor: colors.surface },
   ring: { position: 'absolute', width: AV, height: AV, borderRadius: AV / 2, borderWidth: 2, borderColor: colors.accent },
-  button: { paddingVertical: 14, paddingHorizontal: space.lg, borderRadius: radius.full, backgroundColor: colors.accent },
 });

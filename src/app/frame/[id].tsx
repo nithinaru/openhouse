@@ -1,9 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { Asset, requestPermissionsAsync } from 'expo-media-library';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -27,6 +27,7 @@ import { EASE_IN_OUT } from '@/features/stop/motion';
 import { PressScale } from '@/features/stop/PressScale';
 import { getDemoTrip } from '@/lib/demo/demoTrip';
 import { colors, radius, space, type } from '@/theme';
+import { Button, SheetHeader } from '@/theme/ui';
 
 const SIZES = [
   { id: '12x16', label: '12 × 16 in', price: 39, scale: 0.84 },
@@ -121,11 +122,10 @@ export default function FrameScreen() {
   }
 
   async function frameThis() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCheckingOut(true);
     setMessage(null);
     try {
-      const url = await startCheckout(posterId);
+      const url = await startCheckout(posterId, size);
       if (url) {
         await WebBrowser.openBrowserAsync(url);
         // Do not mark paid here: the order record (orders.forPoster) drives orderConfirmed.
@@ -145,17 +145,14 @@ export default function FrameScreen() {
       style={{ flex: 1, backgroundColor: colors.bg }}
       contentContainerStyle={{ paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl, gap: space.lg }}
     >
-      <Pressable
-        onLongPress={() => {
-          Haptics.selectionAsync();
-          setPreviewConfirmed((v) => !v);
-        }}
-        delayLongPress={700}
-        style={{ paddingHorizontal: space.lg }}
-      >
-        <Text style={type.title}>Frame it</Text>
-        <Text style={[type.caption, { marginTop: 2 }]}>Your day, printed and framed. Swipe to change the style.</Text>
-      </Pressable>
+      <View style={{ paddingHorizontal: space.lg, gap: space.xs }}>
+        <SheetHeader
+          title="Frame it"
+          onTitleLongPress={() => setPreviewConfirmed((v) => !v)}
+          onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        />
+        <Text style={type.caption}>Your day, printed and framed. Swipe to change the style</Text>
+      </View>
 
       {/* The wall */}
       <Animated.View style={[{ height: wallH }, wallStyle]}>
@@ -211,7 +208,7 @@ export default function FrameScreen() {
                 style={[styles.size, active && styles.sizeActive]}
               >
                 <Text style={[styles.sizeLabel, active && { color: colors.text }]}>{s.label}</Text>
-                <Text style={[styles.sizePrice, active && { color: colors.accent }]}>${s.price}</Text>
+                <Text style={[styles.sizePrice, active && { color: colors.text }]}>${s.price}</Text>
               </PressScale>
             );
           })}
@@ -223,18 +220,10 @@ export default function FrameScreen() {
             detail={`${sizeInfo.label} · ${variant.label} · ships in 3–5 days`}
           />
         ) : (
-          <PressScale onPress={frameThis} disabled={checkingOut} accessibilityRole="button" style={[styles.cta, checkingOut && { opacity: 0.7 }]}>
-            {checkingOut ? (
-              <ActivityIndicator color={colors.bg} />
-            ) : (
-              <Text style={styles.ctaText}>Frame this · ${sizeInfo.price}</Text>
-            )}
-          </PressScale>
+          <Button label={`Frame this · $${sizeInfo.price}`} onPress={frameThis} loading={checkingOut} />
         )}
 
-        <PressScale onPress={save} disabled={saving} accessibilityRole="button" style={[styles.secondary, saving && { opacity: 0.7 }]}>
-          {saving ? <ActivityIndicator color={colors.text} /> : <Text style={type.body}>Save to Photos</Text>}
-        </PressScale>
+        <Button variant="secondary" label="Save to Photos" onPress={save} loading={saving} />
 
         {message && <Text style={[type.caption, { textAlign: 'center' }]}>{message}</Text>}
       </View>
@@ -301,7 +290,7 @@ const styles = StyleSheet.create({
   sizes: { flexDirection: 'row', gap: space.sm },
   size: {
     flex: 1,
-    paddingVertical: 12,
+    minHeight: 52,
     paddingHorizontal: space.md,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -311,25 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  sizeActive: { borderColor: colors.accent, backgroundColor: colors.surface },
+  sizeActive: { borderColor: colors.text, backgroundColor: colors.surface },
   sizeLabel: { color: colors.textMuted, fontSize: 15, fontWeight: '500' },
-  sizePrice: { color: colors.textMuted, fontSize: 15, fontWeight: '700' },
-  cta: {
-    alignItems: 'center',
-    paddingVertical: 17,
-    borderRadius: radius.full,
-    backgroundColor: colors.accent,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  ctaText: { color: colors.bg, fontSize: 17, fontWeight: '700' },
-  secondary: {
-    alignItems: 'center',
-    paddingVertical: space.md,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
+  sizePrice: { color: colors.textMuted, fontSize: 15, fontWeight: '500', fontVariant: ['tabular-nums'] },
 });

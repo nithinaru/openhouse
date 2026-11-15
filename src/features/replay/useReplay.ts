@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type MapView from 'react-native-maps';
 import { cancelAnimation, Easing, useSharedValue, withTiming } from 'react-native-reanimated';
 
+import { demoFlags } from '@/features/demo/demoFlags';
 import type { Moment, Trip } from '@/lib/types';
 
 import {
@@ -126,6 +127,16 @@ export function useReplay(trip: Trip, mapRef: RefObject<MapView | null>, opts: {
         }
       }, TICK_MS);
     });
+
+  // Narrator off (demo panel): no audio, captions reveal on the time-based estimate.
+  const captionsOnly = async (wordCount: number, run: number) => {
+    const msPerWord = estimateMs(wordCount) / Math.max(1, wordCount);
+    const ok = await wait(estimateMs(wordCount), run, (elapsed) =>
+      revealWord(Math.min(wordCount - 1, Math.floor(elapsed / msPerWord))),
+    );
+    if (ok) revealWord(wordCount - 1);
+    return ok;
+  };
 
   // Recorded clip path (narrationUri). Captions follow the clip's playhead.
   const playNarration = (uri: string, wordCount: number, run: number) =>
@@ -332,7 +343,8 @@ export function useReplay(trip: Trip, mapRef: RefObject<MapView | null>, opts: {
       }
 
       let ok: boolean;
-      if (m.narrationUri) ok = await playNarration(m.narrationUri, wordCount, id);
+      if (!demoFlags.narratorOn && text) ok = await captionsOnly(wordCount, id);
+      else if (m.narrationUri) ok = await playNarration(m.narrationUri, wordCount, id);
       else if (text) ok = await speakNarration(text, id);
       else ok = await wait(HOLD_MS, id);
       if (!ok) return;
@@ -371,7 +383,7 @@ export function useReplay(trip: Trip, mapRef: RefObject<MapView | null>, opts: {
         cancelAnimation(filmProgress);
         freezeCamera();
       } else {
-        if (phaseRef.current === 'narrating' && m?.narrationUri) narrator.play();
+        if (phaseRef.current === 'narrating' && m?.narrationUri && demoFlags.narratorOn) narrator.play();
         if ((phaseRef.current === 'photos' || phaseRef.current === 'narrating') && m?.ambientUri) ambient.play();
         speechCtl.current?.resume();
         const goal = progressGoal.current;

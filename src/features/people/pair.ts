@@ -1,4 +1,8 @@
 // QR pairing (BUILD.md §5.6).
+//
+// convex/seed.ts imports this file, so it must stay free of '@/' and Expo imports. The live
+// Convex call (pairings:pair) lives in ./pairRemote.ts, which registers itself here when the
+// app loads it; seed and tests only ever see the demo stub.
 
 import { getDemoTrip } from '../../lib/demo/demoTrip';
 
@@ -21,14 +25,31 @@ export function parsePairCode(data: string): string | null {
 
 export type PairResult = { friendName: string; shareCode: string; avatarUri?: string };
 
-/**
- * TODO(convex): replace with the Convex mutation:
- *   const pairMutation = useMutation(api.pairings.pair);
- *   return await pairMutation({ code, lat, lng });
- * The mutation should return the friend's name so the success state can show it.
- */
-export async function pair(code: string, lat: number, lng: number): Promise<PairResult> {
-  console.log('[pair] stub', { code, lat, lng });
+/** Live pairing (Convex). Resolves null when the backend can't pair, so the stub takes over. */
+export type RemotePair = (code: string, lat: number, lng: number) => Promise<PairResult | null>;
+
+let remotePair: RemotePair | null = null;
+
+/** Called once by ./pairRemote.ts in the app. */
+export function registerRemotePair(fn: RemotePair): void {
+  remotePair = fn;
+}
+
+/** Demo answer from the cached trip: known share codes map to their person. */
+export function demoPair(code: string): PairResult {
   const known = getDemoTrip().people.find((p) => p.shareCode === code);
   return { friendName: known?.name ?? 'New friend', shareCode: code, avatarUri: known?.avatarUri };
+}
+
+/** Pairs with the person whose code was scanned: Convex first, the demo stub on any failure. */
+export async function pair(code: string, lat: number, lng: number): Promise<PairResult> {
+  if (remotePair) {
+    try {
+      const live = await remotePair(code, lat, lng);
+      if (live) return live;
+    } catch (e) {
+      console.warn('[pair] live pairing failed, using demo', e);
+    }
+  }
+  return demoPair(code);
 }

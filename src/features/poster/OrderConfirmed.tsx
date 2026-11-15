@@ -66,7 +66,7 @@ export function OrderConfirmed({ palette, detail }: Props) {
             <AnimatedPath
               d="M8 17.5l6 6L26 11"
               fill="none"
-              stroke={colors.bg}
+              stroke={colors.accentInk}
               strokeWidth={3.6}
               strokeLinecap="round"
               strokeLinejoin="round"

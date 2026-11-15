@@ -3,15 +3,16 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { Trip } from '@/lib/types';
 import { colors, radius, space, type } from '@/theme';
+import { PinIcon, PlayIcon } from '@/theme/icons';
+import { Press, Stamp } from '@/theme/ui';
 
-import { PressableScale } from './PressableScale';
 import { collagePhotos, dateLabel, paletteFor, statsLabel } from './tripMeta';
 
 const IMG_TRANSITION = 220;
 
-function Swatches({ palette, size = 14 }: { palette: string[]; size?: number }) {
+function Swatches({ palette, size = 12 }: { palette: string[]; size?: number }) {
   return (
-    <View style={{ flexDirection: 'row', gap: 6 }} accessibilityElementsHidden>
+    <View style={{ flexDirection: 'row', gap: 4 }} accessibilityElementsHidden>
       {palette.map((c, i) => (
         <View
           key={`${c}-${i}`}
@@ -21,7 +22,7 @@ function Swatches({ palette, size = 14 }: { palette: string[]; size?: number }) 
             borderRadius: size / 2,
             backgroundColor: c,
             borderWidth: StyleSheet.hairlineWidth,
-            borderColor: 'rgba(255,255,255,0.18)',
+            borderColor: colors.lineStrong,
           }}
         />
       ))}
@@ -31,17 +32,17 @@ function Swatches({ palette, size = 14 }: { palette: string[]; size?: number }) 
 
 function Photo({ uri, style }: { uri?: string; style: object }) {
   return (
-    <View style={[style, { backgroundColor: colors.line, overflow: 'hidden' }]}>
+    <View style={[style, { backgroundColor: colors.elevated, overflow: 'hidden' }]}>
       {uri && <Image source={{ uri }} style={StyleSheet.absoluteFill} contentFit="cover" transition={IMG_TRANSITION} />}
     </View>
   );
 }
 
-/** Latest trip: one big photo and two stacked, then title, date, stats and palette. */
-export function TripHeroCard({ trip, badge, onPress }: { trip: Trip; badge?: string; onPress: () => void }) {
+/** Latest trip: a contact sheet of three prints, then title, date stamp, stats and palette. */
+export function TripHeroCard({ trip, onPress }: { trip: Trip; badge?: string; onPress: () => void }) {
   const [a, b, c] = collagePhotos(trip, 3);
   return (
-    <PressableScale
+    <Press
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${trip.title}. ${statsLabel(trip)}. Opens replay.`}
@@ -49,30 +50,26 @@ export function TripHeroCard({ trip, badge, onPress }: { trip: Trip; badge?: str
     >
       <View style={styles.collage}>
         <Photo uri={a?.uri} style={{ flex: 2 }} />
-        <View style={{ flex: 1, gap: 3 }}>
+        <View style={{ flex: 1, gap: 2 }}>
           <Photo uri={b?.uri ?? a?.uri} style={{ flex: 1 }} />
           <Photo uri={c?.uri ?? b?.uri ?? a?.uri} style={{ flex: 1 }} />
         </View>
-        {badge && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        )}
         <View style={styles.playChip}>
-          <Text style={styles.playText}>▶  Replay</Text>
+          <PlayIcon size={12} color={colors.text} />
+          <Text style={styles.playText}>Replay</Text>
         </View>
       </View>
-      <View style={{ padding: space.md, gap: space.sm }}>
-        <Text style={[type.title, { fontSize: 26, letterSpacing: -0.4 }]} numberOfLines={2}>
+      <View style={styles.heroBody}>
+        <Stamp>{dateLabel(trip)}</Stamp>
+        <Text style={type.title} numberOfLines={2}>
           {trip.title}
         </Text>
-        <Text style={type.caption}>{dateLabel(trip)}</Text>
         <View style={styles.footer}>
-          <Text style={[type.caption, { color: colors.text, fontVariant: ['tabular-nums'] }]}>{statsLabel(trip)}</Text>
+          <Text style={[type.caption, { fontVariant: ['tabular-nums'] }]}>{statsLabel(trip)}</Text>
           <Swatches palette={paletteFor(trip)} />
         </View>
       </View>
-    </PressableScale>
+    </Press>
   );
 }
 
@@ -80,15 +77,15 @@ export function TripHeroCard({ trip, badge, onPress }: { trip: Trip; badge?: str
 export function TripRow({ trip, onPress }: { trip: Trip; onPress: () => void }) {
   const [hero] = collagePhotos(trip, 1);
   return (
-    <PressableScale
+    <Press
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`${trip.title}. ${statsLabel(trip)}.`}
       style={styles.row}
     >
       <Photo uri={hero?.uri} style={styles.rowThumb} />
-      <View style={{ flex: 1, gap: 4 }}>
-        <Text style={[type.body, { fontWeight: '600' }]} numberOfLines={1}>
+      <View style={{ flex: 1, gap: space.xs }}>
+        <Text style={type.label} numberOfLines={1}>
           {trip.title}
         </Text>
         <Text style={type.caption} numberOfLines={1}>
@@ -96,7 +93,7 @@ export function TripRow({ trip, onPress }: { trip: Trip; onPress: () => void }) 
         </Text>
       </View>
       <Swatches palette={paletteFor(trip).slice(0, 3)} size={10} />
-    </PressableScale>
+    </Press>
   );
 }
 
@@ -104,7 +101,7 @@ export function EmptyTrips() {
   return (
     <View style={styles.empty}>
       <View style={styles.emptyPin}>
-        <View style={styles.emptyDot} />
+        <PinIcon size={20} color={colors.textMuted} />
       </View>
       <Text style={[type.heading, { textAlign: 'center' }]}>No days yet</Text>
       <Text style={[type.caption, { textAlign: 'center', maxWidth: 260 }]}>
@@ -122,28 +119,22 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.line,
   },
-  collage: { flexDirection: 'row', gap: 3, aspectRatio: 4 / 3 },
-  badge: {
-    position: 'absolute',
-    top: space.md,
-    left: space.md,
-    backgroundColor: 'rgba(14,17,22,0.72)',
-    borderRadius: radius.full,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  badgeText: { color: colors.text, fontSize: 12, fontWeight: '600' },
+  collage: { flexDirection: 'row', gap: 2, aspectRatio: 4 / 3 },
   playChip: {
     position: 'absolute',
-    right: space.md,
+    left: space.md,
     bottom: space.md,
-    backgroundColor: colors.accent,
-    borderRadius: radius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 32,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    backgroundColor: colors.scrim,
   },
-  playText: { color: colors.bg, fontSize: 14, fontWeight: '700' },
-  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.xs },
+  playText: { color: colors.text, fontSize: 13, fontWeight: '600' },
+  heroBody: { paddingHorizontal: space.md, paddingTop: space.md, paddingBottom: space.md, gap: space.xs },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: space.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -151,7 +142,9 @@ const styles = StyleSheet.create({
     padding: space.sm,
     paddingRight: space.md,
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
   },
   rowThumb: { width: 56, height: 56, borderRadius: radius.sm },
   empty: { alignItems: 'center', gap: space.sm, paddingVertical: space.xl },
@@ -159,11 +152,10 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    borderWidth: 1,
-    borderColor: colors.line,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.lineStrong,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: space.sm,
   },
-  emptyDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent },
 });

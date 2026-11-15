@@ -11,8 +11,10 @@ import { PairCelebration } from '@/features/people/PairCelebration';
 import { OrderConfirmed } from '@/features/poster/OrderConfirmed';
 import { stopSpeech } from '@/features/replay/narrator';
 import { plural } from '@/features/replay/stats';
+import { BackendBadge } from '@/lib/data/BackendBadge';
 import { DEMO_TRIP_ID, demoTrip } from '@/lib/demo/demoTrip';
 import { colors, radius, space, type } from '@/theme';
+import { Button, SheetHeader } from '@/theme/ui';
 
 import { demoFlags, useDemoFlags } from './demoFlags';
 import { backendHost, probeBackend, scheduleKeikiText, type BackendStatus } from './simulate';
@@ -73,7 +75,7 @@ export function DemoPanel() {
     const r = await scheduleKeikiText(demoTrip);
     setNote(
       r === 'scheduled'
-        ? 'Keiki text lands in 3 s. Lock the phone or go Home.'
+        ? 'Keiki text lands in 3 s. Lock the phone or go Home'
         : r === 'denied'
           ? 'Notifications are off for Expo Go. Turn them on in Settings.'
           : 'Could not schedule the notification.',
@@ -90,15 +92,12 @@ export function DemoPanel() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + space.xl }]}>
-        <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={type.caption}>Rehearsal only</Text>
-            <Text style={styles.title}>Demo mode</Text>
-          </View>
-          <PressableScale onPress={() => router.back()} haptic="none" accessibilityRole="button" hitSlop={10} style={styles.done}>
-            <Text style={styles.doneText}>Done</Text>
-          </PressableScale>
-        </View>
+        <SheetHeader
+          eyebrow="Rehearsal only"
+          title="Demo mode"
+          onClose={() => router.back()}
+          right={<BackendBadge style={styles.badge} />}
+        />
 
         <StatusBlock status={status} onRetry={probe} />
 
@@ -143,17 +142,15 @@ export function DemoPanel() {
           </View>
         </Section>
 
-        <PressableScale
+        <Button
+          variant="quiet"
+          label="Reset all switches"
           onPress={() => {
             demoFlags.reset();
-            setNote('All switches reset.');
+            setNote('All switches reset');
           }}
-          haptic="none"
-          accessibilityRole="button"
           style={styles.resetAll}
-        >
-          <Text style={styles.resetAllText}>Reset all switches</Text>
-        </PressableScale>
+        />
       </ScrollView>
 
       {overlay ? (
@@ -166,9 +163,7 @@ export function DemoPanel() {
               <OrderConfirmed palette={demoTrip.palette} detail="18×24 · Natural oak · ships in 3–5 days" />
             </View>
           ) : null}
-          <PressableScale onPress={() => setOverlay(null)} haptic="none" accessibilityRole="button" style={styles.overlayClose}>
-            <Text style={styles.doneText}>Close</Text>
-          </PressableScale>
+          <Button variant="secondary" label="Close" onPress={() => setOverlay(null)} style={styles.overlayClose} />
         </Animated.View>
       ) : null}
     </View>
@@ -176,7 +171,7 @@ export function DemoPanel() {
 }
 
 function StatusBlock({ status, onRetry }: { status: BackendStatus; onRetry: () => void }) {
-  const dot = status.state === 'online' ? '#5BBF7A' : status.state === 'offline' ? '#C2593B' : colors.textMuted;
+  const dot = status.state === 'online' ? colors.success : status.state === 'offline' ? colors.danger : colors.textMuted;
   const line =
     status.state === 'checking'
       ? 'Checking backend…'
@@ -219,8 +214,8 @@ function Action({
   return (
     <PressableScale onPress={onPress} accessibilityRole="button" style={[styles.action, primary && styles.actionPrimary]}>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[styles.label, primary && { color: '#1A1408' }]}>{label}</Text>
-        <Text style={[styles.detail, primary && { color: 'rgba(26,20,8,0.7)' }]}>{detail}</Text>
+        <Text style={[styles.label, primary && { color: colors.accentInk }]}>{label}</Text>
+        <Text style={[styles.detail, primary && { color: colors.accentInk, opacity: 0.72 }]}>{detail}</Text>
       </View>
       {on ? <View style={[styles.dot, { backgroundColor: colors.accent }]} /> : null}
     </PressableScale>
@@ -229,11 +224,8 @@ function Action({
 
 const styles = StyleSheet.create({
   scroll: { padding: space.lg, gap: space.lg },
-  header: { flexDirection: 'row', alignItems: 'flex-end' },
-  title: { ...type.title, letterSpacing: -0.6, marginTop: 2 },
-  done: { minHeight: 36, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.surface },
-  doneText: { color: colors.text, fontSize: 15, fontWeight: '600' },
-  section: { ...type.caption, fontWeight: '600', marginLeft: 2 },
+  badge: { marginTop: space.sm },
+  section: { ...type.caption },
   status: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -258,9 +250,9 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
   },
   actionPrimary: { backgroundColor: colors.accent, borderColor: colors.accent },
-  label: { fontSize: 16, fontWeight: '600', color: colors.text },
-  detail: { fontSize: 13, color: colors.textMuted },
-  note: { ...type.caption, color: colors.accent, marginLeft: 2 },
+  label: { ...type.label, fontSize: 16 },
+  detail: { ...type.caption },
+  note: { ...type.caption, color: colors.text },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,15 +263,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: colors.line,
   },
-  resetAll: { alignSelf: 'center', paddingVertical: space.md, paddingHorizontal: space.lg },
-  resetAllText: { color: colors.textMuted, fontSize: 15, fontWeight: '600' },
+  resetAll: { alignSelf: 'center' },
   overlay: { backgroundColor: colors.bg, paddingHorizontal: space.lg, gap: space.lg },
-  overlayClose: {
-    alignSelf: 'center',
-    minHeight: 44,
-    paddingHorizontal: space.xl,
-    justifyContent: 'center',
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-  },
+  overlayClose: { alignSelf: 'center', minWidth: 160 },
 });

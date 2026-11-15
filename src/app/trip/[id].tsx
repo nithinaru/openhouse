@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef } from 'react';
-import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import MapView, { Polyline } from 'react-native-maps';
 import Animated, { FadeIn, FadeOut, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,9 +17,9 @@ import { Timeline } from '@/features/replay/Timeline';
 import { TitleCard } from '@/features/replay/TitleCard';
 import { useReplay } from '@/features/replay/useReplay';
 import { useTrip } from '@/features/replay/useTrip';
-import { colors, radius, space, tintFor, type } from '@/theme';
-
-const TINT_FADE_MS = 1400;
+import { colors, film, fonts, radius, space, tintFor, type } from '@/theme';
+import { BackIcon, PauseIcon, PlayIcon } from '@/theme/icons';
+import { IconButton } from '@/theme/ui';
 
 export default function ReplayScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -111,9 +111,9 @@ export default function ReplayScreen() {
           StyleSheet.absoluteFill,
           {
             backgroundColor: tint,
-            opacity: 0.38,
+            opacity: film.tintOpacity,
             transitionProperty: 'backgroundColor',
-            transitionDuration: TINT_FADE_MS,
+            transitionDuration: film.tintFadeMs,
           },
         ]}
       />
@@ -124,7 +124,12 @@ export default function ReplayScreen() {
 
       {/* Top bar */}
       <View style={[styles.topBar, { paddingTop: insets.top + space.sm }]} pointerEvents="box-none">
-        <Pill label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
+        <IconButton
+          tone="media"
+          label="Back"
+          icon={<BackIcon color={colors.text} />}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        />
         <View style={styles.titleWrap} pointerEvents="none">
           {!opening ? (
             <Animated.Text entering={FadeIn.duration(500)} style={styles.title} numberOfLines={1}>
@@ -135,7 +140,12 @@ export default function ReplayScreen() {
         {done ? (
           <View style={styles.pillSpacer} />
         ) : (
-          <Pill label={paused ? 'Play' : 'Pause'} onPress={replay.togglePause} />
+          <IconButton
+            tone="media"
+            label={paused ? 'Play' : 'Pause'}
+            icon={paused ? <PlayIcon color={colors.text} /> : <PauseIcon color={colors.text} />}
+            onPress={replay.togglePause}
+          />
         )}
       </View>
 
@@ -217,19 +227,6 @@ export default function ReplayScreen() {
   );
 }
 
-function Pill({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={10}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.pill, pressed && { transform: [{ scale: 0.97 }], opacity: 0.85 }]}
-    >
-      <Text style={styles.pillText}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   topBar: {
@@ -243,24 +240,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
   },
   titleWrap: { flex: 1, alignItems: 'center' },
-  title: { fontSize: 15, fontWeight: '600', color: colors.text, opacity: 0.9 },
-  pill: {
-    minWidth: 64,
-    alignItems: 'center',
-    backgroundColor: 'rgba(23,27,34,0.72)',
-    borderRadius: radius.full,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(242,238,230,0.16)',
-  },
-  pillSpacer: { minWidth: 64 },
-  pillText: { fontSize: 15, fontWeight: '600', color: colors.text },
+  title: { fontFamily: fonts.serif, fontSize: 17, lineHeight: 22, color: colors.text },
+  pillSpacer: { width: 40 },
   pausedBadge: {
     position: 'absolute',
     alignSelf: 'center',
     top: '42%',
-    backgroundColor: 'rgba(23,27,34,0.88)',
+    backgroundColor: colors.scrimStrong,
     borderRadius: radius.full,
     paddingHorizontal: space.md,
     paddingVertical: space.sm,
@@ -274,5 +260,5 @@ const styles = StyleSheet.create({
     gap: space.md,
   },
   footer: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  counter: { fontSize: 12, fontWeight: '600', color: colors.textMuted, fontVariant: ['tabular-nums'], minWidth: 28 },
+  counter: { ...type.stamp, color: colors.textMuted, minWidth: 32, textAlign: 'right' },
 });

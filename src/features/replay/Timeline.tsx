@@ -12,9 +12,9 @@ import Animated, {
 import { scheduleOnRN } from 'react-native-worklets';
 
 import type { Moment } from '@/lib/types';
-import { colors, radius, space } from '@/theme';
+import { colors, ease, radius, space } from '@/theme';
 
-import { EASE_OUT } from './film';
+const EASE_OUT = ease.out;
 
 const TRACK_H = 3;
 const HIT_H = 36;
@@ -136,11 +136,11 @@ const styles = StyleSheet.create({
   track: {
     height: TRACK_H,
     borderRadius: radius.full,
-    backgroundColor: 'rgba(242,238,230,0.22)',
+    backgroundColor: colors.veil,
     overflow: 'hidden',
   },
   fill: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.accent },
-  notch: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: 'rgba(5,7,10,0.85)' },
+  notch: { position: 'absolute', top: 0, bottom: 0, width: 2, marginLeft: -1, backgroundColor: colors.ink },
   knob: {
     position: 'absolute',
     left: 0,
@@ -159,9 +159,9 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '500',
     color: colors.text,
-    backgroundColor: 'rgba(23,27,34,0.92)',
+    backgroundColor: colors.scrimStrong,
     paddingHorizontal: space.sm,
     paddingVertical: 3,
     borderRadius: radius.sm,

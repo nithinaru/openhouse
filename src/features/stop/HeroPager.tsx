@@ -149,10 +149,10 @@ const styles = StyleSheet.create({
     left: 16,
     height: 22,
     borderRadius: radius.full,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: colors.scrim,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: 'rgba(242,238,230,0.4)' },
+  dot: { width: DOT, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.veil },
   pill: { position: 'absolute', left: 0, top: 0, width: PILL, height: DOT, borderRadius: DOT / 2, backgroundColor: colors.text },
 });

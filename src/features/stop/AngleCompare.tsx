@@ -186,9 +186,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: radius.full,
-    backgroundColor: 'rgba(14,17,22,0.6)',
+    backgroundColor: colors.scrim,
   },
-  labelText: { color: colors.text, fontSize: 12, fontWeight: '600', letterSpacing: 0.3 },
+  labelText: { color: colors.text, fontSize: 12, fontWeight: '500' },
   thumb: {
     width: 48,
     height: 48,

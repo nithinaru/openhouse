@@ -17,7 +17,7 @@ import { colors } from '@/theme';
 
 const CORNER = 34;
 const STROKE = 4;
-const SHADE = 'rgba(8,10,14,0.62)';
+const SHADE = colors.scrim;
 
 /**
  * Overlay for the camera: dims everything but a square window, draws corner
@@ -33,7 +33,6 @@ export function Viewfinder({ locked }: { locked: boolean }) {
   useEffect(() => {
     if (reduced) return;
     sweep.set(withRepeat(withTiming(1, { duration: 1900, easing: Easing.inOut(Easing.quad) }), -1, true));
-    breathe.set(withRepeat(withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.sin) }), -1, true));
   }, [breathe, reduced, sweep]);
 
   useEffect(() => {

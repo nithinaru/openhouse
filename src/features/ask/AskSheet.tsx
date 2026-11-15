@@ -6,15 +6,17 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PressableScale } from '@/features/home/PressableScale';
 import { pickVoice } from '@/features/replay/narrator';
-import { EASE_OUT } from '@/features/replay/film';
 import type { Trip } from '@/lib/types';
-import { colors, radius, space, type } from '@/theme';
+import { colors, ease, radius, size, space, type } from '@/theme';
+import { ArrowIcon, SpeakerIcon } from '@/theme/icons';
+import { Button, Chip, Press, SheetHeader } from '@/theme/ui';
 
 import { askQuestion, type AskResult } from './askBackend';
 import { CitedStopCard } from './CitedStopCard';
 import { StreamedAnswer } from './StreamedAnswer';
+
+const EASE_OUT = ease.out;
 
 export const SUGGESTIONS = [
   'When did I meet Rohan?',
@@ -102,22 +104,8 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
       style={{ flex: 1, backgroundColor: colors.bg }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.grabber} />
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={type.caption}>{trip.title}</Text>
-          <Text style={styles.title}>Ask your day</Text>
-        </View>
-        <PressableScale
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          accessibilityLabel="Close"
-          hitSlop={10}
-          haptic="none"
-          style={styles.close}
-        >
-          <Text style={styles.closeText}>Done</Text>
-        </PressableScale>
+        <SheetHeader eyebrow={trip.title} title="Ask your day" onClose={() => router.back()} />
       </View>
 
       <ScrollView
@@ -132,15 +120,7 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
             <View style={styles.chips}>
               {SUGGESTIONS.map((s, i) => (
                 <Animated.View key={s} entering={FadeInDown.duration(260).delay(60 + i * 45).easing(EASE_OUT)}>
-                  <PressableScale
-                    onPress={() => ask(s)}
-                    accessibilityRole="button"
-                    scaleTo={0.96}
-                    haptic="none"
-                    style={styles.chip}
-                  >
-                    <Text style={styles.chipText}>{s}</Text>
-                  </PressableScale>
+                  <Chip label={s} onPress={() => ask(s)} textStyle={styles.chipText} />
                 </Animated.View>
               ))}
             </View>
@@ -164,16 +144,14 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
                     ))}
 
                     <View style={styles.answerActions}>
-                      <PressableScale
-                        onPress={showMe}
-                        accessibilityRole="button"
+                      <Button
+                        variant="secondary"
+                        label={speaking ? 'Stop' : 'Read aloud'}
                         accessibilityLabel={speaking ? 'Stop reading' : 'Read the answer aloud'}
-                        scaleTo={0.96}
-                        haptic="none"
+                        onPress={showMe}
+                        trailing={<SpeakerIcon color={colors.text} />}
                         style={styles.showMe}
-                      >
-                        <Text style={styles.showMeText}>{speaking ? 'Stop' : 'Show me'}</Text>
-                      </PressableScale>
+                      />
                       <Text style={styles.source}>
                         {state.result.source === 'claude' ? 'Answered by Claude from your memories' : 'Answered on this phone'}
                       </Text>
@@ -181,16 +159,7 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
 
                     <View style={[styles.chips, { marginTop: space.md }]}>
                       {SUGGESTIONS.filter((s) => s !== state.question).map((s) => (
-                        <PressableScale
-                          key={s}
-                          onPress={() => ask(s)}
-                          accessibilityRole="button"
-                          scaleTo={0.96}
-                          haptic="none"
-                          style={[styles.chip, styles.chipSmall]}
-                        >
-                          <Text style={[styles.chipText, { fontSize: 14 }]}>{s}</Text>
-                        </PressableScale>
+                        <Chip key={s} label={s} onPress={() => ask(s)} />
                       ))}
                     </View>
                   </Animated.View>
@@ -214,67 +183,33 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
           autoCorrect
           accessibilityLabel="Ask a question about this day"
         />
-        <PressableScale
+        <Press
           onPress={() => ask(text)}
           disabled={!text.trim()}
           accessibilityRole="button"
           accessibilityLabel="Ask"
-          scaleTo={0.94}
+          scaleTo={0.92}
           haptic="none"
           style={[styles.send, !text.trim() && { opacity: 0.4 }]}
         >
-          <Text style={styles.sendText}>Ask</Text>
-        </PressableScale>
+          <ArrowIcon color={colors.accentInk} />
+        </Press>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  grabber: {
-    alignSelf: 'center',
-    width: 36,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: colors.line,
-    marginTop: space.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: space.lg,
-    paddingTop: space.md,
-    paddingBottom: space.sm,
-  },
-  title: { ...type.title, letterSpacing: -0.6, marginTop: 2 },
-  close: { minHeight: 36, paddingHorizontal: 14, justifyContent: 'center', borderRadius: radius.full, backgroundColor: colors.surface },
-  closeText: { color: colors.text, fontSize: 15, fontWeight: '600' },
+  header: { paddingHorizontal: space.lg, paddingTop: space.lg, paddingBottom: space.sm },
   body: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xl },
-  hint: { ...type.body, color: colors.textMuted, lineHeight: 22 },
+  hint: { ...type.body, color: colors.textMuted },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: space.md,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-  },
-  chipSmall: { minHeight: 38 },
-  chipText: { color: colors.text, fontSize: 15, fontWeight: '500' },
-  question: { fontSize: 15, fontWeight: '600', color: colors.accent },
+  chipText: { fontSize: 15, lineHeight: 20 },
+  question: { ...type.label, color: colors.textMuted },
   thinking: { ...type.body, color: colors.textMuted },
   answerActions: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginTop: space.sm },
-  showMe: {
-    minHeight: 44,
-    paddingHorizontal: space.lg,
-    justifyContent: 'center',
-    borderRadius: radius.full,
-    backgroundColor: colors.accent,
-  },
-  showMeText: { color: '#1A1408', fontSize: 16, fontWeight: '700' },
-  source: { flex: 1, fontSize: 12, color: colors.textMuted },
+  showMe: { minHeight: size.hit, paddingHorizontal: space.md },
+  source: { flex: 1, ...type.caption },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -287,21 +222,21 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 46,
+    minHeight: size.hit,
     paddingHorizontal: space.md,
     borderRadius: radius.full,
     backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
     color: colors.text,
-    fontSize: 16,
+    fontSize: 17,
   },
   send: {
-    minHeight: 46,
-    minWidth: 60,
-    paddingHorizontal: space.md,
+    width: size.hit,
+    height: size.hit,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.full,
+    borderRadius: size.hit / 2,
     backgroundColor: colors.accent,
   },
-  sendText: { color: '#1A1408', fontSize: 16, fontWeight: '700' },
 });

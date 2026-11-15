@@ -7,7 +7,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Animated, {
-  Easing,
   FadeIn,
   FadeInRight,
   LinearTransition,
@@ -22,11 +21,11 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { IngestProgress, StopPreview } from '@/lib/ingest/readLibrary';
-import { colors, radius, space } from '@/theme';
+import { colors, ease, fonts, radius, shadow, space, type } from '@/theme';
 
 import { plural } from './tripMeta';
 
-const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
+const EASE_OUT = ease.out;
 const PIN = 46;
 const HAPTIC_GAP_MS = 140;
 // A wide opening view (continental US); the first stop flies the camera in from here.
@@ -281,9 +280,9 @@ const styles = StyleSheet.create({
   fill: { flex: 1, backgroundColor: colors.bg },
   scrim: { backgroundColor: colors.bg },
   top: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: space.lg, gap: 6 },
-  phase: { color: colors.textMuted, fontSize: 14, fontWeight: '500' },
-  counter: { color: colors.text, fontSize: 24, fontWeight: '700', letterSpacing: -0.4, fontVariant: ['tabular-nums'] },
-  track: { height: 3, borderRadius: 2, backgroundColor: 'rgba(242,238,230,0.12)', marginTop: space.sm, overflow: 'hidden' },
+  phase: { ...type.caption },
+  counter: { fontFamily: fonts.serif, color: colors.text, fontSize: 28, lineHeight: 34, fontVariant: ['tabular-nums'] },
+  track: { height: 3, borderRadius: 2, backgroundColor: colors.line, marginTop: space.sm, overflow: 'hidden' },
   fillBar: { position: 'absolute', left: 0, top: 0, bottom: 0, backgroundColor: colors.accent, borderRadius: 2 },
   note: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0 },
@@ -294,7 +293,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: colors.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(242,238,230,0.2)',
+    borderColor: colors.lineStrong,
   },
   cardImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   cardLabel: {
@@ -304,15 +303,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     paddingHorizontal: 8,
     paddingVertical: 6,
-    backgroundColor: 'rgba(14,17,22,0.62)',
+    backgroundColor: colors.scrimStrong,
   },
-  cardText: { color: colors.text, fontSize: 11, fontWeight: '600' },
+  cardText: { color: colors.text, fontSize: 11, fontWeight: '500' },
   center: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', padding: space.xl, gap: space.sm },
   seekDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: colors.accent, marginBottom: space.sm },
   waiting: { color: colors.textMuted, fontSize: 13, textAlign: 'center' },
-  readyKicker: { color: colors.accent, fontSize: 13, fontWeight: '600' },
-  readyTitle: { color: colors.text, fontSize: 34, fontWeight: '800', letterSpacing: -0.8, textAlign: 'center' },
-  readySub: { color: colors.textMuted, fontSize: 17, textAlign: 'center' },
+  readyKicker: { ...type.stamp },
+  readyTitle: { ...type.display, textAlign: 'center' },
+  readySub: { ...type.body, color: colors.textMuted, textAlign: 'center' },
   pinWrap: { alignItems: 'center' },
   bubble: {
     width: PIN,
@@ -321,10 +320,7 @@ const styles = StyleSheet.create({
     borderWidth: 2.5,
     borderColor: colors.text,
     backgroundColor: colors.surface,
-    shadowColor: '#000',
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    ...shadow.print,
   },
   bubbleImg: { width: PIN - 5, height: PIN - 5, borderRadius: (PIN - 5) / 2 },
   badge: {
@@ -339,7 +335,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { color: colors.bg, fontSize: 10, fontWeight: '800' },
+  badgeText: { color: colors.accentInk, fontSize: 10, fontWeight: '600', fontVariant: ['tabular-nums'] },
   stem: { width: 2, height: 10, backgroundColor: colors.text },
   foot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: -1 },
 });

@@ -6,13 +6,13 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IngestShow } from '@/features/home/IngestShow';
-import { PressableScale } from '@/features/home/PressableScale';
 import { uploadTrip } from '@/lib/data/sync';
 import { DEMO_TRIP_ID } from '@/lib/demo/demoTrip';
 import { notifyTripReady } from '@/lib/ingest/notify';
 import { IngestError, ingestRecent, type IngestProgress } from '@/lib/ingest/readLibrary';
 import { setTrip } from '@/lib/ingest/store';
-import { colors, radius, space, type } from '@/theme';
+import { colors, duration, ease, radius, space, type } from '@/theme';
+import { Button } from '@/theme/ui';
 
 /** How long "Your day is ready" holds before the replay opens. */
 const READY_BEAT_MS = 2200;
@@ -83,45 +83,38 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={styles.body}>
-        <Animated.View entering={FadeInDown.duration(380)} style={{ gap: space.md }}>
+        <Animated.View entering={FadeInDown.duration(duration.enter).easing(ease.out)} style={{ gap: space.md }}>
           <Text style={styles.kicker}>Openhouse</Text>
-          <Text style={styles.headline}>Your camera roll already remembers the day.</Text>
-          <Text style={[type.body, { color: colors.textMuted, lineHeight: 23 }]}>
+          <Text style={type.display}>Your camera roll already remembers the day</Text>
+          <Text style={[type.body, { color: colors.textMuted }]}>
             Where you stood, which way you faced, who was there. Openhouse reads the photos you already took
             and plays the day back. Nothing to type.
           </Text>
         </Animated.View>
         {failed && (
-          <Animated.View entering={FadeIn.duration(200)} style={styles.error}>
-            <Text style={[type.body, { color: colors.text }]}>{state.message}</Text>
+          <Animated.View entering={FadeIn.duration(duration.fast)} style={styles.error}>
+            <Text style={type.callout}>{state.message}</Text>
           </Animated.View>
         )}
       </View>
 
-      <View style={{ padding: space.lg, gap: space.sm }}>
-        <PressableScale accessibilityRole="button" onPress={start} scaleTo={0.96} haptic="medium" style={styles.cta}>
-          <Text style={styles.ctaText}>{failed ? 'Try again' : 'Let Openhouse read your photos'}</Text>
-        </PressableScale>
-        <PressableScale accessibilityRole="button" onPress={useDemo} haptic="none" style={styles.secondary}>
-          <Text style={[type.body, { color: colors.accent }]}>{failed ? 'Use demo trip' : 'See a sample day'}</Text>
-        </PressableScale>
+      <View style={styles.actions}>
+        <Button label={failed ? 'Try again' : 'Let Openhouse read your photos'} onPress={start} />
+        <Button variant="quiet" label={failed ? 'Use the demo trip' : 'See a sample day'} onPress={useDemo} />
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { flex: 1, justifyContent: 'center', padding: space.lg, gap: space.lg },
-  kicker: { color: colors.accent, fontSize: 15, fontWeight: '700' },
-  headline: { ...type.title, fontSize: 34, lineHeight: 40, letterSpacing: -0.8 },
-  error: { backgroundColor: colors.surface, borderRadius: radius.md, padding: space.md },
-  cta: {
-    backgroundColor: colors.accent,
-    borderRadius: radius.full,
-    minHeight: 54,
-    alignItems: 'center',
-    justifyContent: 'center',
+  body: { flex: 1, justifyContent: 'center', paddingHorizontal: space.lg, gap: space.lg },
+  kicker: { ...type.caption, color: colors.textMuted },
+  error: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    padding: space.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
   },
-  ctaText: { color: colors.bg, fontSize: 17, fontWeight: '700' },
-  secondary: { minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  actions: { paddingHorizontal: space.lg, paddingBottom: space.md, gap: space.xs },
 });

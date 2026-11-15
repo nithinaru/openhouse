@@ -84,7 +84,7 @@ Over the golden-hour stop: "Every caption and line of narration was written from
 
 **Say:** "I can also just ask it about my day."
 
-**Tap:** close Walk in and the stop sheet. If Replay hasn't reached the end card yet, tap the last timeline segment and let the last stop finish (~5 s; rehearse whether you need this). On the end card → **Ask about this day** → chip **"When did I meet Rohan?"** → answer streams in → tap the cited **Lunch on 3rd St** card if there's time, or **Show me** to hear it.
+**Tap:** close Walk in and the stop sheet. If Replay hasn't reached the end card yet, tap the last timeline segment and let the last stop finish (~5 s; rehearse whether you need this). On the end card → **Ask about this day** → chip **"When did I meet Rohan?"** → answer streams in → tap the cited **Lunch on 3rd St** card if there's time, or **Read aloud** to hear it.
 
 **Shows:** **Claude** answers over the trip, with **Supermemory** recall across days ("Answered by Claude from your memories" under the answer).
 

@@ -1,10 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeOut } from 'react-native-reanimated';
 
-import { colors, radius, space } from '@/theme';
+import { colors, ease, fonts, radius, space, type } from '@/theme';
+import { Button, Stamp } from '@/theme/ui';
 
-import { EASE_OUT, SERIF } from './film';
 import type { TripStats } from './stats';
 
 type Props = {
@@ -34,12 +34,12 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
 
   return (
     <Animated.View
-      entering={FadeInDown.duration(560).easing(EASE_OUT)}
+      entering={FadeInDown.duration(560).easing(ease.out)}
       exiting={FadeOut.duration(220)}
-      style={[styles.card, { paddingBottom: bottomInset + space.md }]}
+      style={[styles.card, { paddingBottom: bottomInset + space.sm }]}
     >
-      <Text style={styles.date}>{date}</Text>
-      <Text style={styles.title} numberOfLines={2}>
+      <Stamp>{date}</Stamp>
+      <Text style={[type.title, { marginTop: space.xs }]} numberOfLines={2}>
         {title}
       </Text>
 
@@ -47,7 +47,7 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
         {cells.map((c, i) => (
           <Animated.View key={c.label} entering={FadeIn.duration(400).delay(220 + i * 70)} style={styles.cell}>
             <Text style={styles.value}>{c.value}</Text>
-            <Text style={styles.label}>{c.label}</Text>
+            <Text style={type.caption}>{c.label}</Text>
           </Animated.View>
         ))}
       </View>
@@ -55,49 +55,19 @@ export function EndCard({ title, date, stats, palette, bottomInset, onFrame, onW
       {palette.length ? (
         <Animated.View entering={FadeIn.duration(500).delay(520)} style={styles.palette}>
           {palette.map((c, i) => (
-            <View
-              key={`${c}-${i}`}
-              style={[
-                styles.swatch,
-                { backgroundColor: c },
-                i === 0 && { borderTopLeftRadius: radius.sm, borderBottomLeftRadius: radius.sm },
-                i === palette.length - 1 && { borderTopRightRadius: radius.sm, borderBottomRightRadius: radius.sm },
-              ]}
-            />
+            <View key={`${c}-${i}`} style={[styles.swatch, { backgroundColor: c }]} />
           ))}
         </Animated.View>
       ) : null}
 
       <View style={styles.actions}>
-        <Pressable
-          onPress={onFrame}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
-        >
-          <Text style={styles.primaryText}>Frame it</Text>
-        </Pressable>
-        {onWalkIn ? (
-          <Pressable
-            onPress={onWalkIn}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-          >
-            <Text style={styles.secondaryText}>Walk in</Text>
-          </Pressable>
-        ) : null}
+        <Button label="Frame it" onPress={onFrame} style={{ flex: 1 }} />
+        {onWalkIn ? <Button variant="secondary" label="Walk in" onPress={onWalkIn} style={{ flex: 1 }} /> : null}
       </View>
-      {ask ? (
-        <Pressable
-          onPress={ask}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.ask, pressed && styles.pressed]}
-        >
-          <Text style={styles.askText}>Ask about this day</Text>
-        </Pressable>
-      ) : null}
-      <Pressable onPress={onAgain} hitSlop={12} accessibilityRole="button" style={styles.again}>
-        <Text style={styles.againText}>Watch again</Text>
-      </Pressable>
+      <View style={styles.quiet}>
+        {ask ? <Button variant="quiet" label="Ask about this day" onPress={ask} /> : null}
+        <Button variant="quiet" label="Watch again" onPress={onAgain} />
+      </View>
     </Animated.View>
   );
 }
@@ -109,53 +79,18 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     paddingHorizontal: space.lg,
     paddingTop: space.lg,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
+    borderColor: colors.lineStrong,
   },
-  date: { fontSize: 13, color: colors.textMuted },
-  title: { fontFamily: SERIF, fontSize: 30, lineHeight: 36, color: colors.text, marginTop: space.xs },
   stats: { flexDirection: 'row', marginTop: space.lg },
-  cell: { flex: 1 },
-  value: { fontFamily: SERIF, fontSize: 26, color: colors.text, fontVariant: ['tabular-nums'] },
-  label: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
-  palette: { flexDirection: 'row', height: 18, marginTop: space.lg },
+  cell: { flex: 1, gap: space.xxs },
+  value: { fontFamily: fonts.serif, fontSize: 26, lineHeight: 32, color: colors.text, fontVariant: ['tabular-nums'] },
+  palette: { flexDirection: 'row', height: 12, marginTop: space.lg, borderRadius: radius.xs, overflow: 'hidden' },
   swatch: { flex: 1 },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.lg },
-  primary: {
-    flex: 1,
-    height: 54,
-    borderRadius: radius.md,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  primaryText: { fontSize: 17, fontWeight: '700', color: '#1A1408' },
-  secondary: {
-    flex: 1,
-    height: 54,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(242,238,230,0.08)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  secondaryText: { fontSize: 17, fontWeight: '600', color: colors.text },
-  pressed: { transform: [{ scale: 0.97 }], opacity: 0.9 },
-  ask: {
-    height: 48,
-    marginTop: space.sm,
-    borderRadius: radius.md,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  askText: { fontSize: 16, fontWeight: '600', color: colors.accent },
-  again: { alignSelf: 'center', paddingVertical: space.md },
-  againText: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
+  quiet: { flexDirection: 'row', justifyContent: 'center', marginTop: space.xs },
 });

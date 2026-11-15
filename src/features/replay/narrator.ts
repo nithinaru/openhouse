@@ -107,6 +107,12 @@ export function speak(text: string, fromWord: number, voice: string | undefined,
       alive = false;
       h.onDone();
     },
+    // Stopped from outside (demo panel turned the narrator off): move on.
+    onStopped: () => {
+      if (!alive) return;
+      alive = false;
+      h.onDone();
+    },
   });
   return () => {
     alive = false;

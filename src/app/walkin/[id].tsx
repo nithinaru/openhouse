@@ -1,10 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { WalkInViewer } from '@/features/walkin/WalkInViewer';
 import { getDemoMoment, getDemoTrip } from '@/lib/demo/demoTrip';
-import { colors, radius, space, type } from '@/theme';
+import { colors, space } from '@/theme';
+import { PinIcon } from '@/theme/icons';
+import { Chip, CloseButton } from '@/theme/ui';
 
 export default function WalkInScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,27 +21,13 @@ export default function WalkInScreen() {
     <View style={styles.root}>
       <WalkInViewer moment={moment} palette={palette} />
 
-      <Pressable
-        onPress={close}
-        hitSlop={12}
-        accessibilityRole="button"
-        accessibilityLabel="Close"
-        style={({ pressed }) => [
-          styles.close,
-          { top: insets.top + space.sm, left: space.md, opacity: pressed ? 0.6 : 1 },
-        ]}
-      >
-        <Text style={styles.closeGlyph}>×</Text>
-      </Pressable>
+      <View style={[styles.close, { top: insets.top + space.sm }]}>
+        <CloseButton tone="media" onPress={close} />
+      </View>
 
       {moment?.placeName ? (
-        <View
-          pointerEvents="none"
-          style={[styles.caption, { bottom: insets.bottom + space.md }]}
-        >
-          <Text style={type.caption} numberOfLines={1}>
-            {moment.placeName}
-          </Text>
+        <View pointerEvents="none" style={[styles.caption, { bottom: insets.bottom + space.md }]}>
+          <Chip tone="media" icon={<PinIcon size={14} color={colors.textMuted} />} label={moment.placeName} />
         </View>
       ) : null}
     </View>
@@ -48,25 +36,6 @@ export default function WalkInScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  close: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeGlyph: { ...type.heading, lineHeight: 24 },
-  caption: {
-    position: 'absolute',
-    alignSelf: 'center',
-    maxWidth: '80%',
-    paddingHorizontal: space.md,
-    paddingVertical: space.xs + 2,
-    borderRadius: radius.full,
-    backgroundColor: colors.surface,
-  },
+  close: { position: 'absolute', left: space.md },
+  caption: { position: 'absolute', left: space.lg, right: space.lg, alignItems: 'center' },
 });

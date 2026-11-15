@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
-import { SERIF } from '@/features/replay/film';
-import { colors } from '@/theme';
+import { colors, type } from '@/theme';
 
 const WORD_MS = 55; // ~18 words/s: reads as typing, a 30-word answer lands in under 2 s
 
@@ -47,6 +46,6 @@ export function StreamedAnswer({ text, onDone }: { text: string; onDone?: () => 
 }
 
 const styles = StyleSheet.create({
-  answer: { fontFamily: SERIF, fontSize: 24, lineHeight: 32, color: colors.text },
+  answer: { ...type.story, fontSize: 24, lineHeight: 32 },
   caret: { color: colors.accent, fontSize: 20 },
 });

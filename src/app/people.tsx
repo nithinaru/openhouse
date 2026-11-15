@@ -2,17 +2,19 @@ import { CameraView, useCameraPermissions, type BarcodeScanningResult } from 'ex
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
+import { router } from 'expo-router';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { PairCelebration } from '@/features/people/PairCelebration';
-import { DEMO_MY_NAME, DEMO_MY_SHARE_CODE, pair, parsePairCode, type PairResult } from '@/features/people/pair';
+import { DEMO_MY_NAME, DEMO_MY_SHARE_CODE, demoPair, pair, parsePairCode, type PairResult } from '@/features/people/pair';
+import '@/features/people/pairRemote';
 import { QrCard } from '@/features/people/QrCard';
 import { Viewfinder } from '@/features/people/Viewfinder';
 import { EASE_OUT } from '@/features/stop/motion';
-import { PressScale } from '@/features/stop/PressScale';
 import { colors, radius, space, type } from '@/theme';
+import { Button, SheetHeader } from '@/theme/ui';
 
 type Tab = 'code' | 'scan';
 const TABS: Tab[] = ['code', 'scan'];
@@ -26,16 +28,14 @@ export default function PeopleScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.lg, paddingHorizontal: space.lg, gap: space.lg }}>
-      <Pressable
-        delayLongPress={700}
-        onLongPress={async () => {
-          Haptics.selectionAsync();
-          setPreview(preview ? null : await pair('RHN42X', 0, 0));
-        }}
-      >
-        <Text style={type.title}>People</Text>
-        <Text style={[type.caption, { marginTop: 2 }]}>Scan each other to share the day.</Text>
-      </Pressable>
+      <View style={{ gap: space.xs }}>
+        <SheetHeader
+          title="People"
+          onTitleLongPress={() => setPreview(preview ? null : demoPair('RHN42X'))}
+          onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        />
+        <Text style={type.caption}>Scan each other to share the day</Text>
+      </View>
 
       <Segmented value={tab} onChange={setTab} />
 
@@ -45,7 +45,7 @@ export default function PeopleScreen() {
         <Animated.View key="code" entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.sm }}>
           {/* TODO(convex): name + shareCode from api.users.me. */}
           <QrCard name={DEMO_MY_NAME} code={DEMO_MY_SHARE_CODE} />
-          <Text style={[type.caption, { textAlign: 'center', maxWidth: 260 }]}>Have a friend scan this. You’ll each show up on the other’s map, right where you met.</Text>
+          <Text style={[type.caption, { textAlign: 'center', maxWidth: 280, marginTop: space.md }]}>Have a friend scan this. You’ll each show up on the other’s map, right where you met.</Text>
         </Animated.View>
       ) : (
         <Animated.View key="scan" entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)} style={{ flex: 1 }}>
@@ -80,9 +80,9 @@ function Segmented({ value, onChange }: { value: Tab; onChange: (t: Tab) => void
           }}
           accessibilityRole="tab"
           accessibilityState={{ selected: value === t }}
-          style={{ flex: 1, alignItems: 'center', paddingVertical: space.sm + 2 }}
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 36 }}
         >
-          <Text style={[type.body, { fontWeight: '600', color: value === t ? colors.text : colors.textMuted }]}>{t === 'code' ? 'My code' : 'Scan'}</Text>
+          <Text style={[type.label, { color: value === t ? colors.text : colors.textMuted }]}>{t === 'code' ? 'My code' : 'Scan'}</Text>
         </Pressable>
       ))}
     </View>
@@ -188,17 +188,29 @@ function Scanner() {
 }
 
 function PrimaryButton({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <PressScale onPress={onPress} accessibilityRole="button" style={styles.primary}>
-      <Text style={[type.body, { color: colors.bg, fontWeight: '600' }]}>{label}</Text>
-    </PressScale>
-  );
+  return <Button label={label} onPress={onPress} />;
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  segment: { flexDirection: 'row', backgroundColor: colors.surface, borderRadius: radius.full, padding: space.xs },
-  segmentPill: { position: 'absolute', top: space.xs, bottom: space.xs, left: space.xs, borderRadius: radius.full, backgroundColor: colors.line },
+  segment: {
+    flexDirection: 'row',
+    backgroundColor: colors.surface,
+    borderRadius: radius.full,
+    padding: space.xs,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.line,
+  },
+  segmentPill: {
+    position: 'absolute',
+    top: space.xs,
+    bottom: space.xs,
+    left: space.xs,
+    borderRadius: radius.full,
+    backgroundColor: colors.elevated,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.lineStrong,
+  },
   pairing: {
     position: 'absolute',
     left: 0,
@@ -207,5 +219,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space.xs,
   },
-  primary: { paddingVertical: space.sm + 4, paddingHorizontal: space.lg, borderRadius: radius.full, backgroundColor: colors.accent },
 });

@@ -10,9 +10,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { colors, space } from '@/theme';
+import { colors, ease, space, type } from '@/theme';
 
-import { EASE_OUT, INK, SERIF } from './film';
+const EASE_OUT = ease.out;
 
 type Props = { title: string; date: string; meta: string };
 
@@ -49,18 +49,10 @@ export function TitleCard({ title, date, meta }: Props) {
 }
 
 const styles = StyleSheet.create({
-  root: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(5,7,10,0.78)', justifyContent: 'center' },
+  root: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: colors.scrimStrong, justifyContent: 'center' },
   center: { alignItems: 'center', paddingHorizontal: space.xl },
-  date: { fontSize: 14, color: colors.textMuted, letterSpacing: 0.3, marginBottom: space.sm },
-  title: {
-    fontFamily: SERIF,
-    fontSize: 40,
-    lineHeight: 46,
-    color: colors.text,
-    textAlign: 'center',
-    textShadowColor: INK,
-    textShadowRadius: 12,
-  },
-  rule: { width: 64, height: 2, backgroundColor: colors.accent, marginVertical: space.md, borderRadius: 1 },
-  meta: { fontSize: 15, color: colors.text, opacity: 0.85 },
+  date: { ...type.stamp, marginBottom: space.md },
+  title: { ...type.display, fontSize: 40, lineHeight: 46, textAlign: 'center' },
+  rule: { width: 48, height: 1, backgroundColor: colors.accent, marginVertical: space.lg },
+  meta: { ...type.callout, color: colors.textMuted },
 });
