@@ -19,7 +19,7 @@ import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-nat
 import { captureRef } from 'react-native-view-shot';
 import { scheduleOnRN } from 'react-native-worklets';
 
-import { startCheckout } from '@/features/poster/checkout';
+import { startCheckout, waitForPaid } from '@/features/poster/checkout';
 import { FRAME_STYLES, FramedPoster, frameInset } from '@/features/poster/FramedPoster';
 import { OrderConfirmed } from '@/features/poster/OrderConfirmed';
 import { POSTER_VARIANTS } from '@/features/poster/Poster';
@@ -45,10 +45,8 @@ export default function FrameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   // TODO(convex): const trip = useQuery(api.trips.get, { id }) (fall back to demo trip while loading).
   const trip = getDemoTrip(id);
-  // TODO(convex): real poster record id from api.posters.create after uploading the capture.
-  const posterId = `poster-${trip.id}`;
-  // TODO(convex): bind to useQuery(api.orders.forPoster, { posterId })?.status === 'paid'.
-  const serverConfirmed = false;
+  // Set by the /whop webhook via the Convex order record, polled after checkout.
+  const [serverConfirmed, setServerConfirmed] = useState(false);
   // Hidden rehearsal switch: long-press the title to preview the confirmed state.
   const [previewConfirmed, setPreviewConfirmed] = useState(false);
   const orderConfirmed = serverConfirmed || previewConfirmed;
@@ -125,10 +123,14 @@ export default function FrameScreen() {
     setCheckingOut(true);
     setMessage(null);
     try {
-      const url = await startCheckout(posterId, size);
-      if (url) {
-        await WebBrowser.openBrowserAsync(url);
-        // Do not mark paid here: the order record (orders.forPoster) drives orderConfirmed.
+      const checkout = await startCheckout({ tripId: id ?? trip.id, style: variant.id, size });
+      if (checkout) {
+        await WebBrowser.openBrowserAsync(checkout.url);
+        // Never mark paid on browser close: wait for the webhook to update the order.
+        setMessage('Confirming your order…');
+        const paid = await waitForPaid(checkout.orderId);
+        setMessage(paid ? null : 'Payment not confirmed yet. It will show here once Whop confirms it.');
+        if (paid) setServerConfirmed(true);
       } else {
         setMessage('Checkout opens once the backend is live');
       }

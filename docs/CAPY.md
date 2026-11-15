@@ -109,10 +109,17 @@ file storage, and save its URL as narrationUri. One PR.
 
 **Thread 6: Whop frame checkout**
 ```
-Add the Whop sandbox paywall per the hackathon guide: a Convex action orders.checkout(posterId)
-that creates a Whop checkout for a $39 framed print and returns purchase_url, and an HTTP action
-at /whop that verifies payment.succeeded with WHOP_WEBHOOK_SECRET and marks the order paid.
-Add query orders.forPoster. WHOP_ENVIRONMENT must be sandbox. One PR.
+Add the Whop sandbox checkout for framed prints (the app already calls this contract):
+- action orders.checkout({ userId, tripId, style, size }) where style is "minimal" | "night" |
+  "field" and size is "12x16" ($39) | "18x24" ($59). It inserts a posters row and an orders row
+  (status "pending"), creates a Whop sandbox checkout for that price with the order id in its
+  metadata, saves whopCheckoutId on the order, and returns { purchaseUrl, orderId }.
+- query orders.get({ orderId }) returning { status, size, style }.
+- HTTP action POST /whop in convex/http.ts: verify the signature with WHOP_WEBHOOK_SECRET, handle
+  payment.succeeded, find the order by metadata order id or whopCheckoutId, set status "paid".
+Use @whop/sdk server-side only, WHOP_API_KEY, and WHOP_ENVIRONMENT=sandbox (without it the SDK
+calls production). Check docs.whop.com for the exact checkout and webhook APIs. Test with card
+4242 4242 4242 4242. One PR.
 ```
 
 **Thread 7: Revyl proof and validation**

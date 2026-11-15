@@ -24,8 +24,8 @@ export const FN = {
   pairingsForUser: { path: 'pairings:forUser', kind: 'query', deployed: false }, // guessed name, not in CAPY.md
   splatsForMoment: { path: 'splats:forMoment', kind: 'query', deployed: false }, // { momentId }
   splatsBuildForMoment: { path: 'splats:buildForMoment', kind: 'action', deployed: false }, // { momentId }
-  ordersCheckout: { path: 'orders:checkout', kind: 'action', deployed: false }, // { posterId, size? }
-  ordersForPoster: { path: 'orders:forPoster', kind: 'query', deployed: false }, // { posterId }
+  ordersCheckout: { path: 'orders:checkout', kind: 'action', deployed: false }, // { userId, tripId, style, size } -> { purchaseUrl, orderId }
+  ordersGet: { path: 'orders:get', kind: 'query', deployed: false }, // { orderId } -> { status }
   membershipsCheckout: { path: 'memberships:checkout', kind: 'action', deployed: false },
   meEntitlements: { path: 'me:entitlements', kind: 'query', deployed: false }, // -> { plus }
   askQuestion: { path: 'ask:question', kind: 'action', deployed: false }, // { tripId, question } -> { answer, momentIds }
