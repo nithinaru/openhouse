@@ -9,7 +9,7 @@ All screens were designed in Paper (file: **Openhouse — Mobile UI**, https://a
 | `c-pixel-painting/` | Painterly pixel mosaic with LED dot mask | exploration |
 | `d-dogpatch-pixel-blueprint/` | Dogpatch HQ venue in pixel + blueprint, orbit home | exploration (blueprint dropped) |
 | `f-interior-only/` | Interior-only reconstructions in A + C styles | exploration |
-| `rebrand/` | Full rebrand: sky, chrome wordmark, sticker cutouts | **current** |
+| `rebrand/` | Full rebrand: sky, chrome wordmark, sticker cutouts. Onboarding, app, and the create-a-moment flow | **current** |
 
 ## Product constraints that shaped later directions
 
