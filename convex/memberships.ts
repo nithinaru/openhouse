@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action, internalMutation, internalQuery, type QueryCtx } from './_generated/server';
+import { action, env, internalMutation, internalQuery, type QueryCtx } from './_generated/server';
 import { internal } from './_generated/api';
 import type { Id } from './_generated/dataModel';
 import { dollars, purchaseUrlOf, whop } from './whop';
@@ -31,6 +31,7 @@ export const checkout = action({
       metadata: { userId },
       variant: {
         title: 'Openhouse+',
+        product_id: env.WHOP_PLUS_PRODUCT_ID,
         billing_type: 'renewal',
         billing_period: 30,
         currency: 'usd',
