@@ -27,17 +27,24 @@ All photos are AI-generated placeholders of one room in four camera styles; peop
 
 ![step in → walk forward](streetview-step-in-preview.gif)
 
-`streetview-step-in.mp4` (13s, 780×1688) — one clean pass through the finished moment:
+`streetview-step-in.mp4` (17s, 780×1688). You stand *inside* the room and the photos are the room around you, Street View-style:
 
 1. **0–1.5s** ready screen; tap **step in**.
-2. **1.5–3s** camera dives into the floating house, through the living room.
-3. **3–6.5s** standing in the living room (Street View-style): the room is built from the iPhone photo, and other people's photos hang in space where they were taken (@theo digicam, @ines film, @sol 0.5x). A floor chevron points to the kitchen; the view sways as you look around.
-4. **6.5–7.6s** tap the chevron → push forward: the room stretches past you, the photos fly by, the mini-map dot slides into the kitchen.
-5. **7.6–13s** standing in the kitchen with a whole new set of photos around you (@jules digicam, @maya film, @sol 0.5x) and a new chevron toward the stairs.
+2. **1.5–3s** the camera dives into the floating house.
+3. **3–9s** inside the living room. A continuous 360° capture wraps around you, and six guests' photos are stitched over it at the angles they were taken (@rohan iphone at the fireplace, @ines film by the bookshelf, @theo digicam on the staircase, @maya iphone at the kitchen door, @sol 0.5x at the windows, @jules digicam at the sofa). Their cut edges stay visible as you look around; the chip at the bottom names whose photo is in front of you.
+4. **9–10.4s** turn to the kitchen doorway, tap the floor arrow, and get pushed forward through it.
+5. **10.4–17s** inside the kitchen: a whole new 360° set of six photos, plus an arrow back to the living room.
 
-Source lives in `streetview/`: `index.html` is the scene (one `render(t)` function, autoplays when opened in a browser), `capture.mjs` renders frames with headless Chrome, `encode-mp4.swift` turns them into the MP4.
+### How the photos were made (all AI-generated placeholders)
+
+1. One seamless 360° panorama per room (`streetview/assets/pano-*.jpg`).
+2. `streetview/slice_pano.py` cuts each into 6 overlapping 70° portrait views, every 60°.
+3. Each view is re-shot by the image model with identical framing in a different guest's camera style, so neighbours line up (`streetview/assets/<room>-a<deg>.jpg`).
+4. `streetview/index.html` wraps the panorama on a 3D cylinder around the camera and layers the photos at their angles.
+
+### Re-render
 
 ```bash
-node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 13000
+node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 17000
 swift design/rebrand/step-inside/streetview/encode-mp4.swift /tmp/frames design/rebrand/step-inside/streetview-step-in.mp4
 ```
