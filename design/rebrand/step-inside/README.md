@@ -22,3 +22,22 @@ What happens after **step inside** on `../create-a-moment/m7-moment-ready`.
 - `motion-study-loop.mp4` — generated animated loop of the dive, for feel and pacing (not the exact app render).
 
 All photos are AI-generated placeholders of one room in four camera styles; people are fictional.
+
+## Street View walkthrough animation
+
+![step in → walk forward](streetview-step-in-preview.gif)
+
+`streetview-step-in.mp4` (13s, 780×1688) — one clean pass through the finished moment:
+
+1. **0–1.5s** ready screen; tap **step in**.
+2. **1.5–3s** camera dives into the floating house, through the living room.
+3. **3–6.5s** standing in the living room (Street View-style): the room is built from the iPhone photo, and other people's photos hang in space where they were taken (@theo digicam, @ines film, @sol 0.5x). A floor chevron points to the kitchen; the view sways as you look around.
+4. **6.5–7.6s** tap the chevron → push forward: the room stretches past you, the photos fly by, the mini-map dot slides into the kitchen.
+5. **7.6–13s** standing in the kitchen with a whole new set of photos around you (@jules digicam, @maya film, @sol 0.5x) and a new chevron toward the stairs.
+
+Source lives in `streetview/`: `index.html` is the scene (one `render(t)` function, autoplays when opened in a browser), `capture.mjs` renders frames with headless Chrome, `encode-mp4.swift` turns them into the MP4.
+
+```bash
+node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 13000
+swift design/rebrand/step-inside/streetview/encode-mp4.swift /tmp/frames design/rebrand/step-inside/streetview-step-in.mp4
+```
