@@ -1,17 +1,17 @@
 import { useMemo } from 'react';
 
-import { getDemoTrip } from '@/lib/demo/demoTrip';
-import { getTrip } from '@/lib/ingest/store';
+import { bestKnownTrip, useTripById } from '@/lib/data/trips';
+import { demoTrip, getDemoMoment } from '@/lib/demo/demoTrip';
 import type { Moment, Trip } from '@/lib/types';
 
-// Ingested trip from this session first, demo trip otherwise.
-// TODO: swap for the Convex trips.get query once it lands.
+// Live Convex trip first (polled), then the trip ingested this session, then the demo trip.
+// See src/lib/data/trips.ts for the fallback order.
 export function loadTrip(id?: string): Trip {
-  return (id ? getTrip(id) : undefined) ?? getDemoTrip(id);
+  return bestKnownTrip(id).trip;
 }
 
 export function useTrip(id?: string): Trip {
-  return useMemo(() => loadTrip(id), [id]);
+  return useTripById(id).data;
 }
 
 export function sortedMoments(trip: Trip): Moment[] {
@@ -19,8 +19,12 @@ export function sortedMoments(trip: Trip): Moment[] {
 }
 
 export function useMoment(momentId?: string, tripId?: string): { trip: Trip; moment?: Moment } {
+  const { data: trip } = useTripById(tripId);
   return useMemo(() => {
-    const trip = loadTrip(tripId);
-    return { trip, moment: trip.moments.find((m) => m.id === momentId) };
-  }, [momentId, tripId]);
+    const moment = trip.moments.find((m) => m.id === momentId);
+    if (moment || !momentId) return { trip, moment };
+    // A local demo stop id ("m1") opened while the live demo trip is showing: fall back to the local demo.
+    const demoMoment = getDemoMoment(momentId);
+    return demoMoment ? { trip: demoTrip, moment: demoMoment } : { trip, moment };
+  }, [momentId, trip]);
 }

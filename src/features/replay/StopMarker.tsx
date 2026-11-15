@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { Marker } from 'react-native-maps';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import type { Moment } from '@/lib/types';
@@ -43,8 +45,22 @@ type Props = {
   onPress: () => void;
 };
 
+// Pin lands: drops a few points and settles with a small bounce, timed with
+// the haptic tick fired by useReplay.
+function useDrop() {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.set(withSpring(1, { duration: 520, dampingRatio: 0.55 }));
+  }, [t]);
+  return useAnimatedStyle(() => ({
+    opacity: Math.min(1, t.get() * 2),
+    transform: [{ translateY: (1 - t.get()) * -22 }, { scale: 0.85 + 0.15 * t.get() }],
+  }));
+}
+
 export function StopMarker({ moment, active, cameraHeading, onPress }: Props) {
   const rotation = ((moment.headingDeg ?? 0) - cameraHeading + 360) % 360;
+  const drop = useDrop();
   return (
     <Marker
       identifier={moment.id}
@@ -53,6 +69,7 @@ export function StopMarker({ moment, active, cameraHeading, onPress }: Props) {
       onPress={onPress}
       tracksViewChanges
     >
+      <Animated.View style={drop}>
       {moment.headingDeg != null ? (
         <ViewCone rotationDeg={rotation} active={active} />
       ) : (
@@ -67,6 +84,7 @@ export function StopMarker({ moment, active, cameraHeading, onPress }: Props) {
           }}
         />
       )}
+      </Animated.View>
     </Marker>
   );
 }

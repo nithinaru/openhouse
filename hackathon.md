@@ -8,11 +8,11 @@
 - **Frontend:** not deployed
 - **Convex deployment:** https://trustworthy-anteater-9.convex.cloud
 - **Components:** none
-- **Convex features:** schema
+- **Convex features:** schema, indexes, queries, mutations, file storage
 - **Auth:** none
 - **AI models:** none
 - **Started:** 2026-11-15T19:38:19Z
-- **Last updated:** 2026-11-15T20:35:48Z
+- **Last updated:** 2026-11-15T20:45:51Z
 
 ## Log
 
@@ -28,5 +28,14 @@ Added on-device photo ingest from the media library, EXIF parsing and clustering
 ### 2026-11-15 - 83daa00
 Added the walk-in viewer that renders a SHARP Gaussian splat in a WebView with a dreamy low-res look, plus ESLint and expo-speech (`src/features/walkin/`).
 
+### 2026-11-15 - 229c415
+Reworked the home screen with a live ingest map and trip naming, turned replay into a narrated film, and polished the stop pager, framed posters and pairing (`src/app/`, `src/features/replay/`).
+
+### 2026-11-15 - 18f6148
+Added the Convex schema for users, trips, moments, photos, pairings, worlds, posters and orders with indexes, trip queries, moment, photo, pairing and user mutations, an upload URL flow on file storage, and a demo trip seed (`convex/schema.ts`, `convex/trips.ts`, `convex/files.ts`, `convex/seed.ts`). Convex features: schema, indexes, queries, mutations, file storage.
+
+### 2026-11-15 - cb8e9fe
+Added the Ask your day screen and a demo panel, and loaded trips from Convex through an HTTP client with an offline fallback to the cached demo trip (`src/app/ask/[id].tsx`, `src/app/demo.tsx`, `src/lib/data/trips.ts`).
+
 ### 2026-11-15 - working tree
-Connected the app to Convex: installed `convex`, provisioned the dev deployment, added an empty schema, and wrapped the root layout in `ConvexProvider` reading `EXPO_PUBLIC_CONVEX_URL` (`convex/schema.ts`, `src/app/_layout.tsx`). Convex features: schema.
+Wrapped the root layout in `ConvexProvider` reading `EXPO_PUBLIC_CONVEX_URL` so screens can use realtime queries, and verified an iOS Release build on a Revyl cloud iPhone opens the home screen (`src/app/_layout.tsx`).

@@ -1,7 +1,7 @@
 import type { Moment, Pairing, Person, Trip } from '@/lib/types';
 
 // Rough metres between two coords (equirectangular; fine at city scale).
-function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
+export function distanceM(aLat: number, aLng: number, bLat: number, bLng: number): number {
   const rad = Math.PI / 180;
   const x = (bLng - aLng) * rad * Math.cos(((aLat + bLat) / 2) * rad);
   const y = (bLat - aLat) * rad;
