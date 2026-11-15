@@ -9,6 +9,7 @@ import { Modal, Pressable, Share, StyleSheet, Text, TextInput, View, type StyleP
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 
 import { formatCents } from '@/features/commerce/checkout';
+import { useDemoFlags } from '@/features/demo/demoFlags';
 import { colors, duration, ease, fonts, radius, shadow, size, space, type } from '@/theme';
 import { Button, Cutout, haptic, Press, Sticker } from '@/theme/ui';
 
@@ -267,6 +268,7 @@ export function PromoField({
 // Referral: share your drop link, earn 10% of what it sells.
 
 export function ReferralCard({ referral }: { referral: Referral }) {
+  const { whopConnected } = useDemoFlags();
   const share = () =>
     void Share.share({ message: `the drop from today, designed from the day itself: ${referral.url}`, url: referral.url }).catch(() => undefined);
   return (
@@ -285,9 +287,16 @@ export function ReferralCard({ referral }: { referral: Referral }) {
         {referral.url}
       </Text>
       <Button variant="secondary" label="share your link" onPress={share} />
-      <Press onPress={() => router.push('/whop/connect')} haptic="selection" accessibilityRole="link" style={{ alignSelf: 'center', paddingVertical: space.xs }}>
-        <Text style={[type.label, { textDecorationLine: 'underline' }]}>connect whop to get paid →</Text>
-      </Press>
+      {whopConnected ? (
+        <Press onPress={() => router.push('/whop/connect')} haptic="selection" accessibilityRole="link" style={styles.connected}>
+          <View style={styles.connectedDot} />
+          <Text style={type.label}>connected as @nithin · next payout friday</Text>
+        </Press>
+      ) : (
+        <Press onPress={() => router.push('/whop/connect')} haptic="selection" accessibilityRole="link" style={{ alignSelf: 'center', paddingVertical: space.xs }}>
+          <Text style={[type.label, { textDecorationLine: 'underline' }]}>connect whop to get paid →</Text>
+        </Press>
+      )}
     </View>
   );
 }
@@ -343,5 +352,7 @@ const styles = StyleSheet.create({
   refStats: { flexDirection: 'row', gap: space.sm, marginVertical: space.sm },
   refStat: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.md, paddingVertical: space.sm, paddingHorizontal: space.md },
   refValue: { fontFamily: fonts.bold, fontSize: 22, letterSpacing: -0.6, color: colors.text, fontVariant: ['tabular-nums'] },
+  connected: { flexDirection: 'row', alignItems: 'center', gap: space.xs, alignSelf: 'center', paddingVertical: space.xs },
+  connectedDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.success },
   url: { ...type.caption, textTransform: 'none', color: colors.text, marginBottom: space.xs },
 });

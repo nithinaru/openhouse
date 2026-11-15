@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { formatCents, type Product } from '@/features/commerce/checkout';
 import { Confirmed, PurchaseStatus, Section, TagIcon } from '@/features/commerce/ui';
 import { usePurchase } from '@/features/commerce/usePurchase';
+import { demoFlags, useDemoFlags } from '@/features/demo/demoFlags';
 import { confirmDropPaid, startDropCheckout, useDrop, type DropItem, type DropPaid } from '@/features/drop/api';
 import { PieceArt } from '@/features/drop/designs';
 import { FlatLay } from '@/features/drop/FlatLay';
@@ -66,9 +67,15 @@ export default function ShopScreen() {
   const [open, setOpen] = useState<PieceId | null>(null);
   const [sizes, setSizes] = useState<Partial<Record<PieceId, string>>>({});
   const [rehearsal, setRehearsal] = useState<Rehearsal>('off');
-  const [waitlisted, setWaitlisted] = useState(false);
+  const { waitlisted, ownsHoodie } = useDemoFlags();
+  const setWaitlisted = (v: boolean) => demoFlags.set({ waitlisted: v });
 
   const bought = purchase.state.phase === 'done';
+  // Whop beat: a confirmed drop purchase (real confirmDropPaid or the long-press rehearsal)
+  // makes you a hoodie owner for the session, which unlocks the owners chat.
+  useEffect(() => {
+    if (bought && !demoFlags.ownsHoodie) demoFlags.set({ ownsHoodie: true });
+  }, [bought]);
   const live = drop.editions.find((e) => e.edition === edition) ?? drop.editions[0];
   const stock = live?.stock ?? 180;
   const soldOut = rehearsal === 'soldout' || (live ? live.claimed >= live.stock : false);
@@ -194,6 +201,23 @@ export default function ShopScreen() {
           </Animated.View>
         ) : null}
 
+        {bought || ownsHoodie ? (
+          <Animated.View entering={FadeInDown.duration(duration.base).delay(bought ? 500 : 0)} style={styles.owners}>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={type.label}>you own the was there hoodie</Text>
+              <Text style={type.caption}>113 owners · chat unlocked by your purchase</Text>
+            </View>
+            <Press
+              onPress={() => router.push('/whop/chat')}
+              accessibilityRole="button"
+              accessibilityLabel="join the owners chat"
+              style={styles.ownersPill}
+            >
+              <Text style={styles.ownersPillText}>join the owners chat</Text>
+            </Press>
+          </Animated.View>
+        ) : null}
+
         <FriendCodes
           friends={trip.people.map((p) => ({ name: p.name, shareCode: p.shareCode, avatarUri: p.avatarUri }))}
           dropId={drop.dropId}
@@ -273,6 +297,9 @@ const styles = StyleSheet.create({
   bundlePrice: { fontFamily: fonts.bold, fontSize: 20, letterSpacing: -0.5, color: colors.text },
   strike: { fontFamily: fonts.medium, fontSize: 15, color: colors.textFaint, textDecorationLine: 'line-through' },
   waitlist: { alignItems: 'center', paddingVertical: space.sm },
+  owners: { flexDirection: 'row', alignItems: 'center', gap: space.sm, padding: space.md, borderRadius: radius.lg, backgroundColor: colors.bg, ...shadow.chip },
+  ownersPill: { minHeight: 40, paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  ownersPillText: { fontFamily: fonts.bold, fontSize: 14, color: colors.accentInk, textTransform: 'lowercase' },
   divider: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.sm },
   rule: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: colors.lineStrong },
   sell: {

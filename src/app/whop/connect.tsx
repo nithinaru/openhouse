@@ -7,6 +7,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { demoFlags } from '@/features/demo/demoFlags';
 import { Avatar, WHOP_ORANGE, WhopMark } from '@/features/whop/parts';
 import { colors, fonts, radius, space, type } from '@/theme';
 import { Button, haptic, SheetHeader, Sticker } from '@/theme/ui';
@@ -18,7 +19,7 @@ const SCOPES = ['see your whop profile', 'pay out your referral earnings'];
 export default function ConnectWhop() {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
-  const [phase, setPhase] = useState<Phase>('consent');
+  const [phase, setPhase] = useState<Phase>(() => (demoFlags.whopConnected ? 'connected' : 'consent'));
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -30,6 +31,7 @@ export default function ConnectWhop() {
     setPhase('loading');
     timer.current = setTimeout(() => {
       haptic('medium');
+      demoFlags.set({ whopConnected: true });
       setPhase('connected');
     }, 1200);
   };

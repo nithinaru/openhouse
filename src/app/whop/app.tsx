@@ -1,5 +1,6 @@
 // Demo: "wish you were here as a whop app". A Whop-style community frame with our app
-// embedded in its apps tab. Hardcoded; nothing here is live.
+// embedded in its apps tab. Hardcoded product preview; nothing here is live. The chat tab
+// previews the owners chat (/whop/chat), the shop tab links to the real storefront.
 
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -10,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Avatar, PEOPLE, REPLAY_PHOTO, WHOP_ORANGE, WhopMark } from '@/features/whop/parts';
 import { colors, fonts, radius, space, type } from '@/theme';
-import { Button, CloseButton, MediaShade, Press, Sticker } from '@/theme/ui';
+import { Button, CloseButton, haptic, MediaShade, Press, Sticker } from '@/theme/ui';
 
 const COMMUNITIES = [
   { key: 'yc', label: 'yc', bg: WHOP_ORANGE },
@@ -23,6 +24,12 @@ const COMMUNITIES = [
 const TABS = ['chat', 'apps', 'shop'] as const;
 type Tab = (typeof TABS)[number];
 
+const CHAT_PREVIEW = [
+  { id: 'rohan', text: 'hoodie just landed in my cart. who else' },
+  { id: 'ines', text: 'me. the back print is our whole day lol' },
+  { id: 'sol', text: 'found myself by the stairs at 9:15' },
+];
+
 const CLAIMED = 113;
 const MEMBERS = 180;
 
@@ -31,6 +38,12 @@ export default function WhopAppDemo() {
   const reduced = useReducedMotion();
   const [tab, setTab] = useState<Tab>('apps');
   const [community, setCommunity] = useState('yc');
+  const [installed, setInstalled] = useState(false);
+  const install = () => {
+    if (installed) return;
+    haptic('selection');
+    setInstalled(true);
+  };
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   return (
@@ -124,16 +137,55 @@ export default function WhopAppDemo() {
                   </Text>
                 </View>
 
-                <Button label="install on any whop community" onPress={() => undefined} />
+                <Button
+                  variant={installed ? 'secondary' : 'primary'}
+                  label={installed ? 'installed ✓' : 'install on your whop community'}
+                  onPress={install}
+                />
                 <WhopMark label="whop apps" style={{ alignSelf: 'center' }} />
               </Animated.View>
-            ) : (
-              <View style={styles.placeholder}>
-                <Text style={type.caption}>{tab === 'chat' ? '# general · 41 online' : '3 products · the drop, plus, tickets'}</Text>
-                <Press onPress={() => setTab('apps')} haptic="selection" accessibilityRole="button">
-                  <Text style={[type.label, { textDecorationLine: 'underline' }]}>open wish you were here →</Text>
+            ) : tab === 'chat' ? (
+              <Animated.View key="chat" entering={reduced ? undefined : FadeIn.duration(220)} style={{ gap: space.md }}>
+                <Text style={type.caption}># general · 41 online</Text>
+                <Press onPress={() => router.push('/whop/chat')} accessibilityRole="button" accessibilityLabel="open the owners chat">
+                  <View style={styles.card}>
+                    <View style={styles.row}>
+                      <Text style={[type.label, { flex: 1 }]}>owners of the was there hoodie</Text>
+                      <Text style={type.stamp}>3 new</Text>
+                    </View>
+                    {CHAT_PREVIEW.map((m) => (
+                      <View key={m.text} style={styles.previewRow}>
+                        <Avatar id={m.id} name={m.id} size={26} />
+                        <Text style={[type.callout, { flex: 1 }]} numberOfLines={1}>
+                          <Text style={type.label}>{m.id} </Text>
+                          {m.text}
+                        </Text>
+                      </View>
+                    ))}
+                    <Text style={[type.label, { textDecorationLine: 'underline' }]}>open the owners chat →</Text>
+                  </View>
                 </Press>
-              </View>
+              </Animated.View>
+            ) : (
+              <Animated.View key="shop" entering={reduced ? undefined : FadeIn.duration(220)} style={{ gap: space.md }}>
+                <Text style={type.caption}>3 products · the drop, plus, tickets</Text>
+                <Press
+                  onPress={() => router.push({ pathname: '/shop/[id]', params: { id: 'demo-yc-day' } })}
+                  accessibilityRole="button"
+                  accessibilityLabel="open the drop"
+                >
+                  <View style={styles.card}>
+                    <View style={styles.row}>
+                      <Text style={[type.label, { flex: 1 }]}>the drop · was there</Text>
+                      <Text style={type.stamp}>
+                        {CLAIMED} of {MEMBERS}
+                      </Text>
+                    </View>
+                    <Text style={type.caption}>six pieces designed from the day · checkout by whop</Text>
+                    <Text style={[type.label, { textDecorationLine: 'underline' }]}>open the shop →</Text>
+                  </View>
+                </Press>
+              </Animated.View>
             )}
           </ScrollView>
         </View>
@@ -168,5 +220,5 @@ const styles = StyleSheet.create({
   track: { height: 8, borderRadius: 4, backgroundColor: colors.veil, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4, backgroundColor: colors.pinkEdge },
   faces: { flexDirection: 'row', alignItems: 'center' },
-  placeholder: { padding: space.lg, gap: space.md, alignItems: 'center' },
+  previewRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 });

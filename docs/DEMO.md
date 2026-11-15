@@ -7,6 +7,8 @@ Hidden switches (rehearse these, never show them):
 - **Demo panel:** long-press the **Openhouse** wordmark on Home. Load demo trip, reset onboarding, simulate friend pair, simulate order paid, simulate Keiki text, narrator on/off, backend status.
 - **People:** long-press the "People" title to play the pairing celebration.
 - **Frame:** long-press the title to show the order-confirmed state.
+- **Shop:** long-press "the drop · was there" to cycle claimed → sold out → off.
+- **Host:** long-press the title to inject a sale.
 - **Ask:** works offline. With no backend, answers come from the phone ("Answered on this phone" under the answer).
 
 ---
@@ -116,6 +118,41 @@ Over the golden-hour stop: "Every caption and line of narration was written from
 
 **Shows:** **Capy** wrote most of the app; **Revyl** cloud iPhone checks.
 
+### 9. Whop beat (~30 s, optional extension after the close or swap in for beats 6–7)
+
+**Say:** "And the day can earn. Everything you're about to see checks out through Whop."
+
+**Tap (exact):**
+1. Replay end card → **make something** → storefront opens on *the drop · was there*.
+2. **get the full drop** (includes the was there hoodie) → Whop checkout → card **4242 4242 4242 4242**, any future date, any CVC → pay.
+3. Confirmed card ("you're nº … / 180 · confirmed by whop") → under it, black pill **join the owners chat**.
+4. Owners chat opens unlocked ("unlocked by your purchase · whop"). Optional: type one line, send. Tap **✕** to go back to the shop.
+5. Scroll to the referral card → **connect whop to get paid →** → **connect whop** → ~1 s → "connected as @nithin" + payouts → **done**. The referral card now reads "connected as @nithin · next payout friday".
+6. Scroll to the bottom → **host view** → dashboard (payout button now reads "payout via whop") → card **install on your whop community** → whop app preview → **install on your whop community** flips to **installed ✓**. Optional: **chat** tab → owners chat preview, **shop** tab → back to the storefront.
+7. **✕** out. Home now shows the **owners chat · 3 new** chip.
+
+**Live Whop calls vs product previews (say it straight if asked):**
+
+| Step | What it is |
+|------|------------|
+| Checkout (step 2) | **Live Whop** checkout, confirmed by `confirmDropPaid` |
+| Drop stock / live counter | **Live Whop** plans with stock |
+| Promo codes / friend codes | **Live Whop** promo codes |
+| Plus trial (walk in · plus) | **Live Whop** membership |
+| Host stats, feed, payout | **Live Whop** (host:stats via Convex) |
+| Owners chat | Product preview (hardcoded, gated by the purchase in session state) |
+| Sign in with whop / referral payouts | Product preview (timer, no OAuth) |
+| Whop community app / install | Product preview (hardcoded frame) |
+
+**Rehearsal fallbacks (one per step):**
+- Checkout slow or won't load (step 2) → close it, **long-press the "the drop · was there" title** once → rehearsal *claimed* state: confirmed card + **join the owners chat** pill appear (also marks the hoodie owned). A second long-press = sold out (shows waitlist), a third = off.
+- Owners chat shows "buy the was there hoodie to join" (step 4) → demo panel › **Simulate hoodie owned**, or use the long-press above.
+- Connect stalls (step 5) → it's a local timer, it can't hang on network; if you skip it, demo panel › **Simulate whop connected** flips the referral card and the host payout label.
+- Host numbers look empty (step 6) → **long-press "wish you were here for hosts"** to inject a rehearsal sale.
+- Anything else → every whop screen has a **✕** that goes back (or Home if there's no history). Demo panel › **Reset all switches** clears hoodie / connected / chat / waitlist before the next run.
+
+**Shows:** **Whop** checkout, stock and promo codes are live; ownership flows into the community, referral payouts and the host dashboard. State lasts for the session only.
+
 ---
 
 ## If everything breaks
@@ -131,7 +168,7 @@ Over the golden-hour stop: "Every caption and line of narration was written from
 | Capy | Close line; wrote most of the app |
 | Revyl | Close line; cloud iPhone checks before the demo |
 | Convex | Trip data, enrichment, pairings, realtime (beats 1–3), backend status in the demo panel |
-| Whop | Frame checkout (beat 6) |
+| Whop | Frame checkout (beat 6); whop beat (9): drop checkout, owners chat, referral connect, host install |
 | Keiki | "Your day is ready" text (beat 7) |
 | Claude | Narration (beat 2), Ask your day answers (beat 5) |
 | Supermemory | Ask your day recall across days (beat 5) |

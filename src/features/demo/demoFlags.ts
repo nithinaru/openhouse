@@ -15,7 +15,17 @@ export type DemoFlags = {
   onboardingReset: boolean;
   /** Openhouse+ lock. auto = real entitlements (unlocked on the demo trip / offline). */
   plusLocked: PlusLock;
+  /** Whop beat: "sign in with whop" finished (referral payouts + host payout label). */
+  whopConnected: boolean;
+  /** Whop beat: a drop purchase confirmed (real or rehearsal), unlocks the owners chat. */
+  ownsHoodie: boolean;
+  /** Whop beat: messages the user sent in the owners chat, appended after the seed. */
+  chatMessages: ChatMessage[];
+  /** Whop beat: joined the sold-out waitlist. */
+  waitlisted: boolean;
 };
+
+export type ChatMessage = { id: string; text: string; time: string };
 
 export type PlusLock = 'auto' | 'locked' | 'unlocked';
 
@@ -25,6 +35,10 @@ const initial: DemoFlags = {
   narratorOn: true,
   onboardingReset: false,
   plusLocked: 'auto',
+  whopConnected: false,
+  ownsHoodie: false,
+  chatMessages: [],
+  waitlisted: false,
 };
 
 let state: DemoFlags = { ...initial };
@@ -50,6 +64,23 @@ export const demoFlags = {
   get plusLocked() {
     return state.plusLocked;
   },
+  get whopConnected() {
+    return state.whopConnected;
+  },
+  get ownsHoodie() {
+    return state.ownsHoodie;
+  },
+  get chatMessages() {
+    return state.chatMessages;
+  },
+  get waitlisted() {
+    return state.waitlisted;
+  },
+  /** Append a message the user sent in the owners chat. */
+  addChatMessage(msg: ChatMessage) {
+    state = { ...state, chatMessages: [...state.chatMessages, msg] };
+    emit();
+  },
   get(): DemoFlags {
     return state;
   },
@@ -58,7 +89,7 @@ export const demoFlags = {
     emit();
   },
   reset() {
-    state = { ...initial };
+    state = { ...initial, chatMessages: [] };
     emit();
   },
   /** Returns an unsubscribe function. */

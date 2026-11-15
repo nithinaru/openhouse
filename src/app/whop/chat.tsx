@@ -1,16 +1,18 @@
 // Demo: the "was there" owners chat, unlocked by buying the hoodie on Whop.
-// Hardcoded messages; sending appends locally.
+// Hardcoded messages; sent messages live in the session demo state (demoFlags.chatMessages).
+// Locked until demoFlags.ownsHoodie (set by a confirmed drop purchase in the shop).
 
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { useRef, useState, type ComponentRef } from 'react';
+import { useMemo, useRef, useState, type ComponentRef } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Avatar, FLOOR_PHOTO, WHOP_ORANGE } from '@/features/whop/parts';
+import { demoFlags, useDemoFlags } from '@/features/demo/demoFlags';
+import { Avatar, FLOOR_PHOTO, WHOP_ORANGE, WhopMark } from '@/features/whop/parts';
 import { colors, fonts, radius, space, type } from '@/theme';
-import { CloseButton, haptic, Press, Sticker } from '@/theme/ui';
+import { Button, CloseButton, haptic, Press, Sticker } from '@/theme/ui';
 
 type Msg = {
   id: string;
@@ -42,16 +44,22 @@ function nowClock() {
 export default function OwnersChat() {
   const insets = useSafeAreaInsets();
   const reduced = useReducedMotion();
-  const [msgs, setMsgs] = useState<Msg[]>(SEED);
+  const { ownsHoodie, chatMessages } = useDemoFlags();
+  const msgs = useMemo<Msg[]>(
+    () => [...SEED, ...chatMessages.map((m) => ({ id: m.id, from: 'you', time: m.time, text: m.text, mine: true }))],
+    [chatMessages],
+  );
   const [draft, setDraft] = useState('');
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
+  if (!ownsHoodie) return <LockedChat onClose={close} />;
 
   const send = () => {
     const text = draft.trim();
     if (!text) return;
     haptic('medium');
-    setMsgs((m) => [...m, { id: String(Date.now()), from: 'you', time: nowClock(), text, mine: true }]);
+    demoFlags.addChatMessage({ id: String(Date.now()), time: nowClock(), text });
     setDraft('');
     requestAnimationFrame(() => scroll.current?.scrollToEnd({ animated: true }));
   };
@@ -122,7 +130,33 @@ export default function OwnersChat() {
   );
 }
 
+function LockedChat({ onClose }: { onClose: () => void }) {
+  const insets = useSafeAreaInsets();
+  const toShop = () => router.replace({ pathname: '/shop/[id]', params: { id: 'demo-yc-day' } });
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.sky, paddingTop: insets.top + space.md, paddingBottom: insets.bottom + space.lg, paddingHorizontal: space.lg }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+        <CloseButton onPress={onClose} />
+      </View>
+      <View style={styles.lockedBody}>
+        <View style={styles.bigLock}>
+          <View style={[styles.lockShackle, styles.bigShackle]} />
+          <View style={[styles.lockBody, styles.bigBody]} />
+        </View>
+        <Text style={[type.title, { textAlign: 'center' }]}>owners of the was there hoodie</Text>
+        <Text style={[type.callout, { textAlign: 'center', color: colors.textMuted }]}>buy the was there hoodie to join</Text>
+        <Button label="back to the shop" onPress={toShop} style={{ alignSelf: 'stretch' }} />
+        <WhopMark label="gated by whop" style={{ alignSelf: 'center' }} />
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  lockedBody: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.md },
+  bigLock: { width: 44, height: 52, alignItems: 'center', marginBottom: space.sm },
+  bigShackle: { width: 30, height: 24, borderWidth: 5, borderBottomWidth: 0, borderTopLeftRadius: 15, borderTopRightRadius: 15, borderColor: colors.ink },
+  bigBody: { width: 44, height: 28, borderRadius: 6, backgroundColor: colors.ink },
   header: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, paddingHorizontal: space.md, paddingBottom: space.md, backgroundColor: colors.sky },
   lock: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: colors.ink, paddingHorizontal: 10, paddingVertical: 5, borderRadius: radius.full },
   lockIcon: { width: 10, height: 12, alignItems: 'center' },

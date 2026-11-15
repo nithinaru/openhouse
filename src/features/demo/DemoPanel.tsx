@@ -119,6 +119,18 @@ export function DemoPanel() {
             onPress={simulatePaid}
             on={flags.orderPaid}
           />
+          <Action
+            label="Simulate hoodie owned"
+            detail={flags.ownsHoodie ? 'Owners chat unlocked · tap to lock' : 'Unlocks the owners chat and the Home chip'}
+            onPress={() => demoFlags.set({ ownsHoodie: !flags.ownsHoodie })}
+            on={flags.ownsHoodie}
+          />
+          <Action
+            label="Simulate whop connected"
+            detail={flags.whopConnected ? 'Connected as @nithin · tap to disconnect' : 'Referral payouts + "payout via whop"'}
+            onPress={() => demoFlags.set({ whopConnected: !flags.whopConnected })}
+            on={flags.whopConnected}
+          />
           <Action label="Simulate Keiki text" detail="Local notification in 3 s" onPress={keiki} />
           {note ? (
             <Animated.Text entering={FadeIn.duration(160)} exiting={FadeOut.duration(160)} style={styles.note}>

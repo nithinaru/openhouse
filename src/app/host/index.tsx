@@ -4,10 +4,13 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useDemoFlags } from '@/features/demo/demoFlags';
 import { HOST_NAME, HOST_USER_ID, requestPayout, useHostStats, type Payout } from '@/features/host/api';
 import { LiveFeed, money, PayoutCard, PoweredByWhop, SellThrough, StatTile } from '@/features/host/parts';
-import { duration, ease, space, type, colors } from '@/theme';
-import { CloseButton, haptic, SkyBackground, Sticker } from '@/theme/ui';
+import { duration, ease, radius, space, type, colors } from '@/theme';
+import { WHOP_ORANGE } from '@/features/whop/parts';
+import { ArrowIcon } from '@/theme/icons';
+import { CloseButton, haptic, Press, SkyBackground, Sticker } from '@/theme/ui';
 
 // Openhouse for hosts: what an organizer like YC sees while the drop sells. Every number is a
 // Whop object read through Convex (host:stats, polled every 3 s). Long-press the title to
@@ -19,6 +22,7 @@ export default function HostScreen() {
   const [paying, setPaying] = useState(false);
   const [last, setLast] = useState<Payout | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { whopConnected } = useDemoFlags();
 
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
   const preview = stats.source === 'preview';
@@ -83,7 +87,20 @@ export default function HostScreen() {
         </Animated.View>
 
         <Animated.View entering={enter(4)}>
-          <PayoutCard balanceCents={stats.feeBalanceCents} busy={paying} last={last} error={error} onPayout={() => void payout()} />
+          <PayoutCard viaWhop={whopConnected} balanceCents={stats.feeBalanceCents} busy={paying} last={last} error={error} onPayout={() => void payout()} />
+        </Animated.View>
+
+        <Animated.View entering={enter(5)}>
+          <Press onPress={() => router.push('/whop/app')} accessibilityRole="button" accessibilityHint="opens the whop community preview" style={styles.install}>
+            <View style={styles.installMark}>
+              <View style={styles.installDot} />
+            </View>
+            <View style={{ flex: 1, gap: 2 }}>
+              <Text style={type.label}>install on your whop community</Text>
+              <Text style={type.caption}>every member gets their own replay and the drop</Text>
+            </View>
+            <ArrowIcon color={colors.text} />
+          </Press>
         </Animated.View>
 
         <PoweredByWhop />
@@ -95,4 +112,7 @@ export default function HostScreen() {
 const styles = StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   tiles: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  install: { flexDirection: 'row', alignItems: 'center', gap: space.md, padding: space.md, borderRadius: radius.lg, backgroundColor: colors.bg },
+  installMark: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.ink, alignItems: 'center', justifyContent: 'center' },
+  installDot: { width: 14, height: 14, borderRadius: 7, backgroundColor: WHOP_ORANGE },
 });

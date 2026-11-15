@@ -191,7 +191,9 @@ export function PayoutCard({
   last,
   error,
   onPayout,
+  viaWhop,
 }: {
+  viaWhop?: boolean;
   balanceCents: number;
   busy: boolean;
   last: Payout | null;
@@ -205,7 +207,7 @@ export function PayoutCard({
       <Text style={[styles.tileValueBig, styles.onInk]}>{money(n)}</Text>
       <Button
         variant="secondary"
-        label={balanceCents > 0 ? `payout to ${HOST_NAME} · ${money(balanceCents)}` : 'nothing to pay out yet'}
+        label={balanceCents > 0 ? (viaWhop ? `payout via whop · ${money(balanceCents)}` : `payout to ${HOST_NAME} · ${money(balanceCents)}`) : 'nothing to pay out yet'}
         disabled={balanceCents <= 0}
         loading={busy}
         onPress={onPayout}

@@ -8,6 +8,7 @@ import { GiftBanner } from '@/features/commerce/GiftBanner';
 import { useSellerListings } from '@/features/commerce/listings';
 import { BagIcon, TagIcon } from '@/features/commerce/ui';
 import { AddTodayCard, EmptyTrips, TripCard, WhoStrip } from '@/features/home/TripCards';
+import { useDemoFlags } from '@/features/demo/demoFlags';
 import { EarningsCard } from '@/features/sell/EarningsCard';
 import { DEMO_MY_NAME } from '@/features/people/pair';
 import { useBackendStatus } from '@/lib/data/useBackendStatus';
@@ -49,6 +50,7 @@ export default function HomeScreen() {
   const latest = trips[0];
   // Seller dashboard: earnings tick up live while guides sell (listings:forSeller, polled).
   const seller = useSellerListings(latest?.id);
+  const { ownsHoodie } = useDemoFlags();
 
   return (
     <View style={styles.root}>
@@ -128,6 +130,11 @@ export default function HomeScreen() {
                 onPress={() => router.push({ pathname: '/sell/[id]', params: { id: latest.id } })}
               />
             </View>
+            {ownsHoodie ? (
+              <View style={[styles.commerce, { marginTop: space.sm }]}>
+                <Chip label="owners chat · 3 new" onPress={() => router.push('/whop/chat')} />
+              </View>
+            ) : null}
             {seller.listings.length ? (
               <Press
                 onPress={() => router.push({ pathname: '/sell/[id]', params: { id: latest.id } })}
