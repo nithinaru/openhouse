@@ -51,6 +51,7 @@ export default function RootLayout() {
             <Stack.Screen name="stop/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="walkin/[id]" options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="people" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="contacts" options={{ presentation: 'modal' }} />
             <Stack.Screen name="frame/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="ask/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="demo" options={{ presentation: 'modal' }} />

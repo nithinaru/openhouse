@@ -14,7 +14,7 @@ import { QrCard } from '@/features/people/QrCard';
 import { Viewfinder } from '@/features/people/Viewfinder';
 import { EASE_OUT } from '@/features/stop/motion';
 import { colors, radius, space, type } from '@/theme';
-import { Button, SheetHeader, SkyBackground } from '@/theme/ui';
+import { Button, SheetHeader, SkyBackground, Sticker } from '@/theme/ui';
 
 type Tab = 'code' | 'scan';
 const TABS: Tab[] = ['code', 'scan'];
@@ -32,6 +32,7 @@ export default function PeopleScreen() {
         <SheetHeader
           title="people"
           onTitleLongPress={() => setPreview(preview ? null : demoPair('RHN42X'))}
+          right={<Sticker label="+ find friends" rotate={-3} onPress={() => router.push('/contacts')} style={{ marginTop: 4 }} />}
           onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
         />
         <Text style={type.caption}>scan each other to share the day</Text>
