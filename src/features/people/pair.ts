@@ -1,9 +1,13 @@
 // QR pairing (BUILD.md §5.6).
 
+import { getDemoTrip } from '@/lib/demo/demoTrip';
+
 export const PAIR_PREFIX = 'openhouse://pair/';
 
 // TODO(convex): replace with the signed-in user's shareCode from api.users.me.
 export const DEMO_MY_SHARE_CODE = 'ME7Q2K';
+// TODO(convex): replace with the signed-in user's name from api.users.me.
+export const DEMO_MY_NAME = 'Nithin';
 
 export function pairUrl(shareCode: string): string {
   return `${PAIR_PREFIX}${shareCode}`;
@@ -15,7 +19,7 @@ export function parsePairCode(data: string): string | null {
   return m ? m[1].toUpperCase() : null;
 }
 
-export type PairResult = { friendName: string; shareCode: string };
+export type PairResult = { friendName: string; shareCode: string; avatarUri?: string };
 
 /**
  * TODO(convex): replace with the Convex mutation:
@@ -25,6 +29,6 @@ export type PairResult = { friendName: string; shareCode: string };
  */
 export async function pair(code: string, lat: number, lng: number): Promise<PairResult> {
   console.log('[pair] stub', { code, lat, lng });
-  const friendName = code === 'RHN42X' ? 'Rohan' : 'New friend';
-  return { friendName, shareCode: code };
+  const known = getDemoTrip().people.find((p) => p.shareCode === code);
+  return { friendName: known?.name ?? 'New friend', shareCode: code, avatarUri: known?.avatarUri };
 }
