@@ -16,6 +16,7 @@ type WhopEvent = {
     membership_id?: string | null;
     amount_after_fees?: Money;
     payment_id?: string;
+    promo_code_id?: string | null;
     current_period_end?: string | null;
   };
 };
@@ -73,7 +74,12 @@ http.route({
         const purchaseId = str(metadata.purchaseId);
         const paid = purchaseId
           ? await ctx.runMutation(internal.listings.markPaid, { ...purchase, purchaseId })
-          : ((await ctx.runMutation(internal.orders.markPaid, { orderId: str(metadata.orderId), whopCheckoutId, whopPaymentId })) ??
+          : ((await ctx.runMutation(internal.orders.markPaid, {
+              orderId: str(metadata.orderId),
+              whopCheckoutId,
+              whopPaymentId,
+              whopPromoCodeId: data.promo_code_id ?? undefined,
+            })) ??
             (await ctx.runMutation(internal.listings.markPaid, purchase)));
         if (!paid) console.warn('[whop] payment.succeeded with no matching order or purchase', data.id);
         break;

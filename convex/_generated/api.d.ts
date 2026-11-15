@@ -11,6 +11,7 @@
 import type * as drops from "../drops.js";
 import type * as files from "../files.js";
 import type * as gifts from "../gifts.js";
+import type * as host from "../host.js";
 import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as me from "../me.js";
@@ -19,6 +20,8 @@ import type * as moments from "../moments.js";
 import type * as orders from "../orders.js";
 import type * as pairings from "../pairings.js";
 import type * as photos from "../photos.js";
+import type * as promos from "../promos.js";
+import type * as referrals from "../referrals.js";
 import type * as seed from "../seed.js";
 import type * as trips from "../trips.js";
 import type * as users from "../users.js";
@@ -35,6 +38,7 @@ declare const fullApi: ApiFromModules<{
   drops: typeof drops;
   files: typeof files;
   gifts: typeof gifts;
+  host: typeof host;
   http: typeof http;
   listings: typeof listings;
   me: typeof me;
@@ -43,6 +47,8 @@ declare const fullApi: ApiFromModules<{
   orders: typeof orders;
   pairings: typeof pairings;
   photos: typeof photos;
+  promos: typeof promos;
+  referrals: typeof referrals;
   seed: typeof seed;
   trips: typeof trips;
   users: typeof users;
