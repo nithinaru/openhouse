@@ -125,3 +125,49 @@ One PR.
 **Thread 8 (P1): Keiki notify** once `KEIKI_API_KEY` exists. Use the hackathon guide's Keiki prompt: when a trip becomes ready, text "Your <title> is ready".
 
 After each merge: ask Capy for an iOS build on the cloud phone.
+
+## Deeper integrations (after threads 1-6)
+
+Each sponsor should be part of how the product works, not a logo. Function names here are the contract the client is being built against, so keep them exact.
+
+**Thread 9: Ask your day (Claude + Supermemory)**
+```
+Add a Convex action ask.question(tripId, question) that answers questions about the user's
+memories, e.g. "when did I meet Rohan?", "what was the weather at lunch?", "where was I at
+golden hour?". Build context from the trip's moments, photos, people and pairings, plus
+Supermemory search results for the user (v5 API, SUPERMEMORY_API_KEY, Convex action only).
+Call Claude (claude-sonnet-5-5, ANTHROPIC_API_KEY) and return JSON
+{ answer: string, momentIds: string[] } so the app can fly the map to the cited stops.
+Also add memories.indexTrip(tripId): add each moment to Supermemory as a memory tagged with the
+user id and trip id (place, time, caption, people, narration), run once when a trip becomes
+ready. And memories.lastTimeHere(lat, lng) returning a one-line "Last time you were here..."
+recall that narrateTrip folds into the stop's narration when it exists. One PR.
+```
+
+**Thread 10: Keiki agent that knows your day**
+```
+Using the Keiki MCP (setup per https://onkeiki.com/setup.md), deploy an agent named
+"openhouse" on the shared line. Give it one tool: an HTTP call to a Convex HTTP action
+GET /keiki/day?userId=... that returns the latest trip's title, stops (time, place, caption),
+people met and a share link. The agent answers texts like "what did I do today?" or "who did I
+meet at lunch?" in two or three warm sentences, and when a trip becomes ready the backend
+texts "Your <title> is ready" to the user. Test with talk_to_agent and three messages.
+One PR for the Convex side.
+```
+
+**Thread 11: Whop membership + print**
+```
+Extend the Whop sandbox integration: besides the $39/$59 framed print (orders.checkout with a
+size argument), add an "Openhouse+" membership checkout (memberships.checkout) that unlocks
+unlimited Walk in worlds and all poster styles. The /whop webhook marks either the order paid
+or the user as plus. Add query me.entitlements returning { plus: boolean }. One PR.
+```
+
+**Thread 12: Live pipeline status (Convex realtime)**
+```
+Make enrichment a visible pipeline: when photos are uploaded, schedule per-stop jobs
+(enrichStop, splats.buildForMoment, then narrateTrip, then memories.indexTrip) and track
+progress on the trip document as pipeline: { stage, done, total } so the client's ingest
+screen can show "Captioning stop 3 of 6 · building 3D for stop 2" live via useQuery.
+Add a daily cron that finds trips from this day last year and sets an onThisDay flag. One PR.
+```
