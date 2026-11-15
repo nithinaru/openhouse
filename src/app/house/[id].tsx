@@ -206,7 +206,7 @@ export default function HouseScreen() {
 
       {/* top: back, place pill, flyover toggle */}
       <View style={[styles.top, { paddingTop: insets.top + space.sm }]} pointerEvents="box-none">
-        <IconButton icon={<BackIcon color={colors.text} />} label="back" tone="media" onPress={() => router.back()} />
+        <IconButton icon={<BackIcon color={colors.text} />} label="back" tone="media" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
         <View style={styles.placePill}>
           <Text style={styles.placeText} numberOfLines={1}>
             {VENUE.name} · 560 20th st
@@ -231,7 +231,7 @@ export default function HouseScreen() {
               {peopleCopy(hereCount)}
             </Text>
             <Text style={styles.sheetSub} numberOfLines={1}>
-              {hereRoom?.label ?? 'the house'} · {hereCount ? 'tap a cutout to see their day' : 'drag the day forward'}
+              {hereRoom?.label ?? 'the house'} · {hereCount ? 'tap a cutout' : 'drag the day forward'}
             </Text>
           </View>
           <View style={styles.timePill}>

@@ -73,7 +73,7 @@ export default function StopScreen() {
     return (
       <View style={[styles.fill, styles.center]}>
         <Text style={type.body}>stop not found</Text>
-        <Button variant="secondary" label="close" onPress={() => router.back()} style={{ marginTop: space.md }} />
+        <Button variant="secondary" label="close" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} style={{ marginTop: space.md }} />
       </View>
     );
   }
@@ -242,7 +242,7 @@ export default function StopScreen() {
 
       {/* Floating chrome */}
       <Animated.View style={[styles.closeWrap, { top }, contentFade]}>
-        <CloseButton tone="media" onPress={() => router.back()} />
+        <CloseButton tone="media" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       </Animated.View>
 
       <Animated.View pointerEvents="box-none" style={[styles.bottomBar, { paddingBottom: insets.bottom + space.md }, contentFade]}>

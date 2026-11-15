@@ -105,7 +105,7 @@ export function AskSheet({ trip, initialQuestion }: { trip: Trip; initialQuestio
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.header}>
-        <SheetHeader eyebrow={trip.title} title="ask your day" onClose={() => router.back()} />
+        <SheetHeader eyebrow={trip.title} title="ask your day" onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))} />
       </View>
 
       <ScrollView

@@ -15,7 +15,7 @@ import { useBackendStatus } from '@/lib/data/useBackendStatus';
 import { isDemoTripId, useTrips } from '@/lib/data/trips';
 import type { Person } from '@/lib/types';
 import { colors, duration, ease, fonts, space, type } from '@/theme';
-import { ArrowIcon, HouseIcon, MapIcon, PeopleIcon, PlusIcon } from '@/theme/icons';
+import { ArrowIcon } from '@/theme/icons';
 import { AppDock } from '@/features/dock/Dock';
 import { Chip, Press, Sticker, Wordmark } from '@/theme/ui';
 

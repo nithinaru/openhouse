@@ -486,14 +486,14 @@ export function Print({
 export function MediaShade({ from = 0.4, strength = 0.72 }: { from?: number; strength?: number }) {
   const id = useSvgId('shade');
   return (
-    <Svg pointerEvents="none" style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none">
+    <Svg pointerEvents="none" style={StyleSheet.absoluteFill} viewBox="0 0 1 1" preserveAspectRatio="none">
       <Defs>
         <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <Stop offset={from} stopColor={colors.ink} stopOpacity="0" />
           <Stop offset="1" stopColor={colors.ink} stopOpacity={strength} />
         </LinearGradient>
       </Defs>
-      <Rect width="100%" height="100%" fill={`url(#${id})`} />
+      <Rect width={1} height={1} fill={`url(#${id})`} />
     </Svg>
   );
 }
@@ -534,7 +534,8 @@ export function SkyBackground({
   const stops = SKY_STOPS[variant];
   return (
     <View style={[{ flex: 1, backgroundColor: stops[1].c }, style]}>
-      <Svg pointerEvents="none" style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none">
+      {/* Unit viewBox: "100%" resolves against the padded content box, which left a bare strip on padded screens. */}
+      <Svg pointerEvents="none" style={StyleSheet.absoluteFill} viewBox="0 0 1 1" preserveAspectRatio="none">
         <Defs>
           <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
             {stops.map((s) => (
@@ -542,7 +543,7 @@ export function SkyBackground({
             ))}
           </LinearGradient>
         </Defs>
-        <Rect width="100%" height="100%" fill={`url(#${id})`} />
+        <Rect width={1} height={1} fill={`url(#${id})`} />
       </Svg>
       {children}
     </View>

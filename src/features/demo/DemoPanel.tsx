@@ -17,6 +17,11 @@ import { colors, radius, space, type } from '@/theme';
 import { Button, SheetHeader } from '@/theme/ui';
 
 import { demoFlags, useDemoFlags } from './demoFlags';
+
+const goBack = () => {
+  if (router.canGoBack()) router.back();
+  else router.replace('/');
+};
 import { backendHost, probeBackend, scheduleKeikiText, type BackendStatus } from './simulate';
 
 type Overlay = 'pair' | 'paid' | null;
@@ -50,13 +55,13 @@ export function DemoPanel() {
   }, [note]);
 
   const loadDemoTrip = () => {
-    router.back();
+    goBack();
     router.push({ pathname: '/trip/[id]', params: { id: DEMO_TRIP_ID } });
   };
 
   const resetOnboarding = () => {
     demoFlags.set({ onboardingReset: true, friendPaired: false, orderPaid: false });
-    router.back();
+    goBack();
     router.push('/onboarding');
   };
 
@@ -95,7 +100,7 @@ export function DemoPanel() {
         <SheetHeader
           eyebrow="Rehearsal only"
           title="Demo mode"
-          onClose={() => router.back()}
+          onClose={() => goBack()}
           right={<BackendBadge style={styles.badge} />}
         />
 
@@ -159,7 +164,7 @@ export function DemoPanel() {
             label="For hosts"
             detail="YC's dashboard: revenue, sell-through, live Whop payments, payout. Long-press its title for a fake sale"
             onPress={() => {
-              router.back();
+              goBack();
               router.push('/host');
             }}
           />
@@ -167,15 +172,15 @@ export function DemoPanel() {
 
         <Section title="whop">
           <Action label="whop app" detail="wish you were here installed in a whop community" onPress={() => {
-              router.back();
+              goBack();
               router.push('/whop/app');
             }} />
           <Action label="owners chat" detail="was there hoodie owners, unlocked by purchase" onPress={() => {
-              router.back();
+              goBack();
               router.push('/whop/chat');
             }} />
           <Action label="sign in with whop" detail="oauth consent, then referral payouts" onPress={() => {
-              router.back();
+              goBack();
               router.push('/whop/connect');
             }} />
         </Section>

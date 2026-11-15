@@ -43,7 +43,7 @@ export default function PersonDayScreen() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + space.sm, paddingBottom: insets.bottom + space.md }]}>
       <View style={styles.header}>
-        <Press onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="back" hitSlop={12} scaleTo={0.9} style={styles.back}>
+        <Press onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))} accessibilityRole="button" accessibilityLabel="back" hitSlop={12} scaleTo={0.9} style={styles.back}>
           <BackIcon color={colors.text} size={22} />
         </Press>
         <Text style={styles.eyebrow} numberOfLines={1}>
