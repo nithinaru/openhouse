@@ -1,15 +1,32 @@
 {
-  "cli": { "version": ">= 16.0.0", "appVersionSource": "remote" },
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
   "build": {
-    "development": { "developmentClient": true, "distribution": "internal" },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
     "preview": {
       "distribution": "internal",
-      "env": { "EXPO_PUBLIC_CONVEX_URL": "https://trustworthy-anteater-9.convex.cloud" }
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "https://trustworthy-anteater-9.convex.cloud"
+      },
+      "channel": "preview"
     },
     "production": {
       "autoIncrement": true,
-      "env": { "EXPO_PUBLIC_CONVEX_URL": "https://trustworthy-anteater-9.convex.cloud" }
+      "env": {
+        "EXPO_PUBLIC_CONVEX_URL": "https://trustworthy-anteater-9.convex.cloud"
+      },
+      "channel": "production"
     }
   },
-  "submit": { "production": { "ios": {} } }
+  "submit": {
+    "production": {
+      "ios": {}
+    }
+  }
 }
