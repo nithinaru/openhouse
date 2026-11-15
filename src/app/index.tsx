@@ -1,32 +1,26 @@
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PressableScale } from '@/features/home/PressableScale';
 import { EmptyTrips, TripHeroCard, TripRow } from '@/features/home/TripCards';
-import { demoTrip } from '@/lib/demo/demoTrip';
-import { getAllTrips } from '@/lib/ingest/store';
-import type { Trip } from '@/lib/types';
+import { isDemoTripId, useTrips } from '@/lib/data/trips';
 import { colors, radius, space, type } from '@/theme';
-
-// Ingested trips (this session) first, the cached demo trip after them.
-function loadTrips(): { trips: Trip[]; hasIngested: boolean } {
-  const ingested = getAllTrips();
-  return { trips: [...ingested, demoTrip], hasIngested: ingested.length > 0 };
-}
 
 const openTrip = (id: string) => router.push({ pathname: '/trip/[id]', params: { id } });
 
 export default function HomeScreen() {
-  const [{ trips, hasIngested }, setData] = useState(loadTrips);
+  // Own trips (live + this session's ingest) first, the demo trip (live seed, else cached) last.
+  const { data: trips, refresh } = useTrips();
+  const hasIngested = trips.some((t) => !isDemoTripId(t.id));
 
   // The ingest store isn't reactive; re-read whenever Home comes back into view.
   useFocusEffect(
     useCallback(() => {
-      setData(loadTrips());
-    }, []),
+      refresh();
+    }, [refresh]),
   );
 
   const [hero, ...rest] = trips;
@@ -34,7 +28,10 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.wordmark}>Openhouse</Text>
+        {/* Hidden rehearsal switch: long-press the wordmark for the demo panel. */}
+        <Text style={styles.wordmark} onLongPress={() => router.push('/demo')} suppressHighlighting>
+          Openhouse
+        </Text>
         <PressableScale
           onPress={() => router.push('/people')}
           accessibilityRole="button"

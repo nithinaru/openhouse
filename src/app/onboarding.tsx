@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IngestShow } from '@/features/home/IngestShow';
 import { PressableScale } from '@/features/home/PressableScale';
+import { uploadTrip } from '@/lib/data/sync';
 import { DEMO_TRIP_ID } from '@/lib/demo/demoTrip';
 import { notifyTripReady } from '@/lib/ingest/notify';
 import { IngestError, ingestRecent, type IngestProgress } from '@/lib/ingest/readLibrary';
@@ -48,6 +49,12 @@ export default function OnboardingScreen() {
         if (alive.current) setState((s) => (s.kind === 'running' ? { ...s, progress } : s));
       });
       setTrip(trip);
+      // Best-effort Convex upload in the background; never delays the "ready" beat.
+      void uploadTrip(trip, (p) => {
+        if (__DEV__ && (p.stage === 'done' || p.stage === 'skipped' || p.stage === 'failed')) {
+          console.log('[onboarding] upload', p.stage, p.remoteTripId ?? p.reason ?? '');
+        }
+      });
       if (!alive.current) return;
 
       setState((s) => (s.kind === 'running' ? { ...s, ready: { title: trip.title, stops: trip.moments.length } } : s));
