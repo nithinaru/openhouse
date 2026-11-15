@@ -70,9 +70,9 @@ export type Room = {
 };
 
 export const ROOMS: Room[] = [
-  { key: 'door', label: 'front door', lat: 37.76068, lng: -122.3861, nudge: { x: 0, y: 30 }, frames: 86, momentIds: ['m1'], spot: 'on 20th st' },
-  { key: 'hall', label: 'the hall', lat: 37.76086, lng: -122.38625, nudge: { x: -92, y: 10 }, frames: 854, momentIds: ['m2', 'm6'], spot: 'by the stage' },
-  { key: 'floor', label: 'hacking floor', lat: 37.7609, lng: -122.38585, nudge: { x: 96, y: 10 }, frames: 1108, momentIds: ['m3'], spot: 'by the windows' },
+  { key: 'door', label: 'front door', lat: 37.76068, lng: -122.3861, nudge: { x: 30, y: 84 }, frames: 86, momentIds: ['m1'], spot: 'on 20th st' },
+  { key: 'hall', label: 'the hall', lat: 37.76086, lng: -122.38625, nudge: { x: -96, y: 44 }, frames: 854, momentIds: ['m2', 'm6'], spot: 'by the stage' },
+  { key: 'floor', label: 'hacking floor', lat: 37.7609, lng: -122.38585, nudge: { x: 78, y: 20 }, frames: 1108, momentIds: ['m3'], spot: 'by the windows' },
   { key: 'park', label: 'esprit park', lat: 37.76099, lng: -122.39101, nudge: { x: 0, y: 30 }, frames: 173, momentIds: ['m4'], spot: 'on the grass' },
   { key: 'cove', label: 'crane cove', lat: 37.76255, lng: -122.38711, nudge: { x: 0, y: 30 }, frames: 96, momentIds: ['m5'], spot: 'under the cranes' },
 ];

@@ -25,20 +25,23 @@ import { Chip, haptic, IconButton } from '@/theme/ui';
 const ORBIT_DEG_PER_S = 4;
 const RESUME_AFTER_MS = 2600;
 const STANDEE_H = 96;
-const STANDEE_GAP = 50;
+const STANDEE_GAP = 54;
 const PITCH = 60;
 const FLYOVER_OK = Platform.OS === 'ios';
 /** Roughly how much of the screen the bottom sheet covers; the map centers above it. */
 const SHEET_H = 300;
 
+// Center on the venue's own rooms (not the far-off park), nudged north so the
+// cutouts sit above the bottom sheet instead of at the screen edge.
+const VENUE_ROOMS = ROOMS.filter((r) => r.key === 'door' || r.key === 'hall' || r.key === 'floor');
 const CENTER = {
-  latitude: ROOMS.reduce((s, r) => s + r.lat, 0) / ROOMS.length,
-  longitude: ROOMS.reduce((s, r) => s + r.lng, 0) / ROOMS.length,
+  latitude: VENUE_ROOMS.reduce((s, r) => s + r.lat, 0) / VENUE_ROOMS.length - 0.0004,
+  longitude: VENUE_ROOMS.reduce((s, r) => s + r.lng, 0) / VENUE_ROOMS.length,
 };
 
 // Start where everyone was together: the hacking floor just before noon.
 const INITIAL_HEADING = 24;
-const INITIAL_CAMERA: Camera = { center: CENTER, pitch: PITCH, heading: INITIAL_HEADING, altitude: 820, zoom: 16.6 };
+const INITIAL_CAMERA: Camera = { center: CENTER, pitch: PITCH, heading: INITIAL_HEADING, altitude: 1150, zoom: 16.2 };
 
 const START_T = HOUSE_DAY.start + (3 * 60 + 40) * 60_000;
 

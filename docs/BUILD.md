@@ -165,6 +165,7 @@ orders:   { posterId, userId, whopCheckoutId, status: "pending"|"paid" }
   - Preload the next 2 splats.
   - Stretch only: estimate real relative camera poses for a room's photos with VGGT and place the splats in one shared space.
 - Stretch only: a World Labs multi-image world for one room ($5 minimum API credit, ~5 min generation). Not required.
+  - **Status (built):** `convex/worlds.ts` has `worlds:build` (action, `{ momentId, imageUrls }` → `{ worldId, mode: 'live'|'demo', reused }`), `worlds:forMoment` (query) and internal `worlds:poll` (every 10 s, gives up after 10 min, saves the 500k SPZ + `world_marble_url`). Client: the stop's Walk in button reads "build this room in 3d" when there's no splat yet and opens `src/app/world/[id].tsx` (photos tile in, real stage line, polls every 3 s, then auto-opens Walk in with the splat). The viewer keeps flipX (180° about X) for Marble's OpenCV frame and shows a "built with world labs" chip. With no `WORLDLABS_API_KEY` it runs in **demo mode**: no API call, `operationId` = `demo:<ts>`, ready after 25 s with the sample splat, labeled in the UI. Enable with `npx convex env set WORLDLABS_API_KEY <key>`.
 
 ### 5.8 Poster + Whop
 - Poster = `react-native-svg`: project stop coords to the canvas, single-weight route line, stop dots, face circles, title, dates, footer stats ("14.2 mi · 6 stops · 3 people"), trip palette. Capture with `react-native-view-shot`, upload to storage.
