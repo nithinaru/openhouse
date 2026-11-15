@@ -1,6 +1,6 @@
 // QR pairing (BUILD.md §5.6).
 
-import { getDemoTrip } from '@/lib/demo/demoTrip';
+import { getDemoTrip } from '../../lib/demo/demoTrip';
 
 export const PAIR_PREFIX = 'openhouse://pair/';
 
