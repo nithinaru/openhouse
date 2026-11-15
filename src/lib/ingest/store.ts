@@ -7,6 +7,7 @@ const trips = new Map<string, Trip>();
 let latestId: string | undefined;
 
 export function setTrip(trip: Trip): void {
+  trips.delete(trip.id); // re-insert so Map order stays oldest -> newest write
   trips.set(trip.id, trip);
   latestId = trip.id;
 }
@@ -17,4 +18,9 @@ export function getTrip(id: string): Trip | undefined {
 
 export function getLatestTrip(): Trip | undefined {
   return latestId ? trips.get(latestId) : undefined;
+}
+
+/** Every ingested trip this session, most recently written first. */
+export function getAllTrips(): Trip[] {
+  return [...trips.values()].reverse();
 }

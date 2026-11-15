@@ -1,36 +1,105 @@
-import { useLocalSearchParams } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { Asset, requestPermissionsAsync } from 'expo-media-library';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useRef, useState, type ComponentRef } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import Animated, {
+  interpolate,
+  interpolateColor,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import { scheduleOnRN } from 'react-native-worklets';
 
+import { PLUS_STYLES, useEntitlements } from '@/features/commerce/membership';
+import { PlusLock } from '@/features/commerce/ui';
+import { startCheckout, waitForPaid } from '@/features/poster/checkout';
+import { FRAME_STYLES, FramedPoster, frameInset } from '@/features/poster/FramedPoster';
+import { OrderConfirmed } from '@/features/poster/OrderConfirmed';
+import { POSTER_VARIANTS } from '@/features/poster/Poster';
+import { EASE_IN_OUT } from '@/features/stop/motion';
+import { PressScale } from '@/features/stop/PressScale';
 import { getDemoTrip } from '@/lib/demo/demoTrip';
-import { startCheckout } from '@/features/poster/checkout';
-import { Poster } from '@/features/poster/Poster';
-import { colors, radius, space, type } from '@/theme';
+import { colors, fonts, radius, space, type } from '@/theme';
+import { Button, SheetHeader } from '@/theme/ui';
 
-// One frame style for now: dark frame with a light mat. Designer replaces.
-const FRAME = { border: 10, mat: 16, frameColor: colors.surface, matColor: colors.text };
+const SIZES = [
+  { id: '12x16', label: '12 × 16 in', price: 39, scale: 0.84 },
+  { id: '18x24', label: '18 × 24 in', price: 59, scale: 1 },
+] as const;
+type SizeId = (typeof SIZES)[number]['id'];
+
+const WALLS = POSTER_VARIANTS.map((v) => FRAME_STYLES[v.id].wall);
+
+function tick() {
+  Haptics.selectionAsync();
+}
 
 export default function FrameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   // TODO(convex): const trip = useQuery(api.trips.get, { id }) (fall back to demo trip while loading).
   const trip = getDemoTrip(id);
-  // TODO(convex): real poster record id from api.posters.create after uploading the capture.
-  const posterId = `poster-${trip.id}`;
-  // TODO(convex): bind to useQuery(api.orders.forPoster, { posterId })?.status === 'paid'.
-  const orderConfirmed = false;
+  // Set by the /whop webhook via the Convex order record, polled after checkout.
+  const [serverConfirmed, setServerConfirmed] = useState(false);
+  // Hidden rehearsal switch: long-press the title to preview the confirmed state.
+  const [previewConfirmed, setPreviewConfirmed] = useState(false);
+  const orderConfirmed = serverConfirmed || previewConfirmed;
 
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const posterWidth = Math.min(width - space.lg * 2, 420) - (FRAME.border + FRAME.mat) * 2;
+  const reduced = useReducedMotion();
 
-  const frameRef = useRef<ComponentRef<typeof View>>(null);
+  const itemW = Math.min(Math.round(width * 0.74), 380);
+  const side = (width - itemW) / 2;
+  const outerW = itemW - space.lg; // frame outer width at full size
+  const wallH = Math.round(outerW * (4 / 3)) + space.xl * 2;
+
+  const [index, setIndex] = useState(0);
+  const [size, setSize] = useState<SizeId>('12x16');
+  const sizeInfo = SIZES.find((s) => s.id === size)!;
+  const variant = POSTER_VARIANTS[index];
+  // Night and field are Openhouse+ styles: soft lock, the button opens the paywall.
+  const { plus } = useEntitlements(id ?? trip.id);
+  const styleLocked = !plus && PLUS_STYLES.has(variant.id);
+  const openPlus = () => router.push({ pathname: '/plus', params: { from: 'styles', tripId: id ?? trip.id } });
+
+  const scrollX = useSharedValue(0);
+  const lastIndex = useSharedValue(0);
+  const sizeScale = useSharedValue<number>(sizeInfo.scale);
+
+  const frameRefs = useRef<(ComponentRef<typeof View> | null)[]>([]);
   const [saving, setSaving] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    sizeScale.set(withTiming(sizeInfo.scale, { duration: reduced ? 0 : 260, easing: EASE_IN_OUT }));
+  }, [reduced, sizeInfo.scale, sizeScale]);
+
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (e) => {
+      scrollX.set(e.contentOffset.x);
+      const i = Math.max(0, Math.min(POSTER_VARIANTS.length - 1, Math.round(e.contentOffset.x / itemW)));
+      if (i !== lastIndex.get()) {
+        lastIndex.set(i);
+        scheduleOnRN(setIndex, i);
+        scheduleOnRN(tick);
+      }
+    },
+  });
+
+  const wallInput = POSTER_VARIANTS.map((_, i) => i * itemW);
+  const wallStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(scrollX.get(), wallInput, WALLS),
+  }));
 
   async function save() {
     setSaving(true);
@@ -38,16 +107,19 @@ export default function FrameScreen() {
     try {
       const perm = await requestPermissionsAsync(true);
       if (!perm.granted) {
-        setMessage('Allow Photos access to save the poster.');
+        setMessage('allow photos access to save the poster');
         return;
       }
-      const uri = await captureRef(frameRef, { format: 'png', quality: 1, result: 'tmpfile' });
+      const ref = frameRefs.current[index];
+      if (!ref) throw new Error('frame not mounted');
+      const uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });
       // TODO(convex): also upload `uri` to Convex storage and create the poster record (§5.8).
       await Asset.create(uri);
-      setMessage('Saved to Photos');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setMessage('saved to photos');
     } catch (e) {
       console.warn('[frame] save failed', e);
-      setMessage('Could not save the poster.');
+      setMessage('could not save the poster');
     } finally {
       setSaving(false);
     }
@@ -57,16 +129,20 @@ export default function FrameScreen() {
     setCheckingOut(true);
     setMessage(null);
     try {
-      const url = await startCheckout(posterId);
-      if (url) {
-        await WebBrowser.openBrowserAsync(url);
-        // Do not mark paid here: the order record (orders.forPoster) drives orderConfirmed.
+      const checkout = await startCheckout({ tripId: id ?? trip.id, style: variant.id, size });
+      if (checkout) {
+        await WebBrowser.openBrowserAsync(checkout.url);
+        // Never mark paid on browser close: wait for the webhook to update the order.
+        setMessage('confirming your order…');
+        const paid = await waitForPaid(checkout.orderId);
+        setMessage(paid ? null : 'Payment not confirmed yet. It will show here once Whop confirms it.');
+        if (paid) setServerConfirmed(true);
       } else {
-        setMessage('Checkout opens once the backend is live');
+        setMessage('checkout opens once the backend is live');
       }
     } catch (e) {
       console.warn('[frame] checkout failed', e);
-      setMessage('Could not open checkout.');
+      setMessage('could not open checkout');
     } finally {
       setCheckingOut(false);
     }
@@ -75,57 +151,169 @@ export default function FrameScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: space.lg, paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl, gap: space.lg, alignItems: 'center' }}>
-      <Text style={[type.title, { alignSelf: 'flex-start' }]}>Frame it</Text>
-
-      <View
-        ref={frameRef}
-        collapsable={false}
-        style={{ borderWidth: FRAME.border, borderColor: FRAME.frameColor, padding: FRAME.mat, backgroundColor: FRAME.matColor }}>
-        <Poster trip={trip} width={posterWidth} />
+      contentContainerStyle={{ paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl, gap: space.lg }}
+    >
+      <View style={{ paddingHorizontal: space.lg, gap: space.xs }}>
+        <SheetHeader
+          title="frame it"
+          onTitleLongPress={() => setPreviewConfirmed((v) => !v)}
+          onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))}
+        />
+        <Text style={type.caption}>your day, printed and framed. swipe to change the style</Text>
       </View>
 
-      <Text style={[type.caption, { alignSelf: 'flex-start' }]}>Style · Classic dark frame</Text>
+      {/* The wall */}
+      <Animated.View style={[{ height: wallH }, wallStyle]}>
+        <WallLight width={width} height={wallH} />
+        <Animated.ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={itemW}
+          decelerationRate="fast"
+          disableIntervalMomentum
+          scrollEventThrottle={16}
+          onScroll={onScroll}
+          contentContainerStyle={{ paddingHorizontal: side, alignItems: 'center' }}
+        >
+          {POSTER_VARIANTS.map((v, i) => (
+            <CarouselItem key={v.id} index={i} itemW={itemW} height={wallH} scrollX={scrollX} sizeScale={sizeScale} reduced={reduced}>
+              <FramedPoster
+                ref={(r) => {
+                  frameRefs.current[i] = r;
+                }}
+                trip={trip}
+                variant={v.id}
+                posterWidth={outerW - frameInset(v.id) * 2}
+              />
+            </CarouselItem>
+          ))}
+        </Animated.ScrollView>
+      </Animated.View>
 
-      {orderConfirmed ? (
-        <View style={{ alignSelf: 'stretch', padding: space.md, borderRadius: radius.md, backgroundColor: colors.surface, gap: space.xs }}>
-          <Text style={type.heading}>Order confirmed</Text>
-          <Text style={type.caption}>Your framed print is on its way.</Text>
+      <View style={{ alignItems: 'center', gap: space.sm }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
+          <Text style={type.heading}>{variant.label}</Text>
+          {styleLocked ? <PlusLock onPress={openPlus} /> : null}
         </View>
-      ) : (
-        <Pressable
-          onPress={frameThis}
-          disabled={checkingOut}
-          accessibilityRole="button"
-          style={({ pressed }) => ({
-            alignSelf: 'stretch',
-            alignItems: 'center',
-            padding: space.md,
-            borderRadius: radius.full,
-            backgroundColor: colors.accent,
-            opacity: pressed || checkingOut ? 0.7 : 1,
-          })}>
-          {checkingOut ? <ActivityIndicator color={colors.bg} /> : <Text style={[type.body, { color: colors.bg, fontWeight: '600' }]}>Frame this · $39</Text>}
-        </Pressable>
-      )}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {POSTER_VARIANTS.map((v, i) => (
+            <View key={v.id} style={[styles.dot, i === index && { backgroundColor: colors.ink, width: 16 }]} />
+          ))}
+        </View>
+      </View>
 
-      <Pressable
-        onPress={save}
-        disabled={saving}
-        accessibilityRole="button"
-        style={({ pressed }) => ({
-          alignSelf: 'stretch',
-          alignItems: 'center',
-          padding: space.md,
-          borderRadius: radius.full,
-          borderWidth: 1,
-          borderColor: colors.line,
-          opacity: pressed || saving ? 0.7 : 1,
-        })}>
-        {saving ? <ActivityIndicator color={colors.text} /> : <Text style={type.body}>Save to Photos</Text>}
-      </Pressable>
+      <View style={{ paddingHorizontal: space.lg, gap: space.md }}>
+        <View style={styles.sizes}>
+          {SIZES.map((s) => {
+            const active = s.id === size;
+            return (
+              <PressScale
+                key={s.id}
+                onPress={() => {
+                  if (active) return;
+                  Haptics.selectionAsync();
+                  setSize(s.id);
+                }}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                style={[styles.size, active && styles.sizeActive]}
+              >
+                <Text style={[styles.sizeLabel, active && { color: colors.text }]}>{s.label}</Text>
+                <Text style={[styles.sizePrice, active && { color: colors.text }]}>${s.price}</Text>
+              </PressScale>
+            );
+          })}
+        </View>
 
-      {message && <Text style={type.caption}>{message}</Text>}
+        {orderConfirmed ? (
+          <OrderConfirmed
+            palette={trip.palette}
+            detail={`${sizeInfo.label} · ${variant.label} · ships in 3–5 days`}
+          />
+        ) : styleLocked ? (
+          <Button label="unlock this style with plus" onPress={openPlus} />
+        ) : (
+          <Button label={`frame this · $${sizeInfo.price}`} onPress={frameThis} loading={checkingOut} />
+        )}
+
+        <Button variant="secondary" label="save to photos" onPress={save} loading={saving} />
+
+        {message && <Text style={[type.caption, { textAlign: 'center' }]}>{message}</Text>}
+      </View>
     </ScrollView>
   );
 }
+
+function CarouselItem({
+  index,
+  itemW,
+  height,
+  scrollX,
+  sizeScale,
+  reduced,
+  children,
+}: {
+  index: number;
+  itemW: number;
+  height: number;
+  scrollX: SharedValue<number>;
+  sizeScale: SharedValue<number>;
+  reduced: boolean;
+  children: ReactNode;
+}) {
+  const style = useAnimatedStyle(() => {
+    const d = (scrollX.get() - index * itemW) / itemW; // -1..1 around center
+    const s = interpolate(d, [-1, 0, 1], [0.84, 1, 0.84], 'clamp') * sizeScale.get();
+    return {
+      opacity: interpolate(d, [-1, 0, 1], [0.45, 1, 0.45], 'clamp'),
+      transform: reduced
+        ? [{ scale: s }]
+        : [{ perspective: 900 }, { rotateY: `${interpolate(d, [-1, 0, 1], [14, 0, -14], 'clamp')}deg` }, { scale: s }],
+    };
+  });
+
+  return (
+    <View style={{ width: itemW, height, alignItems: 'center', justifyContent: 'center' }}>
+      <Animated.View style={style}>{children}</Animated.View>
+    </View>
+  );
+}
+
+function WallLight({ width, height }: { width: number; height: number }) {
+  return (
+    <Svg pointerEvents="none" width={width} height={height} style={StyleSheet.absoluteFill}>
+      <Defs>
+        <RadialGradient id="spot" cx="50%" cy="8%" rx="70%" ry="75%">
+          <Stop offset="0" stopColor="#FFF6E5" stopOpacity="0.32" />
+          <Stop offset="1" stopColor="#FFF6E5" stopOpacity="0" />
+        </RadialGradient>
+        <LinearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0.6" stopColor="#000" stopOpacity="0" />
+          <Stop offset="1" stopColor="#000" stopOpacity="0.28" />
+        </LinearGradient>
+      </Defs>
+      <Rect width={width} height={height} fill="url(#spot)" />
+      <Rect width={width} height={height} fill="url(#floor)" />
+    </Svg>
+  );
+}
+
+const styles = StyleSheet.create({
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.line },
+  sizes: { flexDirection: 'row', gap: space.sm },
+  size: {
+    flex: 1,
+    minHeight: 52,
+    paddingHorizontal: space.md,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    borderColor: colors.line,
+    backgroundColor: colors.bg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sizeActive: { borderColor: colors.ink, backgroundColor: colors.bg },
+  sizeLabel: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 15 },
+  sizePrice: { color: colors.textMuted, fontFamily: fonts.semibold, fontSize: 15, fontVariant: ['tabular-nums'] },
+});

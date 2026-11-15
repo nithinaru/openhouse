@@ -9,8 +9,10 @@ import * as MediaLibrary from 'expo-media-library/legacy';
 import { Platform } from 'react-native';
 
 import { buildTrip, clusterPhotos, type ClusterPhoto } from '../cluster';
-import type { Trip } from '../types';
+import type { Moment, Trip } from '../types';
 import { parseExif } from './exif';
+import { attachThumbnails } from './thumbnails';
+import { tripTitleFrom } from './title';
 
 export const MAX_PHOTOS = 400;
 const PAGE_SIZE = 200;
@@ -30,6 +32,25 @@ export type IngestProgress = {
   stops: number;
   /** User granted iOS limited ("selected photos") access. */
   limited: boolean;
+  /**
+   * Stops of the most recent day clustered so far, in time order. Each has a stable `key`, so a UI
+   * can diff successive emits to animate stops in as they are found. Absent before reading starts.
+   */
+  stopList?: StopPreview[];
+  /** Distinct named places once reverse geocoding starts. */
+  places?: number;
+};
+
+export type StopPreview = {
+  /** Stable across emits (id of the first hero photo seen for this stop). */
+  key: string;
+  lat: number;
+  lng: number;
+  /** Hero photo uri (asset uri while reading; 512px thumbnail once done). */
+  heroUri?: string;
+  photoCount: number;
+  startAt: number;
+  placeName?: string;
 };
 
 export type IngestErrorCode = 'denied' | 'no-geotagged' | 'unavailable';
@@ -119,6 +140,35 @@ function toPhoto(asset: MediaLibrary.Asset, info: MediaLibrary.AssetInfo | undef
   };
 }
 
+/** Keeps stop keys stable across re-clusterings by remembering each stop's first hero photo id. */
+function createPreviewRegistry() {
+  const seeds: string[] = [];
+  return {
+    of(moments: Moment[]): StopPreview[] {
+      const used = new Set<string>();
+      return moments.map((m) => {
+        const ids = new Set(m.photos.map((p) => p.id));
+        let key = seeds.find((s) => ids.has(s) && !used.has(s));
+        if (!key) {
+          key = m.heroPhotoId ?? m.photos[0]?.id ?? m.id;
+          seeds.push(key);
+        }
+        used.add(key);
+        const hero = m.photos.find((p) => p.id === m.heroPhotoId) ?? m.photos[0];
+        return {
+          key,
+          lat: m.lat,
+          lng: m.lng,
+          heroUri: hero?.uri,
+          photoCount: m.photos.length,
+          startAt: m.startAt,
+          placeName: m.placeName,
+        };
+      });
+    },
+  };
+}
+
 function placeNameFrom(a: Location.LocationGeocodedAddress | undefined): string | undefined {
   if (!a) return undefined;
   return a.name ?? a.street ?? a.district ?? a.city ?? undefined;
@@ -134,6 +184,7 @@ export async function ingestRecent(
 ): Promise<Trip> {
   const userId = opts.userId ?? 'me';
   const progress: IngestProgress = { phase: 'permission', found: 0, read: 0, stops: 0, limited: false };
+  const previews = createPreviewRegistry();
   const emit = (patch: Partial<IngestProgress>) => {
     Object.assign(progress, patch);
     onProgress?.({ ...progress });
@@ -162,28 +213,40 @@ export async function ingestRecent(
     photos[i] = toPhoto(asset, info, userId);
     read += 1;
     if (read % CONCURRENCY === 0 || read === assets.length) {
-      const soFar = photos.filter((p): p is ClusterPhoto => p !== undefined);
-      emit({ read, stops: clusterPhotos(soFar, { userId }).length });
+      const soFar = photos.filter((p): p is ClusterPhoto => p !== undefined && p.lat !== undefined);
+      // Show only the latest day: that's the trip the user gets. Newest photos are read first.
+      const day = buildTrip(clusterPhotos(soFar, { userId }), { userId });
+      const stopList = day ? previews.of(day.moments) : [];
+      emit({ read, stops: stopList.length, stopList });
     }
   });
 
   const geotagged = photos.filter((p): p is ClusterPhoto => p !== undefined && p.lat !== undefined);
   const trip = buildTrip(clusterPhotos(geotagged, { userId }), { userId });
   if (!trip) throw new IngestError('no-geotagged', 'No photos with location were found.');
-  emit({ phase: 'naming', stops: trip.moments.length });
+  emit({ phase: 'naming', stops: trip.moments.length, stopList: previews.of(trip.moments), places: 0 });
 
-  // Reverse geocode once per stop, sequentially: the OS geocoder throttles bursts.
-  for (const m of trip.moments.slice(0, MAX_GEOCODED_STOPS)) {
-    try {
-      const [addr] = await Location.reverseGeocodeAsync({ latitude: m.lat, longitude: m.lng });
-      m.placeName = placeNameFrom(addr);
-    } catch {
-      break; // throttled or no permission (Android); names are optional
+  const areas: (string | undefined)[] = [];
+  const geocode = async () => {
+    // Reverse geocode once per stop, sequentially: the OS geocoder throttles bursts.
+    for (const m of trip.moments.slice(0, MAX_GEOCODED_STOPS)) {
+      try {
+        const [addr] = await Location.reverseGeocodeAsync({ latitude: m.lat, longitude: m.lng });
+        m.placeName = placeNameFrom(addr);
+        areas.push(addr?.district ?? addr?.subregion ?? addr?.city ?? undefined);
+        const names = new Set(trip.moments.map((x) => x.placeName).filter(Boolean));
+        emit({ stopList: previews.of(trip.moments), places: names.size });
+      } catch {
+        break; // throttled or no permission (Android); names are optional
+      }
     }
-  }
+  };
+  // Thumbnails run alongside geocoding so neither adds much wall time.
+  await Promise.all([geocode(), attachThumbnails(trip.moments).catch(() => undefined)]);
 
+  trip.title = tripTitleFrom(trip.startAt, areas, trip.moments) ?? trip.title;
   trip.status = 'ready';
-  emit({ phase: 'done' });
+  emit({ phase: 'done', stopList: previews.of(trip.moments) });
   return trip;
 }
 
