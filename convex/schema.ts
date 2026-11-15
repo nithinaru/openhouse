@@ -5,6 +5,7 @@ export const lens = v.union(v.literal('front'), v.literal('wide'), v.literal('ul
 export const weather = v.object({ tempF: v.number(), summary: v.string() });
 export const posterStyle = v.union(v.literal('minimal'), v.literal('night'), v.literal('field'));
 export const printSize = v.union(v.literal('12x16'), v.literal('18x24'));
+export const product = v.union(v.literal('print'), v.literal('postcards'), v.literal('zine'), v.literal('film'));
 
 export default defineSchema({
   users: defineTable({
@@ -100,13 +101,63 @@ export default defineSchema({
   }).index('by_tripId', ['tripId']),
 
   orders: defineTable({
-    posterId: v.id('posters'),
     userId: v.id('users'),
-    size: printSize,
+    tripId: v.optional(v.id('trips')),
+    product: v.optional(product),
+    variant: v.optional(v.string()),
+    posterId: v.optional(v.id('posters')),
+    size: v.optional(printSize),
+    momentId: v.optional(v.id('moments')),
+    giftToUserId: v.optional(v.id('users')),
+    downloadStorageId: v.optional(v.id('_storage')),
     whopCheckoutId: v.optional(v.string()),
-    status: v.union(v.literal('pending'), v.literal('paid')),
+    whopPaymentId: v.optional(v.string()),
+    status: v.union(v.literal('pending'), v.literal('paid'), v.literal('fulfilled'), v.literal('refunded')),
   })
     .index('by_posterId', ['posterId'])
     .index('by_userId', ['userId'])
-    .index('by_whopCheckoutId', ['whopCheckoutId']),
+    .index('by_whopCheckoutId', ['whopCheckoutId'])
+    .index('by_whopPaymentId', ['whopPaymentId']),
+
+  gifts: defineTable({
+    orderId: v.id('orders'),
+    fromUserId: v.id('users'),
+    toUserId: v.id('users'),
+    momentId: v.optional(v.id('moments')),
+    seen: v.boolean(),
+  })
+    .index('by_toUserId', ['toUserId'])
+    .index('by_orderId', ['orderId']),
+
+  memberships: defineTable({
+    userId: v.id('users'),
+    whopMembershipId: v.string(),
+    status: v.union(v.literal('active'), v.literal('inactive')),
+    renewsAt: v.optional(v.number()),
+  })
+    .index('by_userId', ['userId'])
+    .index('by_whopMembershipId', ['whopMembershipId']),
+
+  listings: defineTable({
+    userId: v.id('users'),
+    tripId: v.id('trips'),
+    title: v.string(),
+    priceCents: v.number(),
+    whopProductId: v.string(),
+    whopPlanId: v.string(),
+    sales: v.number(),
+    earningsCents: v.number(),
+  }).index('by_userId', ['userId']),
+
+  purchases: defineTable({
+    listingId: v.id('listings'),
+    buyerUserId: v.id('users'),
+    status: v.union(v.literal('pending'), v.literal('paid'), v.literal('refunded')),
+    whopCheckoutId: v.optional(v.string()),
+    whopPaymentId: v.optional(v.string()),
+    netCents: v.optional(v.number()),
+  })
+    .index('by_listingId_and_buyerUserId', ['listingId', 'buyerUserId'])
+    .index('by_whopCheckoutId', ['whopCheckoutId'])
+    .index('by_whopPaymentId', ['whopPaymentId']),
 });

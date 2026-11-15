@@ -9,7 +9,11 @@
  */
 
 import type * as files from "../files.js";
+import type * as gifts from "../gifts.js";
 import type * as http from "../http.js";
+import type * as listings from "../listings.js";
+import type * as me from "../me.js";
+import type * as memberships from "../memberships.js";
 import type * as moments from "../moments.js";
 import type * as orders from "../orders.js";
 import type * as pairings from "../pairings.js";
@@ -17,6 +21,7 @@ import type * as photos from "../photos.js";
 import type * as seed from "../seed.js";
 import type * as trips from "../trips.js";
 import type * as users from "../users.js";
+import type * as whop from "../whop.js";
 
 import type {
   ApiFromModules,
@@ -26,7 +31,11 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   files: typeof files;
+  gifts: typeof gifts;
   http: typeof http;
+  listings: typeof listings;
+  me: typeof me;
+  memberships: typeof memberships;
   moments: typeof moments;
   orders: typeof orders;
   pairings: typeof pairings;
@@ -34,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   trips: typeof trips;
   users: typeof users;
+  whop: typeof whop;
 }>;
 
 /**
