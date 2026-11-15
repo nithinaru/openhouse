@@ -164,13 +164,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .diorama { position: absolute; left: -40px; top: 232px; width: 470px; height: 470px; }
 .diorama img { width: 100%; height: 100%; display: block;
   -webkit-mask: radial-gradient(closest-side, #000 72%, transparent); mask: radial-gradient(closest-side, #000 72%, transparent); }
-#s-house.active .diorama { animation: drift 9s ease-in-out infinite alternate; }
+
 @keyframes drift { from { transform: translateY(0) rotate(-.4deg); } to { transform: translateY(-10px) rotate(.4deg); } }
-.tag-k { left: 152px; top: 268px; transform: rotate(-3deg); }
-.tag-l { left: 22px; top: 470px; transform: rotate(-5deg); }
-.tag-u { right: 16px; top: 322px; transform: rotate(4deg); }
-#s-house .sticker { animation: deal .5s cubic-bezier(.2,1.2,.3,1) both; }
-#s-house .tag-l { animation-delay: .5s; } #s-house .tag-k { animation-delay: .62s; } #s-house .tag-u { animation-delay: .74s; }
 #s-house .bottom { gap: 14px; }
 #s-house .bottom .pill { width: 220px; }
 
@@ -246,3 +241,23 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 [hidden] { display: none !important; }
 #b-title { font-size: 29px; white-space: nowrap; }
+
+/* clouds placeholder: "ready to generate" */
+.clouds { overflow: visible; }
+.cloud { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, #fff 0 35%, rgba(255,255,255,.75) 60%, rgba(255,255,255,0)); filter: blur(4px); animation: puff 7s ease-in-out infinite alternate; }
+.c1 { width: 260px; height: 170px; left: 60px;  top: 160px; }
+.c2 { width: 210px; height: 150px; left: 200px; top: 130px; animation-delay: -2s; }
+.c3 { width: 200px; height: 140px; left: 20px;  top: 230px; animation-delay: -4s; }
+.c4 { width: 240px; height: 160px; left: 190px; top: 230px; animation-delay: -1s; }
+.c5 { width: 170px; height: 120px; left: 130px; top: 100px; animation-delay: -3s; }
+.c6 { width: 180px; height: 110px; left: 290px; top: 190px; animation-delay: -5s; }
+.c7 { width: 200px; height: 120px; left: 110px; top: 300px; animation-delay: -6s; }
+@keyframes puff { from { transform: translate(-8px, 4px) scale(1); } to { transform: translate(10px, -6px) scale(1.07); } }
+.spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 3px rgba(255,255,255,.9), 0 0 22px 6px rgba(246,198,221,.7); animation: twinkle 2.4s ease-in-out infinite; }
+.k1 { left: 120px; top: 170px; } .k2 { left: 330px; top: 150px; animation-delay: -.6s; } .k3 { left: 250px; top: 330px; animation-delay: -1.2s; }
+.k4 { left: 90px; top: 320px; animation-delay: -1.8s; } .k5 { left: 380px; top: 280px; animation-delay: -.9s; }
+@keyframes twinkle { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1); } }
+.ready { position: absolute; left: 0; right: 0; top: 214px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.ready-tag { position: static; font-size: 15px; padding: 9px 15px; transform: rotate(-3deg); animation: deal .6s cubic-bezier(.2,1.3,.3,1) .4s both, bob 2.4s ease-in-out 1s infinite; }
+.ready p { font-size: 13.5px; font-weight: 600; color: rgba(0,0,0,.55); letter-spacing: -.01em; line-height: 1.35; }
+.build-clouds { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 50%; }

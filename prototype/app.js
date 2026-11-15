@@ -135,42 +135,142 @@ $('#send').addEventListener('click', () => {
   setTimeout(startBuild, 1100);
 });
 
-/* ---------------- 5 · live build ---------------- */
+/* ---------------- 5 · live build: the house is generated from the photos ---------------- */
 const IMG = {};
-['house.jpg', 'build-empty.jpg', 'build-wire.png'].forEach((f) => { const i = new Image(); i.src = 'assets/' + f; IMG[f] = i; });
+['house.jpg', 'build-empty.jpg'].forEach((f) => { const i = new Image(); i.src = 'assets/' + f; IMG[f] = i; });
 const PHOTOS = Array.from({ length: 18 }, (_, i) => `assets/photos/p${String(i).padStart(2, '0')}.jpg`);
 
 const BUILD_T = 40; // seconds, real time at speed 1
-// soft "blobs" of the finished house that fade in, in image coords (1024 square). room: 0 living, 1 kitchen, 2 upstairs, -1 floor
+// areas of the house that get generated as photos arrive, in image coords (1024 square).
+// room: 0 living, 1 kitchen, 2 upstairs, -1 floor/shell
 const BLOBS = [
-  [180, 430, 230, 0, 8.0], [320, 540, 240, 0, 10.0], [260, 260, 210, 0, 12.0], [140, 640, 200, 0, 14.0], [420, 660, 210, 0, 16.5],
-  [470, 270, 200, 1, 15.5], [590, 250, 190, 1, 18.0], [450, 400, 190, 1, 20.0], [610, 390, 180, 1, 22.5],
-  [300, 800, 230, -1, 19.0], [560, 560, 220, -1, 21.0],
-  [770, 300, 200, 2, 23.5], [900, 330, 210, 2, 25.5], [760, 530, 200, 2, 27.5], [890, 570, 200, 2, 29.5], [720, 720, 210, 2, 31.5],
-  [600, 810, 250, -1, 30.5], [870, 790, 210, -1, 33.0],
-].map(([x, y, r, room, t0]) => ({ x, y, r, room, t0, dur: 4.2, spawned: false }));
+  [200, 450, 230, 0, 7.0], [330, 550, 240, 0, 9.0], [260, 260, 210, 0, 11.0], [140, 640, 200, 0, 13.0], [420, 660, 210, 0, 15.0],
+  [470, 270, 200, 1, 14.5], [590, 250, 190, 1, 17.0], [450, 400, 190, 1, 19.0], [610, 390, 180, 1, 21.5],
+  [300, 800, 230, -1, 18.0], [560, 560, 220, -1, 20.0],
+  [770, 300, 200, 2, 22.5], [900, 330, 210, 2, 24.5], [760, 530, 200, 2, 26.5], [890, 570, 200, 2, 28.5], [720, 720, 210, 2, 30.5],
+  [600, 810, 250, -1, 29.5], [870, 790, 210, -1, 32.0],
+].map(([x, y, r, room, t0]) => ({ x, y, r, room, t0, spawned: false, burst: false }));
+// each area passes through three stages: noisy mosaic → soft blur → sharp
+const STAGES = [{ off: 0, dur: 2.4 }, { off: 1.4, dur: 2.6 }, { off: 3.0, dur: 3.2 }];
 
 const canvas = $('#build'), ctx = canvas.getContext('2d');
 const N = canvas.width; // 768
-const k = N / 1024;
-const mk = document.createElement('canvas'); mk.width = mk.height = N / 2; const mctx = mk.getContext('2d');
-const comp = document.createElement('canvas'); comp.width = comp.height = N; const cctx = comp.getContext('2d');
-const wireC = document.createElement('canvas'); wireC.width = wireC.height = N; const wctx = wireC.getContext('2d');
-const wireGlow = document.createElement('canvas'); wireGlow.width = wireGlow.height = N;
+const S = N / 1024;
+const mkCanvas = (w, h = w) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+const masks = STAGES.map(() => mkCanvas(192));
+const comp = mkCanvas(N), cctx = comp.getContext('2d');
+let LOW, MID, PIX; // mosaic + blur versions of the house, pixel data for particle colours
+const NOISE = [0, 1, 2, 3].map(() => {
+  const c = mkCanvas(160), g = c.getContext('2d'), d = g.createImageData(160, 160);
+  for (let i = 0; i < d.data.length; i += 4) { const v = Math.random() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  g.putImageData(d, 0, 0); return c;
+});
+
+function prepHouse() {
+  const h = IMG['house.jpg'];
+  LOW = mkCanvas(28); LOW.getContext('2d').drawImage(h, 0, 0, 28, 28);
+  MID = mkCanvas(110); MID.getContext('2d').drawImage(h, 0, 0, 110, 110);
+  const full = mkCanvas(256), g = full.getContext('2d'); g.drawImage(h, 0, 0, 256, 256);
+  PIX = g.getImageData(0, 0, 256, 256).data;
+}
+if (IMG['house.jpg'].complete) prepHouse(); else IMG['house.jpg'].addEventListener('load', prepHouse);
 
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
 const build = { t: 0, running: false, done: false, last: 0, skip() { this.t = Math.max(this.t, BUILD_T - 2); } };
 let friendState = [];
+let particles = [], rings = [];
 
-function prepWire() {
-  const g = wireGlow.getContext('2d');
-  g.clearRect(0, 0, N, N);
-  g.shadowColor = 'rgba(255,255,255,.95)'; g.shadowBlur = 7;
-  g.drawImage(IMG['build-wire.png'], 0, 0, N, N);
-  g.shadowBlur = 0; g.globalAlpha = .9;
-  g.drawImage(IMG['build-wire.png'], 0, 0, N, N);
+function burst(b, ox, oy, t) {
+  // photo lands → shatters into points that fly to where they belong in the house
+  rings.push({ x: ox, y: oy, t0: t });
+  if (!PIX) return;
+  for (let i = 0; i < 260; i++) {
+    const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * b.r * .85;
+    const tx = Math.min(1023, Math.max(0, b.x + Math.cos(a) * rr)), ty = Math.min(1023, Math.max(0, b.y + Math.sin(a) * rr));
+    const pi = ((ty >> 2) * 256 + (tx >> 2)) * 4;
+    particles.push({
+      x0: ox, y0: oy, x1: tx * S, y1: ty * S,
+      cx: ox + (Math.random() - .5) * 260, cy: oy - 60 - Math.random() * 140,
+      c: `rgb(${PIX[pi]},${PIX[pi + 1]},${PIX[pi + 2]})`, t0: t + Math.random() * .5, dur: .9 + Math.random() * .8,
+      s: 1.5 + Math.random() * 2.5, spark: Math.random() < .18,
+    });
+  }
+}
+
+function drawMask(m, t, st, fin) {
+  const g = m.getContext('2d'), w = m.width, h = w / 1024;
+  g.clearRect(0, 0, w, w);
+  for (const b of BLOBS) {
+    const p = ease(clamp01((t - b.t0 - st.off) / st.dur));
+    if (p <= 0) continue;
+    const r = b.r * h * (0.3 + 0.9 * p);
+    const gr = g.createRadialGradient(b.x * h, b.y * h, 0, b.x * h, b.y * h, r);
+    gr.addColorStop(0, `rgba(0,0,0,${p})`); gr.addColorStop(.55, `rgba(0,0,0,${p})`); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(b.x * h, b.y * h, r, 0, Math.PI * 2); g.fill();
+  }
+  if (fin > 0) { g.fillStyle = `rgba(0,0,0,${fin})`; g.fillRect(0, 0, w, w); }
+}
+
+function layer(src, mask, smooth, jitter = 0) {
+  cctx.globalCompositeOperation = 'source-over';
+  cctx.clearRect(0, 0, N, N);
+  cctx.imageSmoothingEnabled = smooth;
+  cctx.drawImage(src, jitter, 0, N, N);
+  cctx.imageSmoothingEnabled = true;
+  cctx.globalCompositeOperation = 'destination-in';
+  cctx.drawImage(mask, 0, 0, N, N);
+  ctx.drawImage(comp, 0, 0);
+}
+
+function draw(t) {
+  ctx.clearRect(0, 0, N, N);
+  if (IMG['build-empty.jpg'].complete) ctx.drawImage(IMG['build-empty.jpg'], 0, 0, N, N);
+  if (!LOW) return [0, 0, 0];
+  const fin = ease(clamp01((t - 36) / 3));
+  STAGES.forEach((st, i) => drawMask(masks[i], t, st, fin));
+  // 1 · blocky mosaic, shimmering while it "thinks"
+  layer(LOW, masks[0], false, Math.sin(t * 9) * 2);
+  // 2 · soft blur
+  layer(MID, masks[1], true);
+  // 3 · sharp
+  layer(IMG['house.jpg'], masks[2], true);
+  // grain over everything still generating (stage 1 done, stage 3 not yet)
+  cctx.globalCompositeOperation = 'source-over';
+  cctx.clearRect(0, 0, N, N);
+  cctx.fillStyle = cctx.createPattern(NOISE[(t * 20 | 0) % 4], 'repeat');
+  cctx.fillRect(0, 0, N, N);
+  cctx.globalCompositeOperation = 'destination-in'; cctx.drawImage(masks[0], 0, 0, N, N);
+  cctx.globalCompositeOperation = 'destination-out'; cctx.drawImage(masks[2], 0, 0, N, N);
+  ctx.globalAlpha = .22; ctx.globalCompositeOperation = 'overlay'; ctx.drawImage(comp, 0, 0);
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+
+  // rings where photos land
+  rings = rings.filter((r) => t - r.t0 < 1);
+  for (const r of rings) {
+    const p = (t - r.t0);
+    ctx.strokeStyle = `rgba(255,255,255,${.8 * (1 - p)})`; ctx.lineWidth = 3 * (1 - p) + .5;
+    ctx.beginPath(); ctx.arc(r.x, r.y, 10 + p * 120, 0, Math.PI * 2); ctx.stroke();
+  }
+  // particles
+  particles = particles.filter((q) => t - q.t0 < q.dur + .35);
+  for (const q of particles) {
+    const raw = (t - q.t0) / q.dur; if (raw < 0) continue;
+    const u = ease(Math.min(1, raw)), v = 1 - u;
+    const x = v * v * q.x0 + 2 * v * u * q.cx + u * u * q.x1, y = v * v * q.y0 + 2 * v * u * q.cy + u * u * q.y1;
+    const a = raw < 1 ? 1 : 1 - (raw - 1) * q.dur / .35;
+    ctx.globalAlpha = Math.max(0, a);
+    if (q.spark) { ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 8; }
+    else { ctx.fillStyle = q.c; ctx.shadowBlur = 0; }
+    ctx.fillRect(x - q.s / 2, y - q.s / 2, q.s, q.s);
+  }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+  const roomP = [[0, 0], [0, 0], [0, 0]];
+  const last = STAGES[2];
+  for (const b of BLOBS) if (b.room >= 0) { roomP[b.room][0] += ease(clamp01((t - b.t0) / (last.off + last.dur))); roomP[b.room][1]++; }
+  return roomP.map(([s, n]) => (fin >= 1 ? 1 : s / n));
 }
 
 function startBuild() {
@@ -182,7 +282,8 @@ function startBuild() {
   sec.classList.remove('done');
   $('#step-in').hidden = true;
   ['t-living', 't-kitchen', 't-stairs'].forEach((id) => $('#' + id).classList.remove('show'));
-  BLOBS.forEach((b) => (b.spawned = false));
+  BLOBS.forEach((b) => { b.spawned = false; b.burst = false; });
+  particles = []; rings = [];
   // friends panel: you + picked friends (max 5 rows shown)
   const chosen = PEOPLE.filter((p) => picked.has(p.id));
   const shown = chosen.slice(0, 5);
@@ -205,7 +306,6 @@ function startBuild() {
     more.innerHTML = `<span class="fn" style="padding-left:4px">+${chosen.length - shown.length} more</span><span class="st">link sent</span>`;
     box.append(more);
   }
-  if (IMG['build-wire.png'].complete) prepWire(); else IMG['build-wire.png'].onload = prepWire;
   build.t = 0; build.done = false; build.last = performance.now();
   if (!build.running) { build.running = true; requestAnimationFrame(tick); }
 }
@@ -234,54 +334,6 @@ function flyPhoto(toX, toY) {
   ], { duration: 1500 / Math.sqrt(speed), easing: 'cubic-bezier(.35,.1,.3,1)' }).onfinish = () => el.remove();
 }
 
-function draw(t) {
-  ctx.clearRect(0, 0, N, N);
-  if (IMG['build-empty.jpg'].complete) ctx.drawImage(IMG['build-empty.jpg'], 0, 0, N, N);
-  // wireframe rises from the floor up
-  const wp = ease(clamp01((t - 1.2) / 7));
-  if (wp > 0) {
-    wctx.globalCompositeOperation = 'source-over';
-    wctx.clearRect(0, 0, N, N);
-    wctx.drawImage(wireGlow, 0, 0);
-    const y = N * (1.05 - 1.25 * wp);
-    const g = wctx.createLinearGradient(0, y - 60, 0, y + 60);
-    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,1)');
-    wctx.globalCompositeOperation = 'destination-in';
-    wctx.fillStyle = g; wctx.fillRect(0, 0, N, N);
-    ctx.globalAlpha = 1 - .6 * ease(clamp01((t - 34) / 4));
-    ctx.drawImage(wireC, 0, 0);
-    ctx.globalAlpha = 1;
-    // scan line glow at the build front
-    if (wp < 1) {
-      const sg = ctx.createLinearGradient(0, y - 8, 0, y + 8);
-      sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(.5, 'rgba(255,255,255,.7)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = sg; ctx.fillRect(0, y - 8, N, 16);
-    }
-  }
-  // finished house fades in blob by blob
-  mctx.clearRect(0, 0, mk.width, mk.height);
-  const h = mk.width / 1024;
-  const roomP = [[0, 0], [0, 0], [0, 0]];
-  for (const b of BLOBS) {
-    const p = ease(clamp01((t - b.t0) / b.dur));
-    if (b.room >= 0) { roomP[b.room][0] += p; roomP[b.room][1] += 1; }
-    if (p <= 0) continue;
-    const r = b.r * h * (0.35 + 0.85 * p);
-    const g = mctx.createRadialGradient(b.x * h, b.y * h, 0, b.x * h, b.y * h, r);
-    g.addColorStop(0, `rgba(0,0,0,${p})`); g.addColorStop(.6, `rgba(0,0,0,${p})`); g.addColorStop(1, 'rgba(0,0,0,0)');
-    mctx.fillStyle = g; mctx.beginPath(); mctx.arc(b.x * h, b.y * h, r, 0, Math.PI * 2); mctx.fill();
-  }
-  const fin = ease(clamp01((t - 35.5) / 3));
-  if (fin > 0) { mctx.fillStyle = `rgba(0,0,0,${fin})`; mctx.fillRect(0, 0, mk.width, mk.height); }
-  cctx.globalCompositeOperation = 'source-over';
-  cctx.clearRect(0, 0, N, N);
-  if (IMG['house.jpg'].complete) cctx.drawImage(IMG['house.jpg'], 0, 0, N, N);
-  cctx.globalCompositeOperation = 'destination-in';
-  cctx.drawImage(mk, 0, 0, N, N);
-  ctx.drawImage(comp, 0, 0);
-  return roomP.map(([s, n]) => (fin >= 1 ? 1 : s / n));
-}
-
 function tick(now) {
   const dt = Math.min(.1, (now - build.last) / 1000); build.last = now;
   if (current !== 'build' && current !== 'video') { build.running = false; return; }
@@ -293,12 +345,16 @@ function tick(now) {
   if (rooms[1] >= .999) $('#t-kitchen').classList.add('show');
   if (rooms[2] >= .999) $('#t-stairs').classList.add('show');
 
-  // spawn photos flying into each blob as it starts
-  for (const b of BLOBS) if (!b.spawned && t >= b.t0 - .6) {
-    b.spawned = true;
-    const s = 430 / 1024;
-    for (let i = 0; i < 2; i++) setTimeout(() => flyPhoto(b.x * s + (Math.random() - .5) * 40, b.y * s + (Math.random() - .5) * 40), i * 260 / speed);
+  // photos fly in from friends, land above an area and burst into the points that generate it
+  const s = 430 / 1024;
+  for (const b of BLOBS) {
+    if (!b.spawned && t >= b.t0 - 1.5) { b.spawned = true; b.lx = b.x + (Math.random() - .5) * 60; b.ly = b.y - 40; flyPhoto(b.lx * s, b.ly * s); }
+    if (!b.burst && t >= b.t0 - .2) { b.burst = true; burst(b, b.lx * S, b.ly * S, t); }
   }
+  // clouds part as the first photos arrive
+  const cp = ease(clamp01((t - 4) / 5));
+  const cl = $('#build-clouds');
+  cl.style.opacity = 1 - cp; cl.style.transform = `scale(${1 + cp * .6})`;
 
   // friends: link sent → opened → adding photos → added ✓
   let photos = 38;
