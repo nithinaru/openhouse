@@ -103,7 +103,7 @@ export const prepare = internalQuery({
       new: {
         title: `the drop · ${trip.title.toLowerCase()}`,
         venue,
-        closesAt: isDemo ? endOfDayInSanFrancisco(trip.startAt) : Date.now() + OPEN_MS,
+        closesAt: isDemo ? endOfDayInSanFrancisco(trip.startAt) : null,
       },
     };
   },
@@ -133,10 +133,11 @@ export const insert = internalMutation({
 export const create = action({
   args: { userId: v.id('users'), tripId: v.id('trips') },
   handler: async (ctx, args): Promise<DropView> => {
-    const prepared: { existing: DropView } | { new: { title: string; venue: Doc<'drops'>['venue']; closesAt: number } } =
+    const prepared: { existing: DropView } | { new: { title: string; venue: Doc<'drops'>['venue']; closesAt: number | null } } =
       await ctx.runQuery(internal.drops.prepare, args);
     if ('existing' in prepared) return prepared.existing;
-    const { title, venue, closesAt } = prepared.new;
+    const { title, venue } = prepared.new;
+    const closesAt = prepared.new.closesAt ?? Date.now() + OPEN_MS;
 
     const client = whop();
     const product = await client.products.create({ title, metadata: { tripId: args.tripId, userId: args.userId } });
@@ -166,12 +167,18 @@ export const get = query({
   },
 });
 
-async function wasThere(ctx: MutationCtx, userId: Id<'users'>, venue: Doc<'drops'>['venue']) {
+async function wasThere(ctx: MutationCtx, userId: Id<'users'>, drop: Doc<'drops'>) {
   const user = await ctx.db.get(userId);
   if (!user) throw new Error('User not found');
-  if (user.deviceId === DEMO_DEVICE_ID) return true;
+  if (user.deviceId === DEMO_DEVICE_ID && userId === drop.userId) return true;
+  const located = new Set<Id<'moments'>>();
+  for await (const photo of ctx.db.query('photos').withIndex('by_userId', (q) => q.eq('userId', userId))) {
+    if (photo.lat === undefined || photo.lng === undefined) continue;
+    if (metersBetween({ lat: photo.lat, lng: photo.lng }, drop.venue) <= PRESENCE_M) return true;
+    located.add(photo.momentId);
+  }
   for await (const moment of ctx.db.query('moments').withIndex('by_userId', (q) => q.eq('userId', userId))) {
-    if (metersBetween(moment, venue) <= PRESENCE_M) return true;
+    if (!located.has(moment._id) && metersBetween(moment, drop.venue) <= PRESENCE_M) return true;
   }
   return false;
 }
@@ -200,7 +207,7 @@ export const startOrder = internalMutation({
       if (!size || !SIZES.has(size)) throw new Error(`The ${piece} needs a size from xs to xxl`);
       return { piece, size };
     });
-    if (edition === 'was_there' && !(await wasThere(ctx, userId, drop.venue))) throw new Error('not at the venue');
+    if (edition === 'was_there' && !(await wasThere(ctx, userId, drop))) throw new Error('not at the venue');
 
     const price = cartCents(cart);
     const orderId = await ctx.db.insert('orders', {
