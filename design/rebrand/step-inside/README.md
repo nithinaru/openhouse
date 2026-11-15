@@ -27,17 +27,24 @@ All photos are AI-generated placeholders of one room in four camera styles; peop
 
 ![step in → walk forward](streetview-step-in-preview.gif)
 
-`streetview-step-in.mp4` (13s, 780×1688) — one clean pass through the finished moment:
+`streetview-step-in.mp4` (17s, 780×1688). You stand *inside* the room and the photos are the room around you, Street View-style:
 
 1. **0–1.5s** ready screen; tap **step in**.
-2. **1.5–3s** camera dives into the floating house, through the living room.
-3. **3–6.5s** standing in the living room (Street View-style): the room is built from the iPhone photo, and other people's photos hang in space where they were taken (@theo digicam, @ines film, @sol 0.5x). A floor chevron points to the kitchen; the view sways as you look around.
-4. **6.5–7.6s** tap the chevron → push forward: the room stretches past you, the photos fly by, the mini-map dot slides into the kitchen.
-5. **7.6–13s** standing in the kitchen with a whole new set of photos around you (@jules digicam, @maya film, @sol 0.5x) and a new chevron toward the stairs.
+2. **1.5–3s** the camera dives into the floating house.
+3. **3–9s** inside the living room. The 3D room underneath is a rough, dim reconstruction with dark gaps where nobody shot. Over it, ~19 photos are cut in all the way around you, mostly people **posing** (group squeezes, couples, friends on the stairs, a mirror selfie, the sofa squad) plus a few candids, at their own size, height and tilt. Some are white-bordered prints, some hard cuts, some feather into the room; most don't line up with their neighbours. Any direction shows 3–5 at once. A chip names whose photo is in front of you.
+4. **9–10.4s** turn to the kitchen doorway, tap the floor arrow, and get pushed forward through it.
+5. **10.4–17s** inside the kitchen: a whole new set of ~18 cut-up photos (candy toasts, the punch bowl, the fridge line-up, the skeleton chef, a dance dip), plus an arrow back to the living room.
 
-Source lives in `streetview/`: `index.html` is the scene (one `render(t)` function, autoplays when opened in a browser), `capture.mjs` renders frames with headless Chrome, `encode-mp4.swift` turns them into the MP4.
+### How the photos were made (all AI-generated placeholders)
+
+1. One seamless 360° panorama per room (`streetview/assets/pano-*.jpg`), shown blurred and dimmed as the reconstruction.
+2. For every photo, `streetview/crop_spot.py` cuts a reference from the panorama at the spot and shape it was taken (square, strip, landscape, portrait).
+3. The image model makes a new photo there: mostly posed shots (`pose-*.jpg`), plus candids (`cand-*.jpg`), each in a camera style (iPhone, flash digicam with date stamp, disposable film, 0.5x, selfie).
+4. `streetview/index.html` wraps the panorama on a 3D cylinder and scatters the photos around it, each marked `cut`, `print` or `blend`.
+
+### Re-render
 
 ```bash
-node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 13000
+node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 17000
 swift design/rebrand/step-inside/streetview/encode-mp4.swift /tmp/frames design/rebrand/step-inside/streetview-step-in.mp4
 ```
