@@ -29,3 +29,13 @@ Every way Openhouse makes money runs through Whop. Convex calls the Whop SDK ser
 | Host fee payout | `transfers.create`, `ledgerAccounts.retrieve` for the balance | `src/features/host/api.ts` (backend: `host:payout`) |
 
 Openhouse has no payments code of its own. Whop holds the catalog (products, plans, stock), takes the money, runs subscriptions, issues discount codes, tracks affiliates, and moves the host's share out with transfers. Convex keeps only the ids and the state the app needs to render, and it learns about money from Whop's webhooks. That is what we mean by Whop as the business backend: a host like YC gets a store, a membership, promo codes, a referral program and payouts from one API, and Openhouse is the app on top.
+
+## World Labs: build a stop in 3D
+
+On a stop, **build this room in 3d** sends up to 8 of the stop's photos to World Labs Marble and opens the finished world in Walk in.
+
+- **What is real:** `convex/worlds.ts` calls `POST https://api.worldlabs.ai/marble/v1/worlds:generate` (multi-image, reconstruction mode, auto layout). `worlds:poll` then checks `/marble/v1/operations/{id}` every 10 s for up to 10 min and saves the 500k SPZ splat (`assets.splats.spz_urls`) and `world_marble_url` on the `worlds` row. `trips:get` already passes ready worlds through as `worldSplatUrl` / `worldViewerUrl`. The Walk in viewer (Spark) rotates the SPZ 180° about X to undo Marble's OpenCV frame and shows a "built with world labs" chip. Generation takes about 5 minutes.
+- **Demo mode (no key):** World Labs is never called. `worlds:build` inserts a row whose `operationId` starts with `demo:`, and 25 s later it turns ready with the public sample splat. Everything returns `mode: 'demo'`, and the build screen says "demo world · add a world labs key for real generation". If the backend can't take the build (not deployed, offline, or a local-only stop), the app runs the same 25 s demo on the device.
+- **Turn on real generation:** `npx convex env set WORLDLABS_API_KEY <key>` (World Labs bills a $5 minimum in API credit). Photos have to be reachable at public URLs, which the uploaded Convex thumbnails are.
+
+Code: `convex/worlds.ts` (`worlds:build`, `worlds:forMoment`, internal `worlds:poll`), `src/features/worlds/*`, `src/app/world/[id].tsx`, `src/features/walkin/WalkInViewer.tsx`.

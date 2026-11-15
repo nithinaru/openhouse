@@ -1,10 +1,12 @@
 import { DeviceMotion } from 'expo-sensors';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 
 import type { Moment, Photo } from '@/lib/types';
 import { colors, space, type } from '@/theme';
+import { Chip } from '@/theme/ui';
 
 import { buildViewerHtml, injectGyro, type ViewerMessage, type ViewerNode } from './viewerHtml';
 
@@ -20,8 +22,13 @@ export const SAMPLE_SPLAT_URL = 'https://sparkjs.dev/assets/splats/valley.spz';
 type PhotoWithSplat = Photo & { splatUrl?: string };
 
 export type WalkInSource =
-  | { kind: 'splat'; html: string; walk: boolean; sample: boolean }
+  | { kind: 'splat'; html: string; walk: boolean; sample: boolean; splatUrl?: string }
   | { kind: 'hosted'; uri: string };
+
+/** Who made the world, for the small chip in the corner. */
+export type WalkInBadge = 'worldlabs' | 'demo';
+
+const isWorldLabsUrl = (url?: string) => !!url && /worldlabs\.ai/i.test(url);
 
 function heroPhoto(moment: Moment): Photo | undefined {
   return moment.photos.find((p) => p.id === moment.heroPhotoId) ?? moment.photos[0];
@@ -29,14 +36,37 @@ function heroPhoto(moment: Moment): Photo | undefined {
 
 // Priority: per-photo splats (walk mode) -> moment.worldSplatUrl (SHARP .ply on
 // the hero photo) -> moment.worldViewerUrl (World Labs hosted viewer, stretch)
-// -> the public sample splat.
-export function pickSource(moment: Moment | undefined, palette: string[]): WalkInSource {
+// -> the public sample splat. `override` (a World Labs world just built) wins over all.
+export function pickSource(moment: Moment | undefined, palette: string[], override?: { splatUrl?: string }): WalkInSource {
   const common = {
     palette,
     fogColor: colors.sky,
     arrowColor: colors.bg,
     textColor: colors.text,
   };
+
+  // A single world splat. World Labs Marble SPZ files are in the OpenCV frame (y down,
+  // z forward), same as SHARP; Marble's own viewer rotates them 180 degrees about X, which is
+  // exactly flipX (quaternion (1,0,0,0)). Marble centres the world on the capture point, so the
+  // origin is the right camera spot. The demo sample sits at z = -3 like Spark's examples.
+  const single = (splatUrl: string): WalkInSource => {
+    const hero = moment ? heroPhoto(moment) : undefined;
+    const sample = splatUrl === SAMPLE_SPLAT_URL;
+    return {
+      kind: 'splat',
+      walk: false,
+      sample,
+      splatUrl,
+      html: buildViewerHtml({
+        ...common,
+        nodes: [{ splatUrl, photoUri: hero?.uri, headingDeg: hero?.headingDeg }],
+        flipX: true,
+        position: sample ? [0, 0, -3] : [0, 0, 0],
+      }),
+    };
+  };
+
+  if (override?.splatUrl) return single(override.splatUrl);
 
   const walkPhotos = (moment?.photos as PhotoWithSplat[] | undefined)
     ?.filter((p) => !!p.splatUrl)
@@ -56,18 +86,7 @@ export function pickSource(moment: Moment | undefined, palette: string[]): WalkI
     };
   }
 
-  if (moment?.worldSplatUrl) {
-    const hero = heroPhoto(moment);
-    return {
-      kind: 'splat',
-      walk: false,
-      sample: false,
-      html: buildViewerHtml({
-        ...common,
-        nodes: [{ splatUrl: moment.worldSplatUrl, photoUri: hero?.uri, headingDeg: hero?.headingDeg }],
-      }),
-    };
-  }
+  if (moment?.worldSplatUrl) return single(moment.worldSplatUrl);
 
   if (moment?.worldViewerUrl) return { kind: 'hosted', uri: moment.worldViewerUrl };
 
@@ -88,11 +107,18 @@ export function pickSource(moment: Moment | undefined, palette: string[]): WalkI
 type Props = {
   moment?: Moment;
   palette?: string[];
+  /** A splat to open instead of the moment's own (e.g. a World Labs world just built). */
+  splatUrl?: string;
+  /** Corner chip. Defaults to 'worldlabs' when the splat is on the World Labs CDN. */
+  badge?: WalkInBadge;
   onNodeChange?: (index: number) => void;
 };
 
-export function WalkInViewer({ moment, palette = [], onNodeChange }: Props) {
-  const source = useMemo(() => pickSource(moment, palette), [moment, palette]);
+export function WalkInViewer({ moment, palette = [], splatUrl, badge, onNodeChange }: Props) {
+  const source = useMemo(() => pickSource(moment, palette, { splatUrl }), [moment, palette, splatUrl]);
+  const insets = useSafeAreaInsets();
+  const shownBadge: WalkInBadge | undefined =
+    badge ?? (source.kind === 'splat' && isWorldLabsUrl(source.splatUrl) ? 'worldlabs' : undefined);
   // react-native-webview 14 types default the generic to `undefined`, which
   // collapses props to `never`; pin it to an empty object.
   const webRef = useRef<WebView<object>>(null);
@@ -174,11 +200,24 @@ export function WalkInViewer({ moment, palette = [], onNodeChange }: Props) {
           <Text style={[type.caption, styles.errorText, styles.gap]}>{error}</Text>
         </View>
       ) : null}
+      {shownBadge ? (
+        <View pointerEvents="none" style={[styles.badge, { top: insets.top + space.sm + 6 }]}>
+          <Chip
+            tone="media"
+            label={shownBadge === 'demo' ? 'demo world · world labs' : 'built with world labs'}
+            style={styles.badgeChip}
+            textStyle={styles.badgeText}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  badge: { position: 'absolute', right: space.md },
+  badgeChip: { minHeight: 28, paddingHorizontal: space.sm + 2 },
+  badgeText: { fontSize: 12 },
   fill: { flex: 1, backgroundColor: colors.sky },
   center: { alignItems: 'center', justifyContent: 'center', padding: space.xl },
   errorBg: { backgroundColor: colors.sky },

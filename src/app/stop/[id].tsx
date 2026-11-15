@@ -20,6 +20,7 @@ import { peopleAt } from '@/features/replay/people';
 import { useMoment } from '@/features/replay/useTrip';
 import { AngleCompare } from '@/features/stop/AngleCompare';
 import { HeroPager } from '@/features/stop/HeroPager';
+import { useWorld } from '@/features/worlds/useWorld';
 import type { Person, Photo } from '@/lib/types';
 import { colors, ease, radius, shadow, space, type } from '@/theme';
 import { ArrowIcon, ChatIcon, CloudIcon, SunIcon } from '@/theme/icons';
@@ -38,6 +39,8 @@ export default function StopScreen() {
   const reduced = useReducedMotion();
   const [page, setPage] = useState(0);
   const { plus } = useEntitlements(tripId ?? trip.id);
+  // World Labs world for this stop (convex worlds:forMoment); refreshed on focus.
+  const { world, refresh: refreshWorld } = useWorld(id);
 
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollY = useSharedValue(0);
@@ -59,7 +62,8 @@ export default function StopScreen() {
     useCallback(() => {
       walking.current = false;
       if (walk.get() > 0) walk.set(withTiming(0, { duration: 380, easing: EASE_OUT }));
-    }, [walk]),
+      refreshWorld();
+    }, [walk, refreshWorld]),
   );
 
   const contentFade = useAnimatedStyle(() => ({ opacity: 1 - Math.min(1, walk.get() * 2.5) }));
@@ -85,13 +89,28 @@ export default function StopScreen() {
   const pad = space.lg;
   const contentW = width - pad * 2;
 
+  // Walk in is ready when the stop already has a splat (SHARP, per-photo, or a World Labs world).
+  const worldReady = world?.status === 'ready' && !!(world.splatUrl || world.viewerUrl);
+  const hasWorld =
+    worldReady ||
+    !!moment.worldSplatUrl ||
+    !!moment.worldViewerUrl ||
+    photos.some((p) => !!(p as Photo & { splatUrl?: string }).splatUrl);
+  const building = !hasWorld && world?.status === 'pending';
+
   const goWalk = () => {
-    router.push({ pathname: '/walkin/[id]', params: { id: moment.id } });
+    const splat = worldReady && world?.splatUrl ? { splat: world.splatUrl, badge: world.mode === 'demo' ? 'demo' : 'worldlabs' } : {};
+    router.push({ pathname: '/walkin/[id]', params: { id: moment.id, tripId: tripId ?? trip.id, ...splat } });
   };
 
   const walkIn = () => {
     if (!plus) {
       router.push({ pathname: '/plus', params: { from: 'walkin', tripId: tripId ?? trip.id } });
+      return;
+    }
+    if (!hasWorld) {
+      // No 3d yet: build this room with World Labs (demo mode without a key).
+      router.push({ pathname: '/world/[id]', params: { id: moment.id, tripId: tripId ?? trip.id } });
       return;
     }
     if (walking.current) return;
@@ -231,9 +250,9 @@ export default function StopScreen() {
         <View style={styles.actions}>
           <View style={{ flex: 1 }}>
             <Button
-              label={plus ? 'walk in' : 'walk in · plus'}
+              label={!plus ? 'walk in · plus' : hasWorld ? 'walk in' : building ? 'building in 3d…' : 'build this room in 3d'}
               onPress={walkIn}
-              accessibilityHint="step inside this moment in 3d"
+              accessibilityHint={hasWorld ? 'step inside this moment in 3d' : 'turns these photos into a 3d room with world labs'}
               trailing={<ArrowIcon color={colors.accentInk} />}
             />
           </View>

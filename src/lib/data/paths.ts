@@ -20,6 +20,10 @@ export const FN = {
   usersEnsure: { path: 'users:ensure', kind: 'mutation', deployed: true }, // { deviceId, name } -> { userId, name, shareCode }
   pairingsPair: { path: 'pairings:pair', kind: 'mutation', deployed: true }, // { userId, code, lat, lng } -> { pairingId, friendName, shareCode }
 
+  // World Labs Marble worlds (convex/worlds.ts). Demo mode when WORLDLABS_API_KEY is unset.
+  worldsBuild: { path: 'worlds:build', kind: 'action', deployed: false }, // { momentId, imageUrls[] } -> { worldId, mode: 'live'|'demo', reused }
+  worldsForMoment: { path: 'worlds:forMoment', kind: 'query', deployed: false }, // { momentId } -> { worldId, status, splatUrl?, viewerUrl?, mode, startedAt, expectedMs } | null
+
   // Not in convex/** yet.
   pairingsForUser: { path: 'pairings:forUser', kind: 'query', deployed: false }, // guessed name, not in CAPY.md
   splatsForMoment: { path: 'splats:forMoment', kind: 'query', deployed: false }, // { momentId }
