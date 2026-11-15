@@ -1,6 +1,6 @@
 // Session store for contacts: who we found, who you followed, who you invited.
 // A tiny module-level store read through useSyncExternalStore, so any screen can ask
-// "which friends are on openhouse" without a provider. Lives in memory only.
+// "which friends are on wish you were here" without a provider. Lives in memory only.
 
 import { useSyncExternalStore } from 'react';
 
@@ -86,7 +86,7 @@ export function inviteMany(ids: string[]): number {
 export type Friend = Person & { followed: boolean };
 
 /**
- * Friends on openhouse, demo friends first, then whoever "was there", then a–z.
+ * Friends on wish you were here, demo friends first, then whoever "was there", then a–z.
  * Before contacts are synced this is just the demo trip's people (rohan), so a
  * "who's inside" strip is never empty.
  */

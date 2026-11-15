@@ -38,7 +38,7 @@ type State =
 
 function failureMessage(e: unknown): string {
   if (e instanceof IngestError) {
-    if (e.code === 'denied') return 'openhouse needs photo access to find your stops. you can allow it in settings.';
+    if (e.code === 'denied') return 'wish you were here needs photo access to find your stops. you can allow it in settings.';
     if (e.code === 'no-geotagged') return 'none of your recent photos have a location.';
   }
   return 'something went wrong reading your photos.';
@@ -224,7 +224,7 @@ function AskPhotos({
         {error ? (
           <Button variant="quiet" label="see a sample day" onPress={onSample} />
         ) : (
-          <Text style={styles.fine}>openhouse reads when and where each photo was taken</Text>
+          <Text style={styles.fine}>wish you were here reads when and where each photo was taken</Text>
         )}
       </View>
     </View>

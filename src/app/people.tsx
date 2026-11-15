@@ -105,7 +105,7 @@ function Scanner() {
     const code = parsePairCode(data);
     if (!code) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setState({ kind: 'error', message: 'that is not an openhouse code' });
+      setState({ kind: 'error', message: 'that is not an wish you were here code' });
       return;
     }
 
@@ -145,7 +145,7 @@ function Scanner() {
   if (!permission.granted) {
     return (
       <View style={[styles.center, { gap: space.md }]}>
-        <Text style={[type.body, { textAlign: 'center' }]}>openhouse needs the camera to scan a friend’s code</Text>
+        <Text style={[type.body, { textAlign: 'center' }]}>wish you were here needs the camera to scan a friend’s code</Text>
         {permission.canAskAgain ? (
           <PrimaryButton label="allow camera" onPress={requestPermission} />
         ) : (
@@ -182,7 +182,7 @@ function Scanner() {
           <PrimaryButton label="try again" onPress={reset} />
         </View>
       ) : (
-        <Text style={[type.caption, { textAlign: 'center' }]}>point at a friend’s openhouse code</Text>
+        <Text style={[type.caption, { textAlign: 'center' }]}>point at a friend’s wish you were here code</Text>
       )}
     </View>
   );

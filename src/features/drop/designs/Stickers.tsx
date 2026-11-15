@@ -122,7 +122,7 @@ export function Stickers({ art, side, edition, width }: DesignProps & { width: n
 
       {ghost ? (
         <SvgText x={100} y={238} fontSize={3.6} fontFamily={MONO} fill="rgba(10,10,10,0.4)" textAnchor="middle" letterSpacing={0.6}>
-          {`openhouse · the drop · ${art.dateStamp} · peel slowly`}
+          {`wish you were here · the drop · ${art.dateStamp} · peel slowly`}
         </SvgText>
       ) : null}
     </Svg>

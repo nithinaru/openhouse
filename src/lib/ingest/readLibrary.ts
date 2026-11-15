@@ -253,7 +253,7 @@ export async function ingestRecent(
 function logAssetInfo(info: MediaLibrary.AssetInfo): void {
   const exif = (info.exif ?? {}) as Record<string, unknown>;
   console.log(
-    '[openhouse/ingest] raw asset info\n' +
+    '[wywh/ingest] raw asset info\n' +
       JSON.stringify(
         {
           id: info.id,
@@ -286,7 +286,7 @@ export async function logOneAssetInfo(): Promise<void> {
   });
   const asset = page.assets.find((a) => a.location) ?? page.assets[0];
   if (!asset) {
-    console.log('[openhouse/ingest] no photos in library');
+    console.log('[wywh/ingest] no photos in library');
     return;
   }
   logAssetInfo(await MediaLibrary.getAssetInfoAsync(asset, { shouldDownloadFromNetwork: false }));

@@ -35,7 +35,7 @@ const send = (method, params = {}) => new Promise((res) => { const i = ++id; pen
 
 await send('Page.enable');
 await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
-const url = pathToFileURL(path.join(here, 'index.html')).href + '?t=0';
+const url = pathToFileURL(path.join(here, 'index.html')).href + '?t=0' + (process.env.QUERY ? '&' + process.env.QUERY : '');
 await send('Page.navigate', { url });
 await sleep(2500); // images + fonts
 await send('Runtime.evaluate', { expression: 'document.fonts.ready', awaitPromise: true });

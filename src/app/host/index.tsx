@@ -60,7 +60,7 @@ export default function HostScreen() {
             accessible={false}
           >
             <Text style={type.display} accessibilityRole="header">
-              openhouse for hosts
+              wish you were here for hosts
             </Text>
           </Pressable>
           <Text style={[type.callout, { color: colors.textMuted, marginTop: space.xs }]}>
@@ -71,7 +71,7 @@ export default function HostScreen() {
         <Animated.View entering={enter(1)} style={styles.tiles}>
           <StatTile label="gross revenue" value={stats.grossCents} format={money} big />
           <StatTile label="orders" value={stats.orders} />
-          <StatTile label="openhouse+ members" value={stats.members} />
+          <StatTile label="plus members" value={stats.members} />
         </Animated.View>
 
         <Animated.View entering={enter(2)}>

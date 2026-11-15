@@ -20,7 +20,7 @@ function expiryLine(expiresAt: number): string {
 
 async function shareCode(code: string, percentOff: number, friendName?: string) {
   await Share.share({
-    message: `${friendName ? `${friendName.toLowerCase()}, ` : ''}you were there. use ${code} for ${percentOff}% off the drop on openhouse`,
+    message: `${friendName ? `${friendName.toLowerCase()}, ` : ''}you were there. use ${code} for ${percentOff}% off the drop on wish you were here`,
   }).catch(() => undefined);
 }
 

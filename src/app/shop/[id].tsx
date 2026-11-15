@@ -52,7 +52,7 @@ export default function ShopScreen() {
           <FriendPicker people={trip.people} selected={giftId} onSelect={setGiftId} />
           {giftTo ? (
             <Text style={type.caption}>
-              {giftTo.name.toLowerCase()} gets it in openhouse the moment whop confirms your payment
+              {giftTo.name.toLowerCase()} gets it in wish you were here the moment whop confirms your payment
             </Text>
           ) : null}
         </Section>

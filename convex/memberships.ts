@@ -30,7 +30,7 @@ export const checkout = action({
       mode: 'payment',
       metadata: { userId },
       variant: {
-        title: 'Openhouse+',
+        title: 'Wish You Were Here Plus',
         product_id: env.WHOP_PLUS_PRODUCT_ID,
         billing_type: 'renewal',
         billing_period: 30,

@@ -82,7 +82,7 @@ export function PlusLock({ onPress, label = 'plus', style }: { onPress?: () => v
       label={label}
       icon={<LockIcon size={12} color={colors.text} />}
       onPress={onPress}
-      accessibilityLabel="unlock with openhouse plus"
+      accessibilityLabel="unlock with plus"
       style={style}
     />
   );

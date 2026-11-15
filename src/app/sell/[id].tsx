@@ -120,7 +120,7 @@ export default function SellScreen() {
 
             <Section title="price" right={<Text style={styles.bigPrice}>${price}</Text>}>
               <PriceSlider value={price} onChange={setPrice} />
-              <Text style={type.caption}>you keep {formatCents(keep)} a sale after the 10% openhouse fee</Text>
+              <Text style={type.caption}>you keep {formatCents(keep)} a sale after the 10% wish you were here fee</Text>
             </Section>
 
             {problem?.reason === 'soon' ? (

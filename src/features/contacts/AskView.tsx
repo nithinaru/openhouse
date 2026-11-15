@@ -85,7 +85,7 @@ export function AskView({
         <Text style={[type.body, styles.center, { color: colors.textMuted }]}>
           {mode === 'ask'
             ? 'connect your contacts to see the day from where your friends stood.'
-            : 'openhouse only reads names on your phone to find your friends. turn contacts on in settings, or peek with sample friends.'}
+            : 'wish you were here only reads names on your phone to find your friends. turn contacts on in settings, or peek with sample friends.'}
         </Text>
       </View>
 

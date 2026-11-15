@@ -23,7 +23,7 @@ export type CheckoutStart = { url: string; orderId: string };
 
 const COPY: Record<Unavailable, string> = {
   soon: 'coming online. whop checkout for this lands with the next backend deploy',
-  offline: "can't reach openhouse right now. try again in a moment",
+  offline: "can't reach wish you were here right now. try again in a moment",
   error: 'checkout hit a snag. try again',
 };
 

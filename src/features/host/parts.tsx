@@ -228,7 +228,7 @@ export function PayoutCard({
 
 const SOURCES: { what: string; from: string }[] = [
   { what: 'gross revenue · orders · feed', from: 'payments (payment.succeeded webhook, payments.list)' },
-  { what: 'members', from: 'memberships (openhouse+ renewal plan)' },
+  { what: 'members', from: 'memberships (plus renewal plan)' },
   { what: 'sell-through', from: 'plans with stock (one per edition, unlimited_stock: false)' },
   { what: 'fee balance · payout', from: 'transfers (transfers.create) · ledgerAccounts balance' },
 ];

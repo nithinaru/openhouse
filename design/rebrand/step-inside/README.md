@@ -35,6 +35,10 @@ All photos are AI-generated placeholders of one room in four camera styles; peop
 4. **9–10.4s** turn to the kitchen doorway, tap the floor arrow, and get pushed forward through it.
 5. **10.4–17s** inside the kitchen: a whole new set of ~18 cut-up photos (candy toasts, the punch bowl, the fridge line-up, the skeleton chef, a dance dip), plus an arrow back to the living room.
 
+### Half-photos variant
+
+`streetview-step-in-half.mp4` is the same walkthrough with every other photo (10 in the living room, 9 in the kitchen), so more of the rough reconstruction shows between them. Open `streetview/index.html?half=1` to view it live.
+
 ### How the photos were made (all AI-generated placeholders)
 
 1. One seamless 360° panorama per room (`streetview/assets/pano-*.jpg`), shown blurred and dimmed as the reconstruction.
@@ -47,4 +51,8 @@ All photos are AI-generated placeholders of one room in four camera styles; peop
 ```bash
 node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames 30 17000
 swift design/rebrand/step-inside/streetview/encode-mp4.swift /tmp/frames design/rebrand/step-inside/streetview-step-in.mp4
+
+# half-photos variant
+QUERY=half=1 node design/rebrand/step-inside/streetview/capture.mjs /tmp/frames-half 30 17000
+swift design/rebrand/step-inside/streetview/encode-mp4.swift /tmp/frames-half design/rebrand/step-inside/streetview-step-in-half.mp4
 ```

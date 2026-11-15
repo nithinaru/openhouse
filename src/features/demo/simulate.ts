@@ -54,7 +54,7 @@ export async function scheduleKeikiText(trip: Trip): Promise<'scheduled' | 'deni
     const people = trip.people.length;
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: 'Openhouse',
+        title: 'Wish You Were Here',
         body: `Your ${trip.title} is ready — ${plural(trip.moments.length, 'stop')}, ${people} ${people === 1 ? 'person' : 'people'}`,
         sound: true,
         data: { tripId: trip.id, url: `/trip/${trip.id}` },

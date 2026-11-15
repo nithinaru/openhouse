@@ -44,7 +44,7 @@ export default function PlusScreen() {
       contentContainerStyle={{ paddingTop: insets.top + space.lg, paddingBottom: insets.bottom + space.xl, paddingHorizontal: space.lg, gap: space.lg }}
     >
       <SheetHeader
-        eyebrow="openhouse+"
+        eyebrow="plus"
         title={HEADLINE[from ?? 'default'] ?? HEADLINE.default}
         onClose={close}
         onTitleLongPress={() => purchase.preview(true)}
@@ -80,7 +80,7 @@ export default function PlusScreen() {
         <Animated.View entering={FadeIn.duration(duration.base)} style={{ gap: space.md }}>
           <Confirmed
             palette={[colors.sky, colors.pink, colors.text, colors.skyDeep]}
-            detail="openhouse+ · $5 a month · billed by whop"
+            detail="plus · $5 a month · billed by whop"
             next={[
               { label: 'every poster style is open', detail: 'night map and field notes are on the frame screen' },
               { label: 'walk in anywhere', detail: 'no limit on 3d stops' },
@@ -95,7 +95,7 @@ export default function PlusScreen() {
             {formatCents(PLUS_PRICE_CENTS)} a month
           </Text>
           <Text style={[type.caption, { textAlign: 'center' }]}>cancel anytime from your whop account</Text>
-          <Button label={`start openhouse+ · ${formatCents(PLUS_PRICE_CENTS)}/mo`} onPress={join} loading={purchase.busy} />
+          <Button label={`start plus · ${formatCents(PLUS_PRICE_CENTS)}/mo`} onPress={join} loading={purchase.busy} />
           <PurchaseStatus purchase={purchase} />
           <Button variant="quiet" label="not now" onPress={close} />
         </View>

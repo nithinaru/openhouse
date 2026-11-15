@@ -1,4 +1,4 @@
-// "who was there?" — ask for contacts, find who is already on openhouse, invite the rest.
+// "who was there?" — ask for contacts, find who is already on wish you were here, invite the rest.
 // Contacts are read and matched on the phone; invites are simulated. Nothing leaves it.
 
 import { router } from 'expo-router';

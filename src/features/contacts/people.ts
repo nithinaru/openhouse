@@ -1,4 +1,4 @@
-// Turns the raw address book into "your people": who is already on openhouse and who
+// Turns the raw address book into "your people": who is already on wish you were here and who
 // can be invited. Matching is simulated and deterministic (a hash of the name), so the
 // same phone shows the same friends every time. Nothing here touches the network.
 
@@ -79,10 +79,10 @@ export const SAMPLE: RawContact[] = [
   ['zoe bennett', 25],
 ].map(([name, img]) => ({ id: `sample-${name}`, name: name as string, uri: img ? face(img as number) : undefined }));
 
-/** Sample names that always land "on openhouse", to match the onboarding art. */
+/** Sample names that always land "on wish you were here", to match the onboarding art. */
 const SAMPLE_ON = new Set(['maya chen', 'theo park', 'ines alvarez', 'jules okafor']);
 
-/** The demo trip's people (rohan) always lead "on openhouse" so the story connects. */
+/** The demo trip's people (rohan) always lead "on wish you were here" so the story connects. */
 export function demoPeople(): Person[] {
   const angles = Object.values(demoTrip.theirAngles ?? {}).flat();
   return demoTrip.people.map((p, i) => {
@@ -125,7 +125,7 @@ export function buildPeople(raw: RawContact[], source: 'device' | 'sample'): Per
   raw.forEach((c) => add(c, source));
   if (pool.length < MIN_CROWD) SAMPLE.forEach((c) => add(c, 'sample'));
 
-  // ~25% of the crowd is "already on openhouse", by hash; at least 3 when there are enough.
+  // ~25% of the crowd is "already on wish you were here", by hash; at least 3 when there are enough.
   const scored = pool.map((c) => ({ c, h: hash(c.name) }));
   const onIds = new Set(
     scored.filter(({ c, h }) => (c.src === 'sample' ? SAMPLE_ON.has(c.name) : h % 100 < 25)).map(({ c }) => c.id),
@@ -133,7 +133,7 @@ export function buildPeople(raw: RawContact[], source: 'device' | 'sample'): Per
   if (onIds.size < 3 && pool.length >= 6) {
     [...scored].sort((a, b) => a.h - b.h).forEach(({ c }) => onIds.size < 3 && onIds.add(c.id));
   }
-  // Keep the "on openhouse" list short enough to read; the rest stay invitable.
+  // Keep the "on wish you were here" list short enough to read; the rest stay invitable.
   if (onIds.size > MAX_ON) {
     const keep = scored.filter(({ c }) => onIds.has(c.id)).sort((a, b) => a.h - b.h).slice(0, MAX_ON);
     onIds.clear();

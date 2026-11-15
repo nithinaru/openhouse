@@ -132,7 +132,7 @@ export function EmptyTrips() {
       </View>
       <Text style={[type.heading, { textAlign: 'center' }]}>no days yet</Text>
       <Text style={[type.caption, { textAlign: 'center', maxWidth: 260 }]}>
-        openhouse rebuilds where you went from the photos you already took. nothing to type.
+        wish you were here rebuilds where you went from the photos you already took. nothing to type.
       </Text>
     </View>
   );

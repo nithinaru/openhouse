@@ -1,4 +1,4 @@
-// The list: friends already on openhouse (follow / added), then everyone else a–z with
+// The list: friends already on wish you were here (follow / added), then everyone else a–z with
 // a search field, a letter index and an invite pill. Invites are simulated: the pill
 // flips, a haptic lands, a toast confirms. No SMS, no network.
 
@@ -47,7 +47,7 @@ export function FriendList({ onClose }: { onClose: () => void }) {
   const { rows, offsets, letters } = useMemo(() => {
     const rows: Row[] = [];
     if (on.length) {
-      rows.push({ kind: 'head', key: 'h-on', title: 'on openhouse', meta: `${on.length}` });
+      rows.push({ kind: 'head', key: 'h-on', title: 'already here', meta: `${on.length}` });
       on.forEach((p) => rows.push({ kind: 'friend', key: p.id, person: p }));
     }
     const letters: { letter: string; index: number }[] = [];
@@ -136,7 +136,7 @@ export function FriendList({ onClose }: { onClose: () => void }) {
         const isOn = followed.has(p.id);
         const sub = p.wasThere
           ? `was there · ${p.wasThere.photos} photos`
-          : `on openhouse · ${p.mutual ?? 1} mutual`;
+          : `already here · ${p.mutual ?? 1} mutual`;
         return (
           <View style={styles.row}>
             <Avatar uri={p.uri} initials={p.initials} tint={p.tint} size={48} />
@@ -190,7 +190,7 @@ export function FriendList({ onClose }: { onClose: () => void }) {
             your people
           </Text>
           <Text style={type.caption}>
-            {total} on openhouse · {toInvite} to invite{source === 'sample' ? ' · sample friends' : ''}
+            {total} already here · {toInvite} to invite{source === 'sample' ? ' · sample friends' : ''}
           </Text>
         </View>
         <CloseButton onPress={onClose} />

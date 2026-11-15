@@ -72,7 +72,7 @@ export function Pin({ art, side, edition, serial, width }: DesignProps & { width
           ))}
           <SvgText fontSize={7} fontFamily={MONO} fill="#5E4512" letterSpacing={1.4} textAnchor="middle">
             <TextPath href={`#${ids.top}`} startOffset="50%">
-              openhouse · the drop
+              wish you were here · the drop
             </TextPath>
           </SvgText>
           <SvgText fontSize={7} fontFamily={MONO} fill="#5E4512" letterSpacing={1.4} textAnchor="middle">

@@ -153,7 +153,7 @@ export function DemoPanel() {
           />
         </Section>
 
-        <Section title="Openhouse+">
+        <Section title="Plus">
           <Action
             label={`Plus lock: ${flags.plusLocked}`}
             detail={

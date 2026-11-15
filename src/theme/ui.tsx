@@ -579,7 +579,7 @@ export function Wordmark({
         style={[{ width, height: h - crop, overflow: 'hidden' }, style]}
         accessible
         accessibilityRole="header"
-        accessibilityLabel="openhouse"
+        accessibilityLabel="wish you were here"
       >
         <Image source={WORDMARK_CHROME} style={{ width, height: h, marginTop: -crop }} contentFit="cover" />
       </View>
@@ -592,7 +592,7 @@ export function Wordmark({
       suppressHighlighting
       accessibilityRole="header"
     >
-      openhouse
+      wish you were here
     </Text>
   );
 }

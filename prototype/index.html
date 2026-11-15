@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>wish you were here — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <div id="phone">
+    <div id="island"></div>
+
+    <!-- status bar (shared) -->
+    <div id="status" class="status">
+      <span class="time">9:41</span>
+      <svg width="78" height="14" viewBox="0 0 78 14" aria-hidden="true"><g fill="currentColor"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="0" width="3" height="14" rx="1"/><path d="M31 3.2c2.6 0 5 1 6.8 2.7l1.3-1.4A11.4 11.4 0 0 0 31 1.3 11.4 11.4 0 0 0 22.9 4.5l1.3 1.4A9.6 9.6 0 0 1 31 3.2Zm0 3.8c1.6 0 3 .6 4.1 1.6l1.3-1.4A7.8 7.8 0 0 0 31 5.1a7.8 7.8 0 0 0-5.4 2.1l1.3 1.4A6 6 0 0 1 31 7Zm0 3.7c.6 0 1.1.2 1.5.6L31 12.9l-1.5-1.6c.4-.4.9-.6 1.5-.6Z"/><rect x="47" y="1" width="25" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="49" y="3" width="21" height="8" rx="2"/><rect x="73.5" y="5" width="1.6" height="4" rx=".8" fill-opacity=".45"/></g></svg>
+    </div>
+
+    <!-- 1 · splash -->
+    <section class="screen active" id="s-splash">
+      <img class="splash-art" src="assets/splash.jpg" alt="">
+      <div class="splash-blend"></div>
+      <div class="splash-cta">
+        <p class="splash-line">step back inside.</p>
+        <button class="pill" data-go="photos">get started <span>🏠</span></button>
+        <p class="fine">got an invite link? <u>open it here</u></p>
+      </div>
+    </section>
+
+    <!-- 2 · photo access -->
+    <section class="screen" id="s-photos">
+      <header class="topbar"><button class="back" data-go="splash" aria-label="back">‹</button><div class="dots"><i class="on"></i><i></i><i></i><i></i></div><span class="skip">skip</span></header>
+      <h1 class="h1 center">let us see<br>the night</h1>
+      <p class="sub center">we find the photos from that night.<br>you pick what goes in.</p>
+      <div class="polaroids">
+        <div class="pol p1"><img src="assets/photos/p06.jpg" alt=""></div>
+        <div class="pol p2"><img src="assets/photos/p02.jpg" alt=""></div>
+        <div class="pol p3"><img src="assets/photos/p00.jpg" alt=""></div>
+        <span class="sticker s-dark st-a">only your circle 🔒</span>
+        <span class="sticker s-pink st-b">your camera roll · 2,310 photos</span>
+      </div>
+      <div class="bottom">
+        <button class="pill" id="allow-btn">allow photos <span>📸</span></button>
+        <p class="fine dark">faces &amp; locations never leave your circle</p>
+      </div>
+      <!-- iOS permission sheet -->
+      <div class="ios-dim" id="ios-alert" hidden>
+        <div class="ios-alert">
+          <div class="ios-body">
+            <b>“Wish You Were Here” Would Like to Access Your Photos</b>
+            <p>We look for photos taken at the same place and time as your friends, so you can step back inside the night.</p>
+            <div class="ios-grid">
+              <img src="assets/photos/p00.jpg" alt=""><img src="assets/photos/p03.jpg" alt=""><img src="assets/photos/p07.jpg" alt="">
+              <img src="assets/photos/p10.jpg" alt=""><img src="assets/photos/p05.jpg" alt=""><img src="assets/photos/p14.jpg" alt="">
+            </div>
+            <p class="ios-count">2,310 photos, 41 videos</p>
+          </div>
+          <button class="ios-btn">Limit Access…</button>
+          <button class="ios-btn strong" id="allow-full">Allow Full Access</button>
+          <button class="ios-btn" id="dont-allow">Don’t Allow</button>
+        </div>
+      </div>
+      <div class="scan" id="scan" hidden><div class="spinner"></div><span id="scan-text">reading your camera roll…</span></div>
+    </section>
+
+    <!-- 3 · map -->
+    <section class="screen" id="s-map">
+      <div class="map-cam" id="map-cam">
+        <div class="map" id="map">
+          <img src="assets/map.jpg" alt="">
+          <button class="bubble" style="left:20%;top:16%"><img src="assets/photos/p12.jpg" alt=""><em>12</em></button>
+          <button class="bubble" style="left:82%;top:30%"><img src="assets/photos/p15.jpg" alt=""><em>7</em></button>
+          <button class="bubble" style="left:12%;top:63%"><img src="assets/photos/p08.jpg" alt=""><em>3</em></button>
+          <button class="bubble" style="left:78%;top:82%"><img src="assets/photos/p16.jpg" alt=""><em>19</em></button>
+          <div class="event" id="event">
+            <div class="ring"></div><div class="ring r2"></div>
+            <button class="pin" id="pin" aria-label="open event"><span>🎃</span></button>
+            <div class="event-tag"><b>event detected here</b><small>oct 31 · 8pm–3am · 38 📸</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="speedlines" id="speed"></div>
+      <div class="map-top">
+        <div class="search">🔎 <span>your nights · last 30 days</span></div>
+      </div>
+      <div class="map-hint" id="map-hint"><b>we found a night</b><span>tap the pin to go back</span></div>
+      <div class="flash" id="flash"></div>
+    </section>
+
+    <!-- 4 · the house -->
+    <section class="screen sky" id="s-house">
+      <header class="app-head"><b>wish you were here</b><div class="head-btns"><span class="round">🔔</span><span class="round pink">r</span></div></header>
+      <div class="venue">
+        <h1 class="h1">the delancey house</h1>
+        <p class="sub">2 delancey st · 3 nights · 41 people</p>
+        <div class="chips"><span class="chip on">🎃 halloween · tonight</span><span class="chip">🎂 birthday</span><span class="chip">💻 hackathon</span></div>
+      </div>
+      <div class="diorama" id="house-dio"><img src="assets/house.jpg" alt=""></div>
+      <span class="sticker s-white tag-k">kitchen · 214</span>
+      <span class="sticker s-pink tag-l">living room · 1,108</span>
+      <span class="sticker s-dashed tag-u">upstairs · add yours</span>
+      <div class="bottom">
+        <p class="fine dark">you were here oct 31 · 38 of your photos match</p>
+        <button class="pill" id="house-next">next <span class="arrow">→</span></button>
+      </div>
+
+      <!-- invite sheet -->
+      <div class="sheet-dim" id="sheet-dim"></div>
+      <div class="sheet" id="sheet">
+        <div class="grab"></div>
+        <h2 class="h2">who else was there?</h2>
+        <p class="sub">they’ll add their photos from halloween. more angles = more house.</p>
+        <div class="link-card"><div><b>share the link</b><small>wishyouwerehere.app/m/hw26</small></div><span class="copy">copy 🔗</span></div>
+        <div class="list-head"><b>in your photos from that night</b><span id="picked">0 picked</span></div>
+        <div class="contacts" id="contacts"></div>
+        <button class="pill wide" id="send" disabled>send link <span>💌</span></button>
+      </div>
+    </section>
+
+    <!-- 5 · building -->
+    <section class="screen sky" id="s-build">
+      <div class="build-head">
+        <p class="eyebrow" id="b-eyebrow">halloween · the delancey house</p>
+        <h1 class="h1 center" id="b-title">sending links…</h1>
+        <p class="sub center" id="b-sub">0 photos in · 0 of 3 rooms</p>
+      </div>
+      <div class="build-wrap">
+        <canvas id="build" width="768" height="768"></canvas>
+        <div id="flyers"></div>
+        <span class="sticker s-pink b-tag" id="t-living">living room ✓ built</span>
+        <span class="sticker s-white b-tag" id="t-kitchen">kitchen ✓ built</span>
+        <span class="sticker s-white b-tag" id="t-stairs">upstairs ✓ built</span>
+      </div>
+      <div class="rooms">
+        <div class="room"><div class="bar"><i id="bar-0"></i></div><span>living room</span></div>
+        <div class="room"><div class="bar"><i id="bar-1"></i></div><span>kitchen</span></div>
+        <div class="room"><div class="bar"><i id="bar-2"></i></div><span>upstairs</span></div>
+      </div>
+      <div class="friends" id="friends"></div>
+      <div class="bottom build-bottom">
+        <button class="pill wide step" id="step-in" hidden>step inside <span>✨</span></button>
+      </div>
+    </section>
+
+    <!-- 6 · step inside -->
+    <section class="screen" id="s-video">
+      <video id="video" playsinline preload="auto" src="../design/rebrand/step-inside/streetview-step-in.mp4"></video>
+      <button class="close" id="video-close" aria-label="close">✕</button>
+      <div class="video-end" id="video-end" hidden>
+        <button class="pill" id="replay">watch again ↺</button>
+        <button class="ghost" id="restart">start over</button>
+      </div>
+    </section>
+
+    <div id="home-bar"></div>
+  </div>
+  <p id="keys">click through like a phone · <b>←</b>/<b>→</b> previous/next screen · <b>F</b> speeds up the build</p>
+</div>
+<script src="app.js"></script>
+</body>
+</html>

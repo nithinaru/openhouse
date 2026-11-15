@@ -1,6 +1,6 @@
-# Openhouse — build brief (working name)
+# Wish You Were Here — build brief (formerly Openhouse)
 
-> **One line:** Your camera roll already remembers the trip — where you stood, which way you faced, who was there, what it sounded like. Openhouse plays it back as a narrated, walk-through memory you never had to journal, and lets you frame it.
+> **One line:** Your camera roll already remembers the trip — where you stood, which way you faced, who was there, what it sounded like. Wish You Were Here plays it back as a narrated, walk-through memory you never had to journal, and lets you frame it.
 
 Hackathon: YC Consumer Mobile Hackathon, Sun Nov 15. **Code freeze 4:00 PM. Demo video + submission done by 4:45 PM. Hard deadline 6:00 PM.**
 
@@ -179,7 +179,7 @@ orders:   { posterId, userId, whopCheckoutId, status: "pending"|"paid" }
 
 ## 6. Screens (designer owns visuals)
 
-1. Onboarding — one screen, one button: "Let Openhouse read your photos"
+1. Onboarding — one screen, one button: "Let Wish You Were Here read your photos"
 2. Ingesting — progress as stops appear on a map one by one (this *is* the loading state)
 3. Trips — list/stack of trip cards
 4. **Replay** — full-screen map film; tap to pause; stop drawer with photos + "their angle"

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=390, initial-scale=1" />
-<title>openhouse — step in (360 street view)</title>
+<title>wish you were here — step in (360 street view)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -211,6 +211,8 @@ function buildRoom(rootId, room) {
   });
   room.cyl = cyl; room.root = root;
 }
+// ?half=1 keeps every other photo (spread evenly around the room)
+if (new URLSearchParams(location.search).has('half')) for (const r of Object.values(ROOMS)) r.photos = r.photos.filter((_, i) => i % 2 === 0);
 buildRoom('roomLiving', ROOMS.living);
 buildRoom('roomKitchen', ROOMS.kitchen);
 
@@ -321,7 +323,7 @@ function render(t) {
   const front = inKitchen ? kitFront : livFront;
   $('nowAv').textContent = front.who[0]; $('nowWho').textContent = '@' + front.who; $('nowCam').textContent = '· ' + front.cam;
   $('hint').firstChild.textContent = t > 7700 && t < 9000 ? 'tap the arrow to walk' : 'look around';
-  $('hintSub').textContent = inKitchen ? '18 photos built this room' : '19 photos built this room';
+  $('hintSub').textContent = `${(inKitchen ? ROOMS.kitchen : ROOMS.living).photos.length} photos built this room`;
   $('compassNeedle').setAttribute('transform', `rotate(${-(inKitchen ? kitYaw + 90 : livYaw)})`);
   $('mmLiving').setAttribute('fill', inKitchen ? '#f3f3f3' : '#fbe3ee');
   $('mmKitchen').setAttribute('fill', inKitchen ? '#fbe3ee' : '#f3f3f3');

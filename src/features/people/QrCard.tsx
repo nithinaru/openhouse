@@ -12,7 +12,7 @@ const CARD_W = QR + space.lg * 2;
 /** Your pairing code, on a white card pinned slightly crooked, with your name tag. */
 export function QrCard({ name, code }: { name: string; code: string }) {
   return (
-    <View style={styles.wrap} accessible accessibilityLabel={`your openhouse code, ${code.split('').join(' ')}`}>
+    <View style={styles.wrap} accessible accessibilityLabel={`your wish you were here code, ${code.split('').join(' ')}`}>
       <View style={styles.card}>
         <QRCode value={pairUrl(code)} size={QR} color={colors.ink} backgroundColor={colors.bg} />
         <Text style={styles.code}>{code.split('').join(' ')}</Text>

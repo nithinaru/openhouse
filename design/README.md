@@ -1,6 +1,6 @@
-# openhouse — design explorations
+# wish you were here — design explorations
 
-All screens were designed in Paper (file: **Openhouse — Mobile UI**, https://app.paper.design/file/01M7GCDC71CE495KQMWDX0BYAD) and exported at 2x (780×1688). Each folder is one direction; each has its own README with mood, palette, type and screen notes.
+All screens were designed in Paper (file: **Wish You Were Here — Mobile UI**, https://app.paper.design/file/01M7GCDC71CE495KQMWDX0BYAD) and exported at 2x (780×1688). Each folder is one direction; each has its own README with mood, palette, type and screen notes.
 
 | Folder | Direction | Status |
 | --- | --- | --- |
