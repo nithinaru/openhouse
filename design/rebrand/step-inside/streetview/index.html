@@ -28,7 +28,12 @@
   /* ---------- 360 rooms ---------- */
   .room { position: absolute; inset: 0; perspective: 278px; perspective-origin: 50% 50%; overflow: hidden; background: #0d0a08; }
   .cyl { position: absolute; inset: 0; transform-style: preserve-3d; }
-  .panel { position: absolute; left: 176.25px; top: -14.5px; width: 37.5px; height: 873px; background-repeat: no-repeat; background-size: 1747px 873px; backface-visibility: hidden; }
+  .panel { position: absolute; left: 176.25px; top: -14.5px; width: 37.5px; height: 873px; background-repeat: no-repeat; background-size: 1747px 873px; backface-visibility: hidden; filter: blur(2.5px) brightness(.62) saturate(.75) contrast(1.08); }
+  .void { position: absolute; backface-visibility: hidden; background: radial-gradient(closest-side, rgba(8,6,5,.95), rgba(8,6,5,.75) 55%, rgba(8,6,5,0)); }
+  .photo { position: absolute; background-size: cover; background-position: center; backface-visibility: hidden; }
+  .photo.cut { box-shadow: 0 14px 30px rgba(0,0,0,.6); }
+  .photo.print { box-shadow: 0 0 0 3px rgba(250,248,244,.95), 0 14px 30px rgba(0,0,0,.6); }
+  .photo.blend { -webkit-mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 52%, rgba(0,0,0,0) 100%); mask-image: radial-gradient(ellipse 72% 72% at 50% 50%, #000 52%, rgba(0,0,0,0) 100%); }
   .tile { position: absolute; left: 15px; top: 182px; width: 360px; height: 480px; backface-visibility: hidden; transform-style: preserve-3d; }
   .tile .ph { position: absolute; inset: 0; background-size: cover; background-position: center; box-shadow: 0 0 0 1.5px rgba(255,255,255,.55), 0 10px 26px rgba(0,0,0,.45); }
   .tile .who { position: absolute; left: 10px; bottom: 10px; display: flex; align-items: center; gap: 5px; padding: 4px 9px 4px 4px; border-radius: 14px; background: rgba(255,255,255,.92); font-weight: 700; font-size: 11px; white-space: nowrap; }
@@ -114,56 +119,54 @@ const R = 278, PW = 2 * Math.PI * R, N = 48;
 const ROOMS = {
   living: {
     pano: 'assets/pano-living.jpg',
-    tiles: [
-      { a: 0,   img: 'assets/living-a000.jpg', who: 'rohan', cam: 'iphone',  rz: -0.8, dx: 4,  dy: -6 },
-      { a: 60,  img: 'assets/living-a060.jpg', who: 'ines',  cam: 'film',    rz: 1.2,  dx: -6, dy: 8 },
-      { a: 120, img: 'assets/living-a120.jpg', who: 'theo',  cam: 'digicam', rz: -1.4, dx: 2,  dy: -4 },
-      { a: 180, img: 'assets/living-a180.jpg', who: 'maya',  cam: 'iphone',  rz: 0.9,  dx: -4, dy: 6 },
-      { a: 240, img: 'assets/living-a240.jpg', who: 'sol',   cam: '0.5x',    rz: -1.0, dx: 6,  dy: -8 },
-      { a: 300, img: 'assets/living-a300.jpg', who: 'jules', cam: 'digicam', rz: 1.3,  dx: -3, dy: 4 },
-    ],
-    // candid shots: posed pics, selfies, close-ups. sized + placed like real photos, not aligned to the room
-    candids: [
-      { a: 20,  img: 'assets/cand-L7.jpg', w: 118, h: 118, y: -196, rz: 5,  edge: true },
-      { a: 70,  img: 'assets/cand-L1.jpg', w: 172, h: 172, y: -138, rz: -4, edge: true },
-      { a: 88,  img: 'assets/cand-L2.jpg', w: 98,  h: 174, y: 96,   rz: 2 },
-      { a: 136, img: 'assets/cand-L3.jpg', w: 204, h: 153, y: -46,  rz: 2 },
-      { a: 212, img: 'assets/cand-L4.jpg', w: 150, h: 150, y: -158, rz: -3, edge: true },
-      { a: 262, img: 'assets/cand-L5.jpg', w: 140, h: 187, y: -112, rz: 4,  edge: true },
-      { a: 315, img: 'assets/cand-L6.jpg', w: 192, h: 144, y: 118,  rz: -2 },
-      // tighter re-crops of other shots from the night, dropped in wherever someone took them
-      { a: 42,  img: 'assets/cand-L4.jpg', w: 104, h: 138, y: 168,  rz: -5, bs: '170%', bp: '55% 30%' },
-      { a: 108, img: 'assets/living-a000.jpg', w: 132, h: 99, y: 178, rz: 3, edge: true, bs: '230%', bp: '35% 30%' },
-      { a: 160, img: 'assets/cand-L1.jpg', w: 118, h: 118, y: 172,  rz: -4, bs: '165%', bp: '40% 25%' },
-      { a: 232, img: 'assets/cand-L2.jpg', w: 86,  h: 152, y: -172, rz: 3,  edge: true, bs: '140%', bp: '50% 35%' },
-      { a: 286, img: 'assets/living-a120.jpg', w: 150, h: 112, y: 176, rz: -3, bs: '210%', bp: '55% 25%' },
-      { a: 342, img: 'assets/cand-L3.jpg', w: 120, h: 120, y: -160, rz: 4,  edge: true, bs: '150%', bp: '50% 45%' },
+    // dark gaps in the reconstruction, where nobody took photos
+    voids: [{ a: 58, y: 250, w: 260, h: 150 }, { a: 205, y: 260, w: 240, h: 140 }, { a: 300, y: -250, w: 300, h: 140 }],
+    // style: cut = hard edge, print = white border, blend = feathered into the room
+    photos: [
+      { a: 4,   img: 'assets/pose-LP1.jpg',  w: 180, h: 240, y: -10,  rz: -2, s: 'blend', who: 'rohan', cam: 'iphone' },
+      { a: 20,  img: 'assets/cand-L7.jpg',   w: 112, h: 112, y: -205, rz: 5,  s: 'print', who: 'maya',  cam: 'iphone' },
+      { a: 31,  img: 'assets/pose-LP2.jpg',  w: 230, h: 172, y: 150,  rz: 3,  s: 'cut',   who: 'ines',  cam: 'film' },
+      { a: 48,  img: 'assets/cand-L1.jpg',   w: 176, h: 176, y: -126, rz: -4, s: 'print', who: 'ines',  cam: 'film' },
+      { a: 66,  img: 'assets/cand-L2.jpg',   w: 110, h: 196, y: 56,   rz: 2,  s: 'cut',   who: 'sol',   cam: 'portrait' },
+      { a: 84,  img: 'assets/cand-L4.jpg',   w: 104, h: 138, y: 178,  rz: -5, s: 'blend', who: 'theo',  cam: 'digicam', bs: '170%', bp: '55% 30%' },
+      { a: 100, img: 'assets/pose-LP3.jpg',  w: 180, h: 240, y: -40,  rz: 3,  s: 'blend', who: 'theo',  cam: 'digicam' },
+      { a: 120, img: 'assets/pose-LP4.jpg',  w: 160, h: 213, y: 112,  rz: -3, s: 'cut',   who: 'maya',  cam: 'iphone' },
+      { a: 137, img: 'assets/cand-L3.jpg',   w: 200, h: 150, y: -176, rz: 2,  s: 'cut',   who: 'theo',  cam: 'digicam' },
+      { a: 151, img: 'assets/pose-LP5.jpg',  w: 250, h: 188, y: 50,   rz: -2, s: 'print', who: 'ines',  cam: 'film' },
+      { a: 172, img: 'assets/pose-LP6.jpg',  w: 160, h: 213, y: -112, rz: 4,  s: 'blend', who: 'maya',  cam: 'portrait' },
+      { a: 200, img: 'assets/cand-L4.jpg',   w: 150, h: 150, y: -176, rz: -3, s: 'print', who: 'jules', cam: 'digicam' },
+      { a: 228, img: 'assets/pose-LP7.jpg',  w: 190, h: 190, y: 36,   rz: 3,  s: 'cut',   who: 'sol',   cam: 'selfie' },
+      { a: 250, img: 'assets/pose-LP8.jpg',  w: 250, h: 188, y: -132, rz: -2, s: 'blend', who: 'jules', cam: 'digicam' },
+      { a: 263, img: 'assets/cand-L5.jpg',   w: 140, h: 187, y: 142,  rz: 4,  s: 'print', who: 'ines',  cam: 'film' },
+      { a: 285, img: 'assets/pose-LP9.jpg',  w: 170, h: 227, y: -18,  rz: -3, s: 'cut',   who: 'sol',   cam: '0.5x' },
+      { a: 314, img: 'assets/cand-L6.jpg',   w: 192, h: 144, y: 152,  rz: -2, s: 'cut',   who: 'sol',   cam: '0.5x' },
+      { a: 330, img: 'assets/pose-LP10.jpg', w: 190, h: 190, y: -120, rz: 3,  s: 'blend', who: 'ines',  cam: 'film' },
+      { a: 348, img: 'assets/cand-L3.jpg',   w: 120, h: 120, y: 128,  rz: 4,  s: 'print', who: 'theo',  cam: 'digicam', bs: '150%', bp: '50% 45%' },
     ],
     arrows: [{ a: 184, label: 'kitchen' }],
   },
   kitchen: {
     pano: 'assets/pano-kitchen.jpg',
-    tiles: [
-      { a: 0,   img: 'assets/kitchen-a000.jpg', who: 'jules', cam: 'digicam', rz: 1.1,  dx: -4, dy: 6 },
-      { a: 60,  img: 'assets/kitchen-a060.jpg', who: 'maya',  cam: 'film',    rz: -1.2, dx: 5,  dy: -6 },
-      { a: 120, img: 'assets/kitchen-a120.jpg', who: 'rohan', cam: 'iphone',  rz: 0.7,  dx: -2, dy: 4 },
-      { a: 180, img: 'assets/kitchen-a180.jpg', who: 'theo',  cam: 'iphone',  rz: -0.9, dx: 3,  dy: -5 },
-      { a: 240, img: 'assets/kitchen-a240.jpg', who: 'ines',  cam: 'film',    rz: 1.4,  dx: -5, dy: 7 },
-      { a: 300, img: 'assets/kitchen-a300.jpg', who: 'sol',   cam: '0.5x',    rz: -1.1, dx: 4,  dy: -3 },
-    ],
-    candids: [
-      { a: 30,  img: 'assets/cand-K6.jpg', w: 150, h: 150, y: 150,  rz: -4, edge: true },
-      { a: 77,  img: 'assets/cand-K1.jpg', w: 170, h: 170, y: -128, rz: 3 },
-      { a: 150, img: 'assets/cand-K2.jpg', w: 100, h: 178, y: 92,   rz: -3, edge: true },
-      { a: 202, img: 'assets/cand-K3.jpg', w: 120, h: 120, y: -172, rz: 4,  edge: true },
-      { a: 296, img: 'assets/cand-K4.jpg', w: 200, h: 150, y: 104,  rz: -2 },
-      { a: 345, img: 'assets/cand-K5.jpg', w: 130, h: 173, y: -150, rz: 3 },
-      { a: 4,   img: 'assets/kitchen-a240.jpg', w: 130, h: 98, y: -168, rz: 2, bs: '210%', bp: '50% 40%' },
-      { a: 55,  img: 'assets/cand-K2.jpg', w: 108, h: 108, y: -176, rz: 4,  edge: true, bs: '175%', bp: '50% 14%' },
-      { a: 120, img: 'assets/kitchen-a000.jpg', w: 150, h: 112, y: 166, rz: -3, bs: '210%', bp: '40% 40%' },
-      { a: 176, img: 'assets/cand-K5.jpg', w: 98,  h: 130, y: -156, rz: -4, bs: '150%', bp: '50% 60%' },
-      { a: 246, img: 'assets/cand-K1.jpg', w: 140, h: 105, y: 156,  rz: 3,  edge: true, bs: '175%', bp: '50% 30%' },
-      { a: 328, img: 'assets/cand-K6.jpg', w: 108, h: 144, y: -168, rz: -4, edge: true, bs: '150%', bp: '50% 40%' },
+    voids: [{ a: 92, y: -250, w: 280, h: 140 }, { a: 238, y: 255, w: 260, h: 150 }],
+    photos: [
+      { a: 2,   img: 'assets/kitchen-a240.jpg', w: 130, h: 98, y: -178, rz: 2, s: 'blend', who: 'ines', cam: 'film', bs: '210%', bp: '50% 40%' },
+      { a: 12,  img: 'assets/pose-KP1.jpg',  w: 170, h: 227, y: -16,  rz: 2,  s: 'blend', who: 'rohan', cam: 'iphone' },
+      { a: 30,  img: 'assets/cand-K6.jpg',   w: 150, h: 150, y: 150,  rz: -4, s: 'print', who: 'maya',  cam: 'selfie' },
+      { a: 46,  img: 'assets/pose-KP2.jpg',  w: 190, h: 190, y: -150, rz: 3,  s: 'cut',   who: 'jules', cam: 'digicam' },
+      { a: 62,  img: 'assets/cand-K2.jpg',   w: 108, h: 108, y: 124,  rz: 4,  s: 'print', who: 'maya',  cam: 'film', bs: '175%', bp: '50% 14%' },
+      { a: 78,  img: 'assets/cand-K1.jpg',   w: 170, h: 170, y: -12,  rz: 3,  s: 'cut',   who: 'jules', cam: 'digicam' },
+      { a: 100, img: 'assets/kitchen-a000.jpg', w: 150, h: 112, y: 172, rz: -3, s: 'blend', who: 'jules', cam: 'digicam', bs: '210%', bp: '40% 40%' },
+      { a: 113, img: 'assets/pose-KP3.jpg',  w: 250, h: 188, y: -118, rz: -2, s: 'print', who: 'maya',  cam: 'film' },
+      { a: 135, img: 'assets/pose-KP4.jpg',  w: 160, h: 213, y: 84,   rz: 3,  s: 'blend', who: 'maya',  cam: 'portrait' },
+      { a: 153, img: 'assets/cand-K2.jpg',   w: 100, h: 178, y: -160, rz: -3, s: 'print', who: 'maya',  cam: 'film' },
+      { a: 180, img: 'assets/pose-KP5.jpg',  w: 170, h: 227, y: 20,   rz: -3, s: 'cut',   who: 'theo',  cam: 'digicam' },
+      { a: 202, img: 'assets/cand-K3.jpg',   w: 120, h: 120, y: -182, rz: 4,  s: 'print', who: 'rohan', cam: 'iphone' },
+      { a: 220, img: 'assets/pose-KP6.jpg',  w: 250, h: 188, y: 122,  rz: 2,  s: 'blend', who: 'theo',  cam: 'film' },
+      { a: 246, img: 'assets/cand-K1.jpg',   w: 140, h: 105, y: -152, rz: 3,  s: 'print', who: 'jules', cam: 'digicam', bs: '175%', bp: '50% 30%' },
+      { a: 266, img: 'assets/pose-KP7.jpg',  w: 170, h: 227, y: -10,  rz: -2, s: 'cut',   who: 'ines',  cam: 'iphone' },
+      { a: 296, img: 'assets/cand-K4.jpg',   w: 200, h: 150, y: -150, rz: -2, s: 'cut',   who: 'theo',  cam: 'digicam' },
+      { a: 320, img: 'assets/pose-KP8.jpg',  w: 180, h: 180, y: -36,  rz: 3,  s: 'blend', who: 'sol',   cam: '0.5x' },
+      { a: 345, img: 'assets/cand-K5.jpg',   w: 130, h: 173, y: 124,  rz: 3,  s: 'print', who: 'sol',   cam: '0.5x' },
     ],
     arrows: [{ a: 300, label: 'living room' }],
   },
@@ -184,24 +187,21 @@ function buildRoom(rootId, room) {
     p.style.transform = `rotateY(${-p._a}deg) translateZ(${-R}px)`;
     cyl.appendChild(p); room.panels.push(p);
   }
-  room.tileEls = room.tiles.map((t) => {
+  room.voidEls = room.voids.map((v) => {
     const el = document.createElement('div');
-    el.className = 'tile';
-    el.innerHTML = `<div class="ph" style="background-image:url(${t.img})"></div><div class="who"><span class="av">${t.who[0]}</span>@${t.who} <span class="cam">· ${t.cam}</span></div>`;
-    el._t = t;
-    cyl.appendChild(el);
-    return el;
+    el.className = 'void';
+    Object.assign(el.style, { left: `${195 - v.w / 2}px`, top: `${422 - v.h / 2 + v.y}px`, width: `${v.w}px`, height: `${v.h}px`,
+      transform: `rotateY(${-v.a}deg) translateZ(${-R + 6}px)` });
+    el._a = v.a; cyl.appendChild(el); return el;
   });
-  room.candEls = (room.candids || []).map((c) => {
+  room.photoEls = room.photos.map((c, i) => {
     const el = document.createElement('div');
-    el.className = 'cand' + (c.edge ? ' edge' : '');
-    el.style.left = `${195 - c.w / 2}px`; el.style.top = `${422 - c.h / 2 + c.y}px`;
-    el.style.width = `${c.w}px`; el.style.height = `${c.h}px`;
-    el.style.backgroundImage = `url(${c.img})`;
+    el.className = `photo ${c.s}`;
+    Object.assign(el.style, { left: `${195 - c.w / 2}px`, top: `${422 - c.h / 2 + c.y}px`, width: `${c.w}px`, height: `${c.h}px`,
+      backgroundImage: `url(${c.img})` });
     if (c.bs) { el.style.backgroundSize = c.bs; el.style.backgroundPosition = c.bp || 'center'; }
-    el._c = c;
-    cyl.appendChild(el);
-    return el;
+    el._c = c; el._z = 14 + (i % 4) * 5;
+    cyl.appendChild(el); return el;
   });
   room.arrowEls = room.arrows.map((a) => {
     const w = document.createElement('div');
@@ -221,28 +221,22 @@ const lerp = (a, b, t) => a + (b - a) * t;
 const ease = (t) => 1 - Math.pow(1 - clamp(t), 3);
 const easeIO = (t) => { t = clamp(t); return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
 const seg = (t, a, b) => clamp((t - a) / (b - a));
-const wrap = (d) => ((d % 360) + 540) % 360 - 180;          // -180..180
-function keyed(t, keys) {                                   // piecewise easeIO between [time, value]
+const wrap = (d) => ((d % 360) + 540) % 360 - 180;
+function keyed(t, keys) {
   if (t <= keys[0][0]) return keys[0][1];
   for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) return lerp(keys[i - 1][1], keys[i][1], easeIO(seg(t, keys[i - 1][0], keys[i][0])));
   return keys[keys.length - 1][1];
 }
 
-function drawRoom(room, yaw, { develop = () => 1, candDevelop = () => 1, arrowOn = 1, arrowPress = 0 }) {
+function drawRoom(room, yaw, { reveal = () => 1, arrowOn = 1, arrowPress = 0 }) {
   room.cyl.style.transform = `translateZ(${R}px) rotateY(${yaw}deg)`;
   for (const p of room.panels) p.style.visibility = Math.abs(wrap(p._a - yaw)) < 100 ? 'visible' : 'hidden';
-  room.tileEls.forEach((el, i) => {
-    const t = el._t, d = wrap(t.a - yaw), dev = develop(i);
-    el.style.visibility = Math.abs(d) < 105 ? 'visible' : 'hidden';
-    el.style.transform = `rotateY(${-t.a}deg) translateZ(${-R + 3}px) translate(${t.dx}px, ${t.dy}px) rotateZ(${t.rz}deg) scale(${lerp(1.06, 1, dev)})`;
-    el.style.opacity = dev;
-    el.firstChild.style.filter = `blur(${lerp(9, 0, dev)}px)`;
-  });
-  room.candEls.forEach((el, i) => {
-    const c = el._c, d = wrap(c.a - yaw), dev = candDevelop(i);
+  for (const v of room.voidEls) v.style.visibility = Math.abs(wrap(v._a - yaw)) < 100 ? 'visible' : 'hidden';
+  room.photoEls.forEach((el, i) => {
+    const c = el._c, d = wrap(c.a - yaw), r = reveal(i);
     el.style.visibility = Math.abs(d) < 100 ? 'visible' : 'hidden';
-    el.style.transform = `rotateY(${-c.a}deg) translateZ(${-R + 16 + (i % 3) * 4}px) rotateZ(${c.rz}deg) scale(${lerp(1.12, 1, dev)})`;
-    el.style.opacity = dev;
+    el.style.transform = `rotateY(${-c.a}deg) translateZ(${-R + el._z}px) rotateZ(${c.rz}deg) scale(${lerp(1.14, 1, r)})`;
+    el.style.opacity = r;
   });
   for (const { a, arrow, label } of room.arrowEls) {
     const d = wrap(a.a - yaw), vis = Math.abs(d) < 38;
@@ -253,11 +247,11 @@ function drawRoom(room, yaw, { develop = () => 1, candDevelop = () => 1, arrowOn
     arrow.style.opacity = o;
     label.style.left = x + 'px'; label.style.top = (y - 66) + 'px'; label.style.opacity = o;
   }
-  // which photo is in front of you
-  let best = room.tiles[0], bd = 999;
-  for (const t of room.tiles) { const d = Math.abs(wrap(t.a - yaw)); if (d < bd) { bd = d; best = t; } }
+  let best = room.photos[0], bd = 999;
+  for (const c of room.photos) { const d = Math.abs(wrap(c.a - yaw)) + Math.abs(c.y) / 40; if (d < bd) { bd = d; best = c; } }
   return best;
 }
+
 function touch(t, at, x, y) {
   const el = $('touch');
   if (t < at - 250 || t > at + 350) return;
@@ -296,8 +290,7 @@ function render(t) {
   const livYaw = keyed(t, LIV_YAW);
   const livOrder = [2, 1, 0, 5, 4, 3]; // develops in the order you look at them
   const livFront = drawRoom(ROOMS.living, livYaw, {
-    develop: (i) => ease(seg(t, 3000 + livOrder.indexOf(i) * 520, 3700 + livOrder.indexOf(i) * 520)),
-    candDevelop: (i) => { const k = (i * 5) % 13; return ease(seg(t, 3400 + k * 210, 3800 + k * 210)); },
+    reveal: (i) => { const k = (i * 7) % 19; return ease(seg(t, 3000 + k * 190, 3450 + k * 190)); },
     arrowOn: ease(seg(t, 7700, 8200)) * (1 - ease(seg(t, 9000, 9400))),
     arrowPress: Math.sin(Math.PI * seg(t, 8650, 8950)),
   });
@@ -311,8 +304,7 @@ function render(t) {
   const kitIn = ease(seg(t, 9700, 10700));
   const kitYaw = keyed(t, KIT_YAW);
   const kitFront = drawRoom(ROOMS.kitchen, kitYaw, {
-    develop: (i) => ease(seg(t, 10200 + [2, 1, 0, 3, 5, 4][i] * 280, 10800 + [2, 1, 0, 3, 5, 4][i] * 280)),
-    candDevelop: (i) => { const k = (i * 5) % 12; return ease(seg(t, 10500 + k * 150, 10900 + k * 150)); },
+    reveal: (i) => { const k = (i * 7) % 18; return ease(seg(t, 10200 + k * 120, 10600 + k * 120)); },
     arrowOn: ease(seg(t, 15200, 15700)),
   });
   $('roomKitchen').style.opacity = kitIn;
@@ -329,7 +321,7 @@ function render(t) {
   const front = inKitchen ? kitFront : livFront;
   $('nowAv').textContent = front.who[0]; $('nowWho').textContent = '@' + front.who; $('nowCam').textContent = '· ' + front.cam;
   $('hint').firstChild.textContent = t > 7700 && t < 9000 ? 'tap the arrow to walk' : 'look around';
-  $('hintSub').textContent = inKitchen ? '6 new photos built this room' : '6 photos built this room';
+  $('hintSub').textContent = inKitchen ? '18 photos built this room' : '19 photos built this room';
   $('compassNeedle').setAttribute('transform', `rotate(${-(inKitchen ? kitYaw + 90 : livYaw)})`);
   $('mmLiving').setAttribute('fill', inKitchen ? '#f3f3f3' : '#fbe3ee');
   $('mmKitchen').setAttribute('fill', inKitchen ? '#fbe3ee' : '#f3f3f3');
