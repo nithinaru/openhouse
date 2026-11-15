@@ -9,7 +9,9 @@
  */
 
 import type * as files from "../files.js";
+import type * as http from "../http.js";
 import type * as moments from "../moments.js";
+import type * as orders from "../orders.js";
 import type * as pairings from "../pairings.js";
 import type * as photos from "../photos.js";
 import type * as seed from "../seed.js";
@@ -24,7 +26,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   files: typeof files;
+  http: typeof http;
   moments: typeof moments;
+  orders: typeof orders;
   pairings: typeof pairings;
   photos: typeof photos;
   seed: typeof seed;

@@ -3,6 +3,8 @@ import { v } from 'convex/values';
 
 export const lens = v.union(v.literal('front'), v.literal('wide'), v.literal('ultrawide'), v.literal('tele'));
 export const weather = v.object({ tempF: v.number(), summary: v.string() });
+export const posterStyle = v.union(v.literal('minimal'), v.literal('night'), v.literal('field'));
+export const printSize = v.union(v.literal('12x16'), v.literal('18x24'));
 
 export default defineSchema({
   users: defineTable({
@@ -94,13 +96,14 @@ export default defineSchema({
   posters: defineTable({
     tripId: v.id('trips'),
     style: v.string(),
-    storageId: v.id('_storage'),
+    storageId: v.optional(v.id('_storage')),
   }).index('by_tripId', ['tripId']),
 
   orders: defineTable({
     posterId: v.id('posters'),
     userId: v.id('users'),
-    whopCheckoutId: v.string(),
+    size: printSize,
+    whopCheckoutId: v.optional(v.string()),
     status: v.union(v.literal('pending'), v.literal('paid')),
   })
     .index('by_posterId', ['posterId'])
