@@ -50,6 +50,7 @@ export default function OwnersChat() {
     [chatMessages],
   );
   const [draft, setDraft] = useState('');
+  const VIDEO = process.env.EXPO_PUBLIC_DEMO_VIDEO === '1';
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -65,7 +66,7 @@ export default function OwnersChat() {
   };
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <View style={[styles.header, { paddingTop: insets.top + space.md }]}>
         <View style={{ flex: 1, gap: space.xs }}>
           <Text style={type.heading}>owners of the was there hoodie · 113</Text>
@@ -111,15 +112,26 @@ export default function OwnersChat() {
       </ScrollView>
 
       <View style={[styles.inputBar, { paddingBottom: insets.bottom + space.sm }]}>
-        <TextInput
-          value={draft}
-          onChangeText={setDraft}
-          placeholder="say something to the owners"
-          placeholderTextColor={colors.textFaint}
-          style={styles.input}
-          onSubmitEditing={send}
-          returnKeyType="send"
-        />
+        {VIDEO ? (
+          // Recording builds: tapping fills a ready reply instead of opening the keyboard.
+          <Press onPress={() => setDraft('just got mine. nº 113, see you all at demos')} haptic="none" style={{ flex: 1 }} accessibilityRole="button">
+            <View style={[styles.input, { justifyContent: 'center' }]}>
+              <Text style={[type.callout, !draft && { color: colors.textFaint }]} numberOfLines={1}>
+                {draft || 'say something to the owners'}
+              </Text>
+            </View>
+          </Press>
+        ) : (
+          <TextInput
+            value={draft}
+            onChangeText={setDraft}
+            placeholder="say something to the owners"
+            placeholderTextColor={colors.textFaint}
+            style={styles.input}
+            onSubmitEditing={send}
+            returnKeyType="send"
+          />
+        )}
         <Press onPress={send} haptic="none" accessibilityRole="button" accessibilityLabel="send" disabled={!draft.trim()}>
           <View style={[styles.send, !draft.trim() && { opacity: 0.4 }]}>
             <Text style={styles.sendText}>send</Text>
