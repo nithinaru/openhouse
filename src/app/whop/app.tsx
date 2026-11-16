@@ -96,7 +96,7 @@ export default function WhopAppDemo() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={type.label}>wish you were here</Text>
-                    <Text style={type.caption}>installed app · by openhouse</Text>
+                    <Text style={type.caption}>installed app · whop app store</Text>
                   </View>
                 </View>
 

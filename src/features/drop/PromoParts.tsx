@@ -145,9 +145,9 @@ function FriendCode({
   return (
     <View style={styles.friend}>
       <Cutout uri={friend.avatarUri} name={friend.name} width={44} height={52} rotate={index % 2 ? 3 : -3} />
-      <View style={{ flex: 1, gap: space.xs }}>
-        <Text style={type.label}>{friend.name.toLowerCase()}</Text>
-        <Text style={type.caption}>{expiryLine(promo.expiresAt)}</Text>
+      <View style={{ flex: 1, minWidth: 72, gap: space.xs }}>
+        <Text style={type.label} numberOfLines={1}>{friend.name.toLowerCase()}</Text>
+        <Text style={type.caption} numberOfLines={1}>{expiryLine(promo.expiresAt)}</Text>
       </View>
       <CodeSticker code={promo.code} percentOff={promo.percentOff} friendName={friend.name} rotate={index % 2 ? 2 : -3} onUse={onUse} />
     </View>
@@ -275,7 +275,7 @@ export function ReferralCard({ referral }: { referral: Referral }) {
     <View style={styles.panel}>
       <View style={styles.refHead}>
         <Text style={[type.heading, { flex: 1 }]}>share your drop link · earn {Math.round(REFERRAL_SHARE * 100)}%</Text>
-        {referral.source === 'local' ? <Sticker label="preview" small tone="paper" rotate={3} /> : null}
+        {referral.source === 'local' && process.env.EXPO_PUBLIC_DEMO_VIDEO !== '1' ? <Sticker label="preview" small tone="paper" rotate={3} /> : null}
       </View>
       <Text style={type.caption}>anyone who buys through your link: you get {Math.round(REFERRAL_SHARE * 100)}% of it, paid by whop</Text>
       <View style={styles.refStats}>
@@ -304,7 +304,7 @@ export function ReferralCard({ referral }: { referral: Referral }) {
 function RefStat({ value, label }: { value: string; label: string }) {
   return (
     <View style={styles.refStat}>
-      <Text style={styles.refValue}>{value}</Text>
+      <Text style={styles.refValue} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{value}</Text>
       <Text style={type.caption}>{label}</Text>
     </View>
   );

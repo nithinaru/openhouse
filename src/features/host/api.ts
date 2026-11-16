@@ -192,7 +192,12 @@ export function useHostStats(userId: string = HOST_USER_ID) {
     };
   }, [userId]);
 
-  let stats = injected.reduceRight((s, sale) => withSale(s, sale), live ?? preview);
+  // Recording builds (EXPO_PUBLIC_DEMO_VIDEO=1): the demo drop's numbers plus the hoodie bought on camera.
+  const video = process.env.EXPO_PUBLIC_DEMO_VIDEO === '1';
+  const base: HostStats = video
+    ? withSale({ ...preview, source: 'live' }, { key: 'you', who: 'nithin', item: SHORT.hoodie, edition: 'was_there', amountCents: priceOf('hoodie'), at: (preview.recent[0]?.at ?? 0) + 30_000 })
+    : (live ?? preview);
+  let stats = injected.reduceRight((s, sale) => withSale(s, sale), base);
   if (paidOut) stats = { ...stats, feeBalanceCents: Math.max(0, stats.feeBalanceCents - paidOut) };
 
   const inject = useCallback(() => setInjected((cur) => [fakeSale(), ...cur].slice(0, 20)), []);
