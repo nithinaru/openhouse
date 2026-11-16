@@ -1,4 +1,83 @@
-# Wish You Were Here
+<h1 align="center">
+  <img src="docs/readme/00-title.png" alt="wish you were here" width="100%">
+</h1>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/YC-consumer%20mobile%20hackathon-fa4616?style=for-the-badge&labelColor=0b0b0c">
+  <img src="https://img.shields.io/badge/expo-SDK%2058-b4d2f0?style=for-the-badge&labelColor=0b0b0c">
+  <img src="https://img.shields.io/badge/convex-backend-f6c6dd?style=for-the-badge&labelColor=0b0b0c">
+  <img src="https://img.shields.io/badge/whop-payments%20%2B%20drops-fa4616?style=for-the-badge&labelColor=0b0b0c">
+  <img src="https://img.shields.io/badge/world%20labs-3d%20worlds-d9ccf5?style=for-the-badge&labelColor=0b0b0c">
+</p>
+
+<p align="center">
+  <img src="docs/readme/hero-full-flow.gif" width="260" alt="the whole app in 15 seconds"><br>
+  <sub><b>the whole app in 15 seconds</b></sub>
+</p>
+
+<img src="docs/readme/01-how-it-works.png" width="100%" alt="how it works">
+
+<br>
+
+## <img src="https://img.shields.io/badge/01-find%20the%20night-b4d2f0?style=for-the-badge&labelColor=0b0b0c" alt="01 find the night">
+
+<table><tr>
+<td width="290"><img src="docs/readme/01-find-the-night.gif" width="260"></td>
+<td>📸 allow photos<br><br>📍 a night pops out of your map<br><br>🎃 tap it → <b>dive in</b></td>
+</tr></table>
+
+<img src="docs/readme/strip-01-find-the-night.png" width="100%">
+
+## <img src="https://img.shields.io/badge/02-invite%20who%20was%20there-f6c6dd?style=for-the-badge&labelColor=0b0b0c" alt="02 invite"> <img src="https://img.shields.io/badge/03-the%20house%20builds%20live-fff3c9?style=for-the-badge&labelColor=0b0b0c" alt="03 build">
+
+<table><tr>
+<td align="center"><img src="docs/readme/02-invite.gif" width="240"><br><sub>💌 one link</sub></td>
+<td align="center"><img src="docs/readme/03-live-build.gif" width="240"><br><sub>☁️ → 🏠 every photo lands, the house appears</sub></td>
+</tr></table>
+
+<img src="docs/readme/strip-02-create-a-moment.png" width="100%">
+
+## <img src="https://img.shields.io/badge/04-step%20inside-0b0b0c?style=for-the-badge&labelColor=fa4616" alt="04 step inside">
+
+<table><tr>
+<td align="center"><img src="docs/readme/04-step-inside.gif" width="240"><br><sub>🚪 360° rooms made of everyone's photos</sub></td>
+<td align="center"><img src="docs/readme/04b-step-inside-kitchen.gif" width="240"><br><sub>👻 stand where they stood</sub></td>
+</tr></table>
+
+<img src="docs/readme/strip-03-step-inside.png" width="100%">
+
+## <img src="https://img.shields.io/badge/05-the%20fomo%20shop-fa4616?style=for-the-badge&labelColor=0b0b0c" alt="05 the fomo shop">
+
+<table><tr>
+<td width="290"><img src="docs/readme/05-fomo-shop.gif" width="260"></td>
+<td>🔮 snow globe of <i>your</i> house<br><br>📖 photo book<br><br>👕 inside-joke capsule<br><br>⏳ made once · closes sunday<br><br>🧡 <b>sold on whop</b></td>
+</tr></table>
+
+<img src="docs/readme/strip-04-fomo-shop.png" width="100%">
+
+## <img src="https://img.shields.io/badge/powered%20by-whop-fa4616?style=for-the-badge&labelColor=0b0b0c" alt="powered by whop">
+
+<img src="docs/readme/whop.png" width="100%" alt="whop is the business backend">
+
+<p align="center"><sub>🧡 checkout · 🎁 gifts · ⭐ plus · 🎟️ was-there codes · 🤝 referrals · 📊 host dashboard · 💸 payouts — <a href="#how-wish-you-were-here-uses-whop">full map ↓</a></sub></p>
+
+## <img src="https://img.shields.io/badge/06-6%20directions%20to%201-d9ccf5?style=for-the-badge&labelColor=0b0b0c" alt="06 directions">
+
+<img src="docs/readme/strip-05-directions.png" width="100%">
+
+## ▶️ try it
+
+| | |
+|---|---|
+| 🧪 **clickable demo** | `python3 -m http.server 4320` → [localhost:4320/prototype](prototype/) |
+| 📱 **the app** | `npm install && npx expo start` |
+| 🎨 **designs** | [design/](design/) · Paper: *Wish You Were Here — Mobile UI* |
+
+<br>
+
+---
+
+## 🛠️ under the hood
 
 Your camera roll already remembers the day: where you stood, which way you faced, who was there. Wish You Were Here plays it back as a narrated, walk-through replay you never had to journal, and lets you frame it.
 
