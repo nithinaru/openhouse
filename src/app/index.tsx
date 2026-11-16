@@ -17,7 +17,7 @@ import type { Person } from '@/lib/types';
 import { colors, duration, ease, fonts, space, type } from '@/theme';
 import { ArrowIcon } from '@/theme/icons';
 import { AppDock } from '@/features/dock/Dock';
-import { Chip, Press, Sticker, Wordmark } from '@/theme/ui';
+import { Chip, DOCK_H, Press, Sticker, Wordmark } from '@/theme/ui';
 
 import { shortDate, statsLabel } from '@/features/home/tripMeta';
 
@@ -59,7 +59,8 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingTop: insets.top + space.sm,
-          paddingBottom: insets.bottom + 120,
+          // Clear the floating dock: its offset + height + breathing room.
+          paddingBottom: insets.bottom + space.sm + DOCK_H + space.xl,
         }}
         showsVerticalScrollIndicator={false}
       >

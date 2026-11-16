@@ -194,6 +194,8 @@ const styles = StyleSheet.create({
   },
   strip: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    rowGap: space.md,
     alignItems: 'flex-start',
     paddingTop: space.xs,
     paddingHorizontal: 20,

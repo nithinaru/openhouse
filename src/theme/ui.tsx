@@ -656,7 +656,7 @@ function useSvgId(prefix: string): string {
   return `${prefix}${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
 }
 
-const DOCK_H = 64;
+export const DOCK_H = 64;
 
 const styles = StyleSheet.create({
   iconButton: {

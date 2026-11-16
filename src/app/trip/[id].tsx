@@ -59,6 +59,8 @@ export default function ReplayScreen() {
       <MapView
         ref={mapRef}
         style={styles.fill}
+        // Keep Apple's "Maps" legal mark above the bottom timeline (36pt scrubber + gaps).
+        mapPadding={{ top: 0, left: 0, right: 0, bottom: insets.bottom + space.sm + 36 + space.sm }}
         initialCamera={
           first
             ? {
