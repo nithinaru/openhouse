@@ -25,3 +25,6 @@ End-to-end flow: create → pick location → invite → photos matched by locat
 
 ## Step inside (`step-inside/`)
 Walking through a finished moment: footprints at every photo spot, camera-true photos snapping into the 3D room, angles of one moment, who-stood-where map, and the motion spec.
+
+## FOMO shop (`fomo-shop/`)
+A limited merch drop after every moment, fulfilled by wop: snow globe of the house (the hero), photo book, and a 4-piece inside-joke capsule. See its README.

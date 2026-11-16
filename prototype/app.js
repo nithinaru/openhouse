@@ -1,7 +1,7 @@
 // wish you were here — clickable browser prototype (controlled demo, nothing is sent anywhere)
 const $ = (s, el = document) => el.querySelector(s);
 const phone = $('#phone');
-const ORDER = ['splash', 'photos', 'map', 'house', 'build', 'video'];
+const ORDER = ['splash', 'photos', 'map', 'house', 'build', 'video', 'shop'];
 let current = 'splash';
 let speed = new URLSearchParams(location.search).has('fast') ? 4 : 1;
 
@@ -16,6 +16,7 @@ addEventListener('resize', fit); fit();
 /* ---------------- navigation ---------------- */
 function go(name, { instant = false } = {}) {
   if (name === current) return;
+  onLeave[current]?.(name);
   const from = $('#s-' + current), to = $('#s-' + name);
   if (instant) { from.classList.add('instant'); to.classList.add('instant'); }
   from.classList.remove('active');
@@ -31,8 +32,10 @@ document.addEventListener('click', (e) => {
   if (t) go(t.dataset.go);
 });
 addEventListener('keydown', (e) => {
+  if (current === 'shop') return; // shop.js handles its own keys
   if (e.key === 'f' || e.key === 'F') { speed = speed === 1 ? 4 : 1; return; }
   const i = ORDER.indexOf(current);
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') e.wywhNav = true; // shop.js ignores this event
   if (e.key === 'ArrowRight') {
     if (current === 'build' && !build.done) { build.skip(); return; }
     if (current === 'house' && !$('#s-house').classList.contains('sheet-open')) { openSheet(); return; }
@@ -44,9 +47,19 @@ addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' && i > 0) { closeSheet(); go(ORDER[i - 1]); }
 });
 
+const resetMap = () => { mapBusy = false; ['#map-cam', '#speed', '#map-hint', '#flash'].forEach((s) => $(s).getAnimations().forEach((a) => a.cancel())); };
 const onEnter = {
-  map() { mapBusy = false; $('#map-cam').getAnimations().forEach((a) => a.cancel()); },
-  video() { const v = $('#video'); $('#video-end').hidden = true; v.currentTime = 0; v.play().catch(() => {}); },
+  map: resetMap,
+  build() { build.last = performance.now(); if (!build.running) { build.running = true; requestAnimationFrame(tick); } },
+  video() { $('#shop-card').hidden = false; const v = $('#video'); $('#video-end').hidden = true; v.currentTime = 0; v.play().catch(() => {}); },
+};
+
+// clean up a screen when leaving it, so timers and overlays never leak into the next one
+const onLeave = {
+  photos() { scanTimers.forEach(clearTimeout); scanTimers = []; scanning = false; $('#ios-alert').hidden = true; $('#scan').hidden = true; $('#scan-text').textContent = 'reading your camera roll…'; },
+  map() { clearTimeout(diveTimer); },
+  house() { clearTimeout(sendTimer); closeSheet(); syncPicked(); $('#contacts').scrollTop = 0; },
+  video() { $('#video').pause(); },
 };
 
 /* ---------------- 2 · photo permission ---------------- */
@@ -54,17 +67,19 @@ $('#allow-btn').addEventListener('click', () => { $('#ios-alert').hidden = false
 $('#dont-allow').addEventListener('click', () => { $('#ios-alert').hidden = true; });
 $('#allow-full').addEventListener('click', finishPermission);
 $('#ios-alert .ios-btn').addEventListener('click', finishPermission); // "limit access" also continues in the demo
+let scanTimers = [], scanning = false;
 function finishPermission() {
+  if (scanning) return; scanning = true;
   $('#ios-alert').hidden = true;
   const scan = $('#scan'), txt = $('#scan-text');
   scan.hidden = false;
   const steps = ['reading your camera roll…', 'grouping 2,310 photos into nights…', 'found a night with 38 photos 🎃'];
-  steps.forEach((s, i) => setTimeout(() => (txt.textContent = s), i * 750));
-  setTimeout(() => { scan.hidden = true; txt.textContent = steps[0]; go('map'); }, steps.length * 750 + 250);
+  steps.forEach((s, i) => scanTimers.push(setTimeout(() => (txt.textContent = s), i * 750)));
+  scanTimers.push(setTimeout(() => { if (current === 'photos') go('map'); }, steps.length * 750 + 250));
 }
 
 /* ---------------- 3 · map → GTA-style dive ---------------- */
-let mapBusy = false;
+let mapBusy = false, diveTimer = 0;
 $('#pin').addEventListener('click', dive);
 $('#event').addEventListener('click', dive);
 function dive() {
@@ -82,7 +97,8 @@ function dive() {
     { duration: D, fill: 'forwards', easing: 'ease-in' });
   $('#map-hint').animate([{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(60px)' }], { duration: 300, fill: 'forwards' });
   $('#flash').animate([{ opacity: 0 }, { opacity: 0, offset: .78 }, { opacity: 1 }], { duration: D, fill: 'forwards' });
-  setTimeout(() => {
+  diveTimer = setTimeout(() => {
+    if (current !== 'map') return;
     go('house', { instant: true });
     $('#house-dio').animate([
       { transform: 'scale(2.6) translateY(40px)', filter: 'blur(10px)' },
@@ -92,7 +108,7 @@ function dive() {
     const fl = document.createElement('div'); fl.className = 'flash'; fl.style.zIndex = 30; $('#s-house').append(fl);
     fl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 650, easing: 'ease-out' }).onfinish = () => fl.remove();
     // reset the map for next time
-    setTimeout(() => ['#map-cam', '#speed', '#map-hint', '#flash'].forEach((s) => $(s).getAnimations().forEach((a) => a.cancel())), 600);
+    setTimeout(resetMap, 600);
   }, D);
 }
 
@@ -128,11 +144,13 @@ function openSheet() { $('#s-house').classList.add('sheet-open'); }
 function closeSheet() { $('#s-house').classList.remove('sheet-open'); }
 $('#house-next').addEventListener('click', openSheet);
 $('#sheet-dim').addEventListener('click', closeSheet);
+let sendTimer = 0;
 $('#send').addEventListener('click', () => {
   const send = $('#send');
+  if (send.disabled) return;
   send.disabled = true;
   send.innerHTML = '<span class="spinner"></span> sending…';
-  setTimeout(startBuild, 1100);
+  sendTimer = setTimeout(() => { if (current === 'house') startBuild(); }, 1100);
 });
 
 /* ---------------- 5 · live build: the house is generated from the photos ---------------- */
@@ -181,6 +199,7 @@ const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const build = { t: 0, running: false, done: false, last: 0, skip() { this.t = Math.max(this.t, BUILD_T - 2); } };
 let friendState = [];
 let particles = [], rings = [];
+let fx = 0; // effects clock: keeps running after the build clock stops at the end
 
 function burst(b, ox, oy, t) {
   // photo lands → shatters into points that fly to where they belong in the house
@@ -225,6 +244,7 @@ function layer(src, mask, smooth, jitter = 0) {
 }
 
 function draw(t) {
+  const buildT = t;
   ctx.clearRect(0, 0, N, N);
   if (IMG['build-empty.jpg'].complete) ctx.drawImage(IMG['build-empty.jpg'], 0, 0, N, N);
   if (!LOW) return [0, 0, 0];
@@ -246,7 +266,8 @@ function draw(t) {
   ctx.globalAlpha = .22; ctx.globalCompositeOperation = 'overlay'; ctx.drawImage(comp, 0, 0);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
 
-  // rings where photos land
+  // rings where photos land (effects clock)
+  t = fx;
   rings = rings.filter((r) => t - r.t0 < 1);
   for (const r of rings) {
     const p = (t - r.t0);
@@ -269,18 +290,20 @@ function draw(t) {
 
   const roomP = [[0, 0], [0, 0], [0, 0]];
   const last = STAGES[2];
+  t = buildT;
   for (const b of BLOBS) if (b.room >= 0) { roomP[b.room][0] += ease(clamp01((t - b.t0) / (last.off + last.dur))); roomP[b.room][1]++; }
   return roomP.map(([s, n]) => (fin >= 1 ? 1 : s / n));
 }
 
 function startBuild() {
+  clearTimeout(sendTimer);
   closeSheet();
-  setTimeout(() => { const s = $('#send'); s.innerHTML = 'send link <span>💌</span>'; syncPicked(); }, 600);
   if (!picked.size) pickDefaults();
   go('build');
   const sec = $('#s-build');
   sec.classList.remove('done');
   $('#step-in').hidden = true;
+  $('#shop-card').hidden = true;
   ['t-living', 't-kitchen', 't-stairs'].forEach((id) => $('#' + id).classList.remove('show'));
   BLOBS.forEach((b) => { b.spawned = false; b.burst = false; });
   particles = []; rings = [];
@@ -338,6 +361,7 @@ function tick(now) {
   const dt = Math.min(.1, (now - build.last) / 1000); build.last = now;
   if (current !== 'build' && current !== 'video') { build.running = false; return; }
   if (!build.done) build.t = Math.min(BUILD_T, build.t + dt * speed);
+  fx += dt * speed;
   const t = build.t;
   const rooms = draw(t);
   rooms.forEach((p, i) => ($('#bar-' + i).style.width = (p * 100).toFixed(1) + '%'));
@@ -349,7 +373,7 @@ function tick(now) {
   const s = 430 / 1024;
   for (const b of BLOBS) {
     if (!b.spawned && t >= b.t0 - 1.5) { b.spawned = true; b.lx = b.x + (Math.random() - .5) * 60; b.ly = b.y - 40; flyPhoto(b.lx * s, b.ly * s); }
-    if (!b.burst && t >= b.t0 - .2) { b.burst = true; burst(b, b.lx * S, b.ly * S, t); }
+    if (!b.burst && t >= b.t0 - .2) { b.burst = true; burst(b, b.lx * S, b.ly * S, fx); }
   }
   // clouds part as the first photos arrive
   const cp = ease(clamp01((t - 4) / 5));
@@ -386,5 +410,5 @@ $('#step-in').addEventListener('click', () => go('video'));
 const video = $('#video');
 video.addEventListener('ended', () => { $('#video-end').hidden = false; });
 $('#replay').addEventListener('click', () => { $('#video-end').hidden = true; video.currentTime = 0; video.play(); });
-$('#video-close').addEventListener('click', () => { video.pause(); go('build'); build.last = performance.now(); if (!build.running) { build.running = true; requestAnimationFrame(tick); } });
-$('#restart').addEventListener('click', () => { video.pause(); picked.clear(); syncPicked(); go('splash'); });
+$('#video-close').addEventListener('click', () => { video.pause(); go('build'); });
+$('#restart').addEventListener('click', () => { video.pause(); picked.clear(); syncPicked(); window.resetShop?.(); go('splash'); });

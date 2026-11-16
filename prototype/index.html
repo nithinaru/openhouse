@@ -16,7 +16,7 @@
 
     <!-- status bar (shared) -->
     <div id="status" class="status">
-      <span class="time">9:41</span>
+      <span class="time">4:47</span>
       <svg width="78" height="14" viewBox="0 0 78 14" aria-hidden="true"><g fill="currentColor"><rect x="0" y="9" width="3" height="5" rx="1"/><rect x="5" y="6" width="3" height="8" rx="1"/><rect x="10" y="3" width="3" height="11" rx="1"/><rect x="15" y="0" width="3" height="14" rx="1"/><path d="M31 3.2c2.6 0 5 1 6.8 2.7l1.3-1.4A11.4 11.4 0 0 0 31 1.3 11.4 11.4 0 0 0 22.9 4.5l1.3 1.4A9.6 9.6 0 0 1 31 3.2Zm0 3.8c1.6 0 3 .6 4.1 1.6l1.3-1.4A7.8 7.8 0 0 0 31 5.1a7.8 7.8 0 0 0-5.4 2.1l1.3 1.4A6 6 0 0 1 31 7Zm0 3.7c.6 0 1.1.2 1.5.6L31 12.9l-1.5-1.6c.4-.4.9-.6 1.5-.6Z"/><rect x="47" y="1" width="25" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="49" y="3" width="21" height="8" rx="2"/><rect x="73.5" y="5" width="1.6" height="4" rx=".8" fill-opacity=".45"/></g></svg>
     </div>
 
@@ -37,11 +37,11 @@
       <h1 class="h1 center">let us see<br>the night</h1>
       <p class="sub center">we find the photos from that night.<br>you pick what goes in.</p>
       <div class="polaroids">
-        <div class="pol p1"><img src="assets/photos/p06.jpg" alt=""></div>
-        <div class="pol p2"><img src="assets/photos/p02.jpg" alt=""></div>
-        <div class="pol p3"><img src="assets/photos/p00.jpg" alt=""></div>
+        <div class="pol p1"><img src="assets/pol-place.jpg" alt=""></div>
+        <div class="pol p2"><img src="assets/pol-people.jpg" alt=""></div>
+        <div class="pol p3"><img src="assets/pol-house.jpg" alt=""><em>what you get back ✨</em></div>
         <span class="sticker s-dark st-a">only your circle 🔒</span>
-        <span class="sticker s-pink st-b">your camera roll · 2,310 photos</span>
+        <span class="sticker s-pink st-b">only photos from that night 🌙</span>
       </div>
       <div class="bottom">
         <button class="pill" id="allow-btn">allow photos <span>📸</span></button>
@@ -146,6 +146,11 @@
       </div>
       <div class="friends" id="friends"></div>
       <div class="bottom build-bottom">
+        <button class="shop-card" id="shop-card" data-shop hidden>
+          <img src="assets/shop/globe.png" alt="">
+          <span><b>the fomo shop is open</b><small>snow globe, photo book + 4 pieces</small></span>
+          <i>›</i>
+        </button>
         <button class="pill wide step" id="step-in" hidden>step inside <span>✨</span></button>
       </div>
     </section>
@@ -155,15 +160,145 @@
       <video id="video" playsinline preload="auto" src="../design/rebrand/step-inside/streetview-step-in.mp4"></video>
       <button class="close" id="video-close" aria-label="close">✕</button>
       <div class="video-end" id="video-end" hidden>
-        <button class="pill" id="replay">watch again ↺</button>
-        <button class="ghost" id="restart">start over</button>
+        <p class="end-line">that was halloween at the delancey house.</p>
+        <button class="pill" data-shop>proceed to shop <span>🛍️</span></button>
+        <div class="end-row"><button class="ghost" id="replay">watch again ↺</button><button class="ghost" id="restart">start over</button></div>
+      </div>
+    </section>
+
+    <!-- 7 · the fomo shop (design: design/rebrand/fomo-shop) -->
+    <section class="screen" id="s-shop">
+      <div class="sh-sky" id="sh-clouds"></div>
+      <header class="sh-head">
+        <button class="sh-round" id="sh-back" aria-label="back">‹</button>
+        <span class="sh-count"><i></i>closes in <b id="sh-countdown">--:--:--</b></span>
+        <button class="sh-host" id="sh-host-btn" aria-label="host dashboard">📊</button>
+        <button class="sh-bag" id="sh-bag-btn">bag <span id="sh-bag-n">0</span></button>
+      </header>
+      <div class="sh-title">
+        <h1 class="h1">the fomo shop</h1>
+        <p class="sub">halloween at the delancey house · only made once</p>
+        <div class="sh-stock" id="sh-stock"><span class="wbadge">whop</span><b id="sh-stock-was">–/180</b> was there <i>·</i> <b id="sh-stock-pub">–/500</b> public</div>
+      </div>
+      <button class="sh-ticker" id="sh-ticker"><span class="wdot"></span><span id="sh-ticker-text">connecting to whop…</span></button>
+      <div class="sh-stage" id="sh-stage">
+        <div class="sh-scene" id="sh-scene">
+          <div class="sh-track" id="sh-track"></div>
+          <div class="sh-word" id="sh-word"><div class="sh-float"><img src="assets/shop/fomo.png" alt="fomo"><span class="sh-tag">the night's over. the merch isn't 🎃</span></div></div>
+        </div>
+      </div>
+      <p class="sh-hint">swipe the ring · tap a piece to open it</p>
+      <div class="sh-panel">
+        <button class="sh-nav" id="sh-prev" aria-label="previous">‹</button>
+        <div class="sh-info" id="sh-info"><b id="sh-name">the night, in a globe</b><small id="sh-why">your living room + everyone who stood in it</small></div>
+        <button class="sh-add" id="sh-add">$68</button>
+        <button class="sh-nav" id="sh-next" aria-label="next">›</button>
+      </div>
+      <div class="sh-toast" id="sh-toast">added ✨</div>
+
+      <div class="sh-scrim" id="sh-scrim"></div>
+      <aside class="sh-sheet" id="sh-detail">
+        <div class="grab"></div>
+        <div class="sh-hero"><img id="sh-d-img" alt=""><span class="sticker s-pink sh-d-tag" id="sh-d-tag"></span></div>
+        <h2 class="sh-d-name"><b id="sh-d-name"></b><span id="sh-d-price"></span></h2>
+        <p class="sub" id="sh-d-desc"></p>
+        <p class="sh-opt-label" id="sh-d-optlabel"></p>
+        <div class="sh-chips" id="sh-d-chips"></div>
+        <button class="pill wide" id="sh-d-add">add to bag</button>
+        <p class="fine dark">made to order · <span id="sh-d-left">sold through whop</span></p>
+      </aside>
+      <aside class="sh-sheet sh-bagsheet" id="sh-bag">
+        <div class="grab"></div>
+        <div class="sh-bag-scroll">
+          <h2 class="h2">your bag</h2>
+          <p class="sub" id="sh-bag-sub">from halloween at the delancey house</p>
+          <div class="sh-lines" id="sh-lines"></div>
+
+          <p class="wsec">edition <code class="wapi">plans · stock</code></p>
+          <div class="sh-editions">
+            <button class="sh-ed on" data-ed="was_there"><b>was there</b><small id="ed-was">you were at the venue ✓</small></button>
+            <button class="sh-ed" data-ed="public"><b>public</b><small id="ed-pub">open to anyone</small></button>
+          </div>
+
+          <p class="wsec">got a was there code? <code class="wapi">promoCodes</code></p>
+          <div class="sh-promo"><input id="sh-promo-in" placeholder="ROHAN-WASTHERE" autocomplete="off" spellcheck="false"><button id="sh-promo-apply">apply</button></div>
+          <p class="wmsg" id="sh-promo-msg"></p>
+
+          <div class="wcard">
+            <div class="wcard-h"><b>codes for your people</b><code class="wapi">promoCodes.create</code></div>
+            <small>one −20% code per friend who was there. one use each.</small>
+            <div class="sh-friendcodes" id="sh-friendcodes"></div>
+          </div>
+
+          <div class="wcard">
+            <div class="wcard-h"><b>share your drop link · earn 10%</b><code class="wapi">affiliates</code></div>
+            <small>anyone who buys through your link: you get 10%, paid by whop.</small>
+            <div class="sh-ref" id="sh-ref"><button class="mini" id="sh-ref-btn">get my link</button></div>
+          </div>
+
+          <div class="wcard plus">
+            <div class="wcard-h"><b>⭐ plus · try free for 7 days</b><code class="wapi">memberships</code></div>
+            <small>every poster style · unlimited walk ins · a month in review film. $5/mo after.</small>
+            <button class="mini dark" id="sh-plus-btn">start free trial</button>
+          </div>
+
+          <div class="sh-proof"><b>@ines, @theo + 9 others got the globe</b><small>their cutouts stand next to yours in every one</small></div>
+          <div class="sh-sum"><span>subtotal</span><span id="sh-subtotal">$0</span></div>
+          <div class="sh-sum" id="sh-disc-row" hidden><span>was there code</span><span id="sh-disc">−$0</span></div>
+          <div class="sh-sum"><span>made + shipped · host gets 10%</span><span>free</span></div>
+          <div class="sh-sum total"><span>total</span><span id="sh-total">$0</span></div>
+        </div>
+        <button class="pill wide whop-pay" id="sh-pay">pay with <b>whop</b> · $0</button>
+        <p class="fine dark">whop sandbox · test card 4242 4242 4242 4242</p>
+      </aside>
+
+      <aside class="sh-sheet sh-hostsheet" id="sh-hostsheet">
+        <div class="grab"></div>
+        <div class="sh-bag-scroll">
+          <span class="sticker s-dark" style="position:static;display:inline-block;transform:rotate(-3deg)">host · yc</span>
+          <h2 class="h2" style="margin-top:8px">wish you were here for hosts</h2>
+          <p class="sub">yc hackathon day · the drop, live from whop</p>
+          <div class="sh-tiles">
+            <div><b id="hs-gross">$0</b><small>gross revenue</small><code class="wapi">payments</code></div>
+            <div><b id="hs-orders">0</b><small>orders</small><code class="wapi">payments</code></div>
+            <div><b id="hs-members">0</b><small>plus members</small><code class="wapi">memberships</code></div>
+          </div>
+          <p class="wsec">the drop · sell-through <code class="wapi">plans · stock</code></p>
+          <div class="sh-sell" id="hs-sell"></div>
+          <p class="wsec">recent payments <code class="wapi">webhooks · payment.succeeded</code></p>
+          <div class="sh-feed" id="hs-feed"></div>
+          <button class="pill wide" id="hs-payout">payout via whop · $0</button>
+          <p class="wmsg center" id="hs-payout-msg"><code class="wapi">ledgerAccounts · transfers</code></p>
+        </div>
+      </aside>
+
+      <div class="sh-done" id="sh-done" hidden>
+        <div class="sh-done-card" id="sh-wait">
+          <span class="wbadge big">whop</span>
+          <h2 class="h2">finish on whop</h2>
+          <p class="sub">checkout opened in a new tab.<br>test card <b>4242 4242 4242 4242</b>, any date + cvc.</p>
+          <div class="sh-waiting"><span class="spinner dark"></span> waiting for whop to confirm…</div>
+          <a class="ghost dark" id="sh-reopen" target="_blank" rel="noopener">reopen checkout ↗</a>
+          <button class="ghost dark" id="sh-cancel">back to the bag</button>
+        </div>
+        <div class="sh-done-card" id="sh-paid" hidden>
+          <span class="sticker s-pink" style="position:static;transform:rotate(-4deg)">confirmed by whop ✨</span>
+          <h2 class="h2" id="sh-paid-title">it's being made</h2>
+          <p class="sub" id="sh-paid-sub">only for the people who were there.<br>arrives nov 24–26.</p>
+          <p class="wmsg" id="sh-paid-order"></p>
+          <button class="pill" id="sh-done-ok">keep browsing</button>
+          <button class="ghost dark" id="sh-done-host">see it on the host dashboard 📊</button>
+          <button class="ghost dark" id="sh-done-start">start over</button>
+        </div>
       </div>
     </section>
 
     <div id="home-bar"></div>
   </div>
-  <p id="keys">click through like a phone · <b>←</b>/<b>→</b> previous/next screen · <b>F</b> speeds up the build</p>
+  <p id="keys">click through like a phone · <b>←</b>/<b>→</b> previous/next screen · <b>F</b> speeds up the build · in the shop <b>←</b>/<b>→</b> turn the ring</p>
 </div>
 <script src="app.js"></script>
+<script src="whop.js"></script>
+<script src="shop.js"></script>
 </body>
 </html>
