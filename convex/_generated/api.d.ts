@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ask from "../ask.js";
 import type * as drops from "../drops.js";
 import type * as files from "../files.js";
 import type * as gifts from "../gifts.js";
@@ -16,6 +17,7 @@ import type * as http from "../http.js";
 import type * as listings from "../listings.js";
 import type * as me from "../me.js";
 import type * as memberships from "../memberships.js";
+import type * as memories from "../memories.js";
 import type * as moments from "../moments.js";
 import type * as orders from "../orders.js";
 import type * as pairings from "../pairings.js";
@@ -35,6 +37,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ask: typeof ask;
   drops: typeof drops;
   files: typeof files;
   gifts: typeof gifts;
@@ -43,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   listings: typeof listings;
   me: typeof me;
   memberships: typeof memberships;
+  memories: typeof memories;
   moments: typeof moments;
   orders: typeof orders;
   pairings: typeof pairings;

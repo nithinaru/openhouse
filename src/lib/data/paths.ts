@@ -32,8 +32,8 @@ export const FN = {
   ordersGet: { path: 'orders:get', kind: 'query', deployed: false }, // { orderId } -> { status }
   membershipsCheckout: { path: 'memberships:checkout', kind: 'action', deployed: false },
   meEntitlements: { path: 'me:entitlements', kind: 'query', deployed: false }, // -> { plus }
-  askQuestion: { path: 'ask:question', kind: 'action', deployed: false }, // { tripId, question } -> { answer, momentIds }
-  memoriesIndexTrip: { path: 'memories:indexTrip', kind: 'action', deployed: false }, // { tripId }
+  askQuestion: { path: 'ask:question', kind: 'action', deployed: true }, // { tripId, question } -> { answer, momentIds, momentOrders }
+  memoriesIndexTrip: { path: 'memories:indexTrip', kind: 'action', deployed: true }, // { tripId } -> { namespace, added, failed }
 
   // Whop commerce (contract in docs/WHOP.md).
   giftsForUser: { path: 'gifts:forUser', kind: 'query', deployed: false }, // { userId } -> Gift[]
