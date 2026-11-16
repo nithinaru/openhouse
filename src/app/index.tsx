@@ -27,7 +27,9 @@ const GAP = 12;
 
 export default function HomeScreen() {
   // Own trips (live + this session's ingest) first, the demo trip (live seed, else cached) last.
-  const { data: trips, refresh } = useTrips();
+  const { data: allTrips, refresh } = useTrips();
+  // Recording builds (EXPO_PUBLIC_DEMO_VIDEO=1) show only the demo day.
+  const trips = process.env.EXPO_PUBLIC_DEMO_VIDEO === '1' ? allTrips.filter((t) => isDemoTripId(t.id)) : allTrips;
   const hasIngested = trips.some((t) => !isDemoTripId(t.id));
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();

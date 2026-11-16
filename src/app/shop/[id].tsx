@@ -70,6 +70,9 @@ export default function ShopScreen() {
   const { waitlisted, ownsHoodie } = useDemoFlags();
   const setWaitlisted = (v: boolean) => demoFlags.set({ waitlisted: v });
 
+  // Video mode (EXPO_PUBLIC_DEMO_VIDEO=1, recording builds only): a fixed happy path for the
+  // screen-recorded demo. The Whop checkout page is real; closing it counts as paid.
+  const VIDEO = process.env.EXPO_PUBLIC_DEMO_VIDEO === '1';
   const bought = purchase.state.phase === 'done';
   // Whop beat: a confirmed drop purchase (real confirmDropPaid or the long-press rehearsal)
   // makes you a hoodie owner for the session, which unlocks the owners chat.
@@ -79,7 +82,7 @@ export default function ShopScreen() {
   const live = drop.editions.find((e) => e.edition === edition) ?? drop.editions[0];
   const stock = live?.stock ?? 180;
   const soldOut = rehearsal === 'soldout' || (live ? live.claimed >= live.stock : false);
-  const claimed = soldOut ? stock : Math.min(stock, (live?.claimed ?? 0) + (bought && drop.source === 'local' ? 1 : 0));
+  const claimed = VIDEO ? 112 + (bought ? 1 : 0) : soldOut ? stock : Math.min(stock, (live?.claimed ?? 0) + (bought && drop.source === 'local' ? 1 : 0));
   const serial = edition === 'was_there' ? `nº ${bought ? claimed : Math.min(stock, claimed + 1)} / ${stock}` : undefined;
 
   // --- gifting (as before) ---
@@ -100,7 +103,7 @@ export default function ShopScreen() {
     setOpen(null);
     void purchase.buy(
       () => startDropCheckout({ trip, drop, edition, items, promoCode, referralCode: typeof ref === 'string' ? ref : null }),
-      confirmDropPaid,
+      VIDEO ? async (c) => ({ orderId: c.orderId }) : confirmDropPaid,
     );
   };
   const itemFor = (p: PieceId): DropItem => (PIECES[p].sizes ? { piece: p, size: sizes[p] ?? 'm' } : { piece: p });
@@ -118,7 +121,7 @@ export default function ShopScreen() {
 
         <Animated.View entering={enter(0)} style={{ gap: space.sm }}>
           <Sticker
-            label={rehearsal === 'off' ? 'limited drop · whop' : `rehearsal · ${rehearsal === 'purchased' ? 'claimed' : 'sold out'}`}
+            label={VIDEO || rehearsal === 'off' ? 'limited drop · whop' : `rehearsal · ${rehearsal === 'purchased' ? 'claimed' : 'sold out'}`}
             small
             rotate={-4}
             style={{ alignSelf: 'flex-start' }}
