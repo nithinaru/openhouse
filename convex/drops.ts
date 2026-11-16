@@ -11,7 +11,18 @@ type DropItem = Infer<typeof dropItem>;
 
 const STOCK: Record<Edition, number> = { was_there: 180, public: 500 };
 const EDITION_TITLE: Record<Edition, string> = { was_there: 'was there', public: 'public' };
-const PIECE_CENTS = { hoodie: 7200, tee: 3800, tote: 2800, cap: 3200, stickers: 800, pin: 1400 };
+const PIECE_CENTS: Record<DropItem['piece'], number> = {
+  hoodie: 7200,
+  tee: 3800,
+  tote: 2800,
+  cap: 3200,
+  stickers: 800,
+  pin: 1400,
+  globe: 6800,
+  book: 5400,
+};
+// The $149 bundle is exactly one each of the original six. Later pieces (globe, book) are a la carte.
+const BUNDLE_PIECES = new Set<DropItem['piece']>(['hoodie', 'tee', 'tote', 'cap', 'stickers', 'pin']);
 const BUNDLE_CENTS = 14900;
 const SIZES = new Set(['xs', 's', 'm', 'l', 'xl', 'xxl']);
 const SIZED = new Set(['hoodie', 'tee']);
@@ -64,7 +75,9 @@ function endOfDayInSanFrancisco(ms: number) {
 
 function cartCents(items: DropItem[]) {
   const pieces = new Set(items.map((i) => i.piece));
-  if (items.length === pieces.size && pieces.size === Object.keys(PIECE_CENTS).length) return BUNDLE_CENTS;
+  const isBundle =
+    items.length === BUNDLE_PIECES.size && pieces.size === BUNDLE_PIECES.size && [...pieces].every((p) => BUNDLE_PIECES.has(p));
+  if (isBundle) return BUNDLE_CENTS;
   return items.reduce((sum, i) => sum + PIECE_CENTS[i.piece], 0);
 }
 

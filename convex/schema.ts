@@ -14,6 +14,8 @@ export const piece = v.union(
   v.literal('cap'),
   v.literal('stickers'),
   v.literal('pin'),
+  v.literal('globe'),
+  v.literal('book'),
 );
 export const dropItem = v.object({ piece, size: v.optional(v.string()) });
 

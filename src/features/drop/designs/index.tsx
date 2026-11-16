@@ -43,6 +43,9 @@ export const PieceArt = memo(function PieceArt({ piece, side = 'front', ...rest 
     case 'stickers':
       return <Stickers {...p} />;
     case 'pin':
+    // No generated mockups yet for the globe and book: the badge stands in until photos land.
+    case 'globe':
+    case 'book':
       return <Pin {...p} />;
   }
 });

@@ -11,13 +11,14 @@ const HOST_SHARE = 0.1;
 const RECENT = 12;
 const MAX_DROPS = 50;
 const MAX_MEMBERS = 1000;
-const ALL_PIECES = 6;
+const BUNDLE_PIECES = new Set(['hoodie', 'tee', 'tote', 'cap', 'stickers', 'pin']);
 
 type Recent = { who: string; item: string; edition?: Edition; amountCents: number; at: number };
 
 function itemLabel(items: Doc<'orders'>['items']) {
   const pieces = new Set((items ?? []).map((i) => i.piece));
-  if (pieces.size === ALL_PIECES) return 'the full drop';
+  const isBundle = pieces.size === BUNDLE_PIECES.size && [...pieces].every((p) => BUNDLE_PIECES.has(p));
+  if (isBundle) return 'the full drop';
   if (items?.length === 1) return `the ${items[0].piece}`;
   return `${items?.length ?? 0} pieces`;
 }

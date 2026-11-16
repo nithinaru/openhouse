@@ -95,6 +95,8 @@ const SHORT: Record<PieceId | 'bundle', string> = {
   cap: 'the cap',
   stickers: 'the sticker sheet',
   pin: 'the pin',
+  globe: 'the snow globe',
+  book: 'the photo book',
   bundle: 'the full drop',
 };
 

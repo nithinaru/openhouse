@@ -4,7 +4,7 @@
 // When `image` is set, that photo is shown instead of the SVG front; `imageBack` replaces the
 // back. Leave them unset to keep the generated design. See ./README.md.
 
-export type PieceId = 'hoodie' | 'tee' | 'tote' | 'cap' | 'stickers' | 'pin';
+export type PieceId = 'hoodie' | 'tee' | 'tote' | 'cap' | 'stickers' | 'pin' | 'globe' | 'book';
 export type Side = 'front' | 'back';
 export type Edition = 'was_there' | 'public';
 
@@ -89,8 +89,26 @@ export const PIECES: Record<PieceId, PieceInfo> = {
     // image: require('../../../assets/merch/pin-front.png'),
     // imageBack: require('../../../assets/merch/pin-back.png'),
   },
+  // Sold through Whop alongside the drop; not part of the bundle or the flat lay.
+  globe: {
+    id: 'globe',
+    name: 'the night, in a globe',
+    blurb: 'snow globe · one room from the night inside',
+    priceCents: 6800,
+    sizes: null,
+    box: { w: 200, h: 200 },
+  },
+  book: {
+    id: 'book',
+    name: 'the photo book',
+    blurb: 'hardcover · every photo from the day, in order',
+    priceCents: 5400,
+    sizes: null,
+    box: { w: 200, h: 200 },
+  },
 };
 
+/** The six bundle pieces, in display order. Globe and book are sold separately. */
 export const PIECE_ORDER: PieceId[] = ['hoodie', 'tee', 'tote', 'cap', 'stickers', 'pin'];
 
 /** "the full drop": all six pieces. */

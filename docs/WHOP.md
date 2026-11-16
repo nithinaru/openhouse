@@ -256,7 +256,11 @@ Prices (cents, server is the source of truth; the app shows the same numbers):
 | `cap` | 3200 | — |
 | `stickers` | 800 | — |
 | `pin` | 1400 | — |
-| all six (`items` covers every piece once) | 14900 bundle | — |
+| `globe` (snow globe) | 6800 | — |
+| `book` (photo book) | 5400 | — |
+| all six (`items` is exactly one each of hoodie, tee, tote, cap, stickers, pin) | 14900 bundle | — |
+
+Carts containing `globe` or `book` are priced as the plain sum.
 
 ### `drops:create` (action)
 
@@ -284,7 +288,7 @@ Args `{ dropId: Id<'drops'> }` → same shape as `drops:create`, or `null`. `cla
   dropId: Id<'drops'>,
   userId: Id<'users'>,
   edition: 'was_there' | 'public',
-  items: Array<{ piece: 'hoodie' | 'tee' | 'tote' | 'cap' | 'stickers' | 'pin', size?: string }>,
+  items: Array<{ piece: 'hoodie' | 'tee' | 'tote' | 'cap' | 'stickers' | 'pin' | 'globe' | 'book', size?: string }>,
 }
 ```
 
