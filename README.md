@@ -69,8 +69,8 @@
 
 | | |
 |---|---|
-| 🧪 **clickable demo** | `python3 -m http.server 4320` → [localhost:4320/prototype](prototype/) |
-| 📱 **the app** | `npm install && npx expo start` |
+| 🧪 **clickable demo** (no install) | **[nithinaru.github.io/openhouse/prototype](https://nithinaru.github.io/openhouse/prototype/)** · locally: `python3 -m http.server 4320` → [localhost:4320/prototype](prototype/) |
+| 📱 **the live app** (iPhone + Expo Go) | `exp://u.expo.dev/4634e89f-273c-4f78-9e6e-65a81e47390f?channel-name=preview&runtime-version=exposdk%3A58.0.0` · locally: `npm install && npx expo start` |
 | 🎨 **designs** | [design/](design/) · Paper: *Wish You Were Here — Mobile UI* |
 
 <br>
